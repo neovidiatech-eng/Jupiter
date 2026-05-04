@@ -21,7 +21,8 @@ import {
   Package,
   Coins,
   ShieldCheck,
-  Repeat
+  Repeat,
+  Trophy
 } from 'lucide-react';
 
 export interface RouteConfig {
@@ -58,6 +59,7 @@ const RolesPage = lazy(() => import("../../features/admin/pages/Roles"));
 const RequestsPage = lazy(() => import("../../features/admin/pages/Requests"));
 const CurriculumPage = lazy(() => import("../../features/admin/pages/Curriculum"));
 const LibraryPage = lazy(() => import("../../features/admin/pages/Library"));
+const RanksPage = lazy(() => import("../../features/admin/pages/Ranks"));
 
 export const adminDashboardRoutes: RouteConfig[] = [
   {
@@ -238,6 +240,13 @@ export const adminDashboardRoutes: RouteConfig[] = [
     icon: ShieldCheck,
     path: 'roles',
     element: <RolesPage />
+  },
+  {
+    id: 'ranks',
+    label: 'Academic Ranks',
+    icon: Trophy,
+    path: 'ranks',
+    element: <RanksPage />
   },
   {
     id: "finance",

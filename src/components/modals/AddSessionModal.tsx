@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Search, Video, ChevronDown, AlertCircle, Calendar, MonitorPlay, AlertTriangle, Clock, Bell } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { X, Search, Video, ChevronDown, AlertCircle, Calendar, MonitorPlay, AlertTriangle, Clock, Bell, BookOpen, Layers } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getSessionSchema, getMultipleSessionsSchema, SessionFormData, MultipleSessionsPayload, MultipleSessionsFormData } from '../../lib/schemas/SessionSchema';
@@ -54,42 +54,61 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
       endTime: '15:00',
       duration: '60',
       monthYear: new Date().toISOString().substring(0, 7),
-      selectedDays: ['Mon', 'Thu'],
+      selectedDays: [],
     },
   });
 
   const watchTitle = watch('title');
   const watchSubject = watch('subject');
+  const watchStudent = watch('student');
   const watchSelectedDays = (watch('selectedDays') as DayOfWeek[]) || [];
+
+  // Find selected student data and compute plan info
+  const selectedStudentData = useMemo(() => {
+    if (!watchStudent || !students?.data?.studentsData) return null;
+    return students.data.studentsData.find((s: Student) => s.id === watchStudent) || null;
+  }, [watchStudent, students]);
+
+  const studentPlanInfo = useMemo(() => {
+    if (!selectedStudentData) return null;
+    return {
+      planName: language === 'ar'
+        ? selectedStudentData.plan?.name_ar
+        : selectedStudentData.plan?.name_en || null,
+      totalSessions: selectedStudentData.sessions || 0,
+      sessionsAttended: selectedStudentData.sessions_attended || 0,
+      sessionsRemaining: selectedStudentData.sessions_remaining || 0,
+    };
+  }, [selectedStudentData, language]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
       <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-[1000px] max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
-        
+
         {/* Header */}
         <div className="px-8 py-5 border-b border-gray-100 flex items-start justify-between bg-white">
-           <div className="flex items-center gap-4">
-             <div className="w-12 h-12 rounded-[14px] bg-indigo-50 flex items-center justify-center">
-               <Calendar className="w-6 h-6 text-[#6366f1]" />
-             </div>
-             <div>
-               <h2 className="text-xl font-bold text-gray-900 leading-tight">Create New Session</h2>
-               <p className="text-[13px] font-semibold text-gray-400 mt-0.5">Configure and schedule learning tracks for students.</p>
-             </div>
-           </div>
-           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors">
-             <X className="w-5 h-5" />
-           </button>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-[14px] bg-indigo-50 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-[#6366f1]" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 leading-tight">Create New Session</h2>
+              <p className="text-[13px] font-semibold text-gray-400 mt-0.5">Configure and schedule learning tracks for students.</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Body */}
         <div className="flex flex-col lg:flex-row overflow-hidden">
-          
+
           {/* Left Column - Configuration */}
           <div className="w-full lg:w-[58%] p-6 md:p-8 bg-white overflow-y-auto custom-scrollbar">
-             {/* Student & Instructor Selectors */}
+            {/* Student & Instructor Selectors */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
               <div>
                 <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
@@ -136,14 +155,57 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                 {errors.teacher && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.teacher.message as string}</p>}
               </div>
             </div>
+
+            {/* Student Plan Info Card */}
+            {selectedStudentData && studentPlanInfo && (
+              <div className="mb-6 bg-gradient-to-r from-indigo-50/60 to-fuchsia-50/40 border border-indigo-100/60 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
+                    <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                  </div>
+                  <span className="text-[11px] font-bold text-indigo-900/60 uppercase tracking-wider">Student Plan Details</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-3.5 h-3.5 text-fuchsia-500" />
+                    <span className="text-xs font-bold text-gray-700">
+                      {studentPlanInfo.planName || 'No Plan Assigned'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <p className="text-sm font-black text-indigo-600">{studentPlanInfo.totalSessions}</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
+                    </div>
+                    <div className="w-px h-6 bg-gray-200"></div>
+                    <div className="text-center">
+                      <p className="text-sm font-black text-emerald-600">{studentPlanInfo.sessionsRemaining}</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Remaining</p>
+                    </div>
+                    <div className="w-px h-6 bg-gray-200"></div>
+                    <div className="text-center">
+                      <p className="text-sm font-black text-amber-600">{studentPlanInfo.sessionsAttended}</p>
+                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Attended</p>
+                    </div>
+                  </div>
+                </div>
+                {studentPlanInfo.sessionsRemaining <= 0 && studentPlanInfo.totalSessions > 0 && (
+                  <div className="mt-3 flex items-center gap-2 text-red-500 bg-red-50 px-3 py-1.5 rounded-xl border border-red-100">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold">No remaining sessions — student plan is fully consumed.</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Session Title */}
             <div className="mb-6">
               <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
                 <Video className="w-3.5 h-3.5" /> Session Title
               </label>
-              <input 
-                type="text" 
-                placeholder="e.g. Mathematics - Algebra Basics" 
+              <input
+                type="text"
+                placeholder="e.g. Mathematics - Algebra Basics"
                 {...register('title')}
                 className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.title ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300`}
               />
@@ -155,8 +217,8 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
               <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
                 <AlertCircle className="w-3.5 h-3.5" /> Description
               </label>
-              <textarea 
-                placeholder="Briefly describe the session goals..." 
+              <textarea
+                placeholder="Briefly describe the session goals..."
                 {...register('description')}
                 className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.description ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300 resize-none h-24`}
               />
@@ -213,13 +275,13 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
             <div className="mb-6">
               <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">Scheduling Mode</label>
               <div className="flex p-1 bg-gray-50 rounded-[18px]">
-                <button 
+                <button
                   onClick={() => setSchedulingMode('single')}
                   className={`flex-1 py-2.5 text-xs font-bold rounded-[14px] transition-all ${schedulingMode === 'single' ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-100' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                   Single Session
                 </button>
-                <button 
+                <button
                   onClick={() => setSchedulingMode('batch')}
                   className={`flex-1 py-2.5 text-xs font-bold rounded-[14px] transition-all ${schedulingMode === 'batch' ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-gray-100' : 'text-gray-500 hover:text-gray-700'}`}
                 >
@@ -234,8 +296,8 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
                   <div>
                     <label className="block text-[11px] font-bold text-indigo-900/40 mb-2 uppercase tracking-wider">Target Month</label>
-                    <input 
-                      type="month" 
+                    <input
+                      type="month"
                       {...register('monthYear')}
                       className="w-full px-4 py-3 bg-white border border-indigo-50 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
                     />
@@ -243,8 +305,8 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-indigo-900/40 mb-2 uppercase tracking-wider">Default Start Time</label>
-                    <input 
-                      type="time" 
+                    <input
+                      type="time"
                       {...register('startTime')}
                       className="w-full px-4 py-3 bg-white border border-indigo-50 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
                     />
@@ -254,7 +316,7 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                 <div>
                   <label className="block text-[11px] font-bold text-indigo-900/40 mb-3 uppercase tracking-wider">Weekly Schedule</label>
                   <div className="flex flex-wrap gap-2">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
                       const isSelected = watchSelectedDays.includes(day as DayOfWeek);
                       return (
                         <button
@@ -265,13 +327,12 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                             if (isSelected) setValue('selectedDays', current.filter((d: string) => d !== day));
                             else setValue('selectedDays', [...current, day]);
                           }}
-                          className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${
-                            isSelected 
-                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' 
+                          className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${isSelected
+                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
                               : 'bg-white border-transparent text-gray-500 hover:border-indigo-100'
-                          }`}
+                            }`}
                         >
-                          {day}
+                          {day.substring(0, 3)}
                         </button>
                       )
                     })}
@@ -284,8 +345,8 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-[11px] font-bold text-emerald-900/40 mb-2 uppercase tracking-wider">Session Date</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       {...register('sessionDate')}
                       className="w-full px-4 py-3 bg-white border border-emerald-50 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
                     />
@@ -294,16 +355,16 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-emerald-900/40 mb-2 uppercase tracking-wider">Start</label>
-                      <input 
-                        type="time" 
+                      <input
+                        type="time"
                         {...register('startTime')}
                         className="w-full px-4 py-2 bg-white border border-emerald-50 rounded-2xl text-sm font-bold text-gray-900"
                       />
                     </div>
                     <div>
                       <label className="block text-[11px] font-bold text-emerald-900/40 mb-2 uppercase tracking-wider">End</label>
-                      <input 
-                        type="time" 
+                      <input
+                        type="time"
                         {...register('endTime')}
                         className="w-full px-4 py-2 bg-white border border-emerald-50 rounded-2xl text-sm font-bold text-gray-900"
                       />
@@ -340,9 +401,9 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                 <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
                   <MonitorPlay className="w-3.5 h-3.5" /> Custom Link
                 </label>
-                <input 
-                  type="url" 
-                  placeholder="https://zoom.us/..." 
+                <input
+                  type="url"
+                  placeholder="https://zoom.us/..."
                   {...register('meetingLink')}
                   className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.meetingLink ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300`}
                   dir="ltr"
@@ -363,24 +424,22 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <button 
+                <button
                   onClick={() => setMeetingPlatform('zoom')}
-                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${
-                    meetingPlatform === 'zoom' 
-                      ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]' 
+                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${meetingPlatform === 'zoom'
+                      ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]'
                       : 'bg-white border-gray-100 text-gray-700 hover:border-indigo-100'
-                  }`}
+                    }`}
                 >
                   <Video className="w-4 h-4" />
                   Zoom Meet
                 </button>
-                <button 
+                <button
                   onClick={() => setMeetingPlatform('google')}
-                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${
-                    meetingPlatform === 'google' 
-                      ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]' 
+                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${meetingPlatform === 'google'
+                      ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]'
                       : 'bg-white border-gray-100 text-gray-700 hover:border-indigo-100'
-                  }`}
+                    }`}
                 >
                   <MonitorPlay className="w-4 h-4" />
                   Google Meet
@@ -393,8 +452,8 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
               <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
                 <AlertTriangle className="w-3.5 h-3.5" /> Private Notes
               </label>
-              <textarea 
-                placeholder="Add any internal notes..." 
+              <textarea
+                placeholder="Add any internal notes..."
                 {...register('notes')}
                 className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.notes ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300 resize-none h-24`}
               />
@@ -414,9 +473,9 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                 12 Sessions
               </span>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-              
+
               {/* Card 1 */}
               <div className="bg-white border border-gray-100 rounded-2xl p-3 flex gap-4 shadow-sm hover:border-gray-200 transition-all">
                 <div className="w-12 h-12 bg-gray-50 rounded-xl flex flex-col items-center justify-center flex-shrink-0 border border-gray-100/50">
@@ -450,7 +509,7 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                   </div>
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="text-[10px] font-bold text-red-500 flex items-center gap-1">
-                       Room 402 Occupied
+                      Room 402 Occupied
                     </span>
                   </div>
                   <button className="text-[10px] font-bold text-[#6366f1] hover:underline mt-1.5">
@@ -506,17 +565,17 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
         {/* Footer */}
         <div className="px-8 py-6 border-t border-gray-100 bg-white/80 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5 text-red-500 bg-red-50 px-4 py-2 rounded-full border border-red-100">
-             <AlertTriangle className="w-4 h-4" />
-             <span className="text-[11px] font-bold tracking-tight">1 Potential Conflict Detected</span>
+            <AlertTriangle className="w-4 h-4" />
+            <span className="text-[11px] font-bold tracking-tight">1 Potential Conflict Detected</span>
           </div>
           <div className="flex items-center gap-4 w-full sm:w-auto">
-            <button 
+            <button
               onClick={onClose}
               className="flex-1 sm:flex-none px-7 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-2xl transition-all"
             >
               Save Draft
             </button>
-            <button 
+            <button
               onClick={handleSubmit((data) => {
                 if (schedulingMode === 'single') {
                   onAdd(data as SessionFormData);
@@ -541,7 +600,8 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
         </div>
 
       </div>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }

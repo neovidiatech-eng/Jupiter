@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, User, Mail, Phone, MapPin, ClipboardList, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import WhatsAppPhone from '../ui/WhatsAppPhone';
 import { useTranslation } from 'react-i18next';
@@ -17,133 +17,159 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
   if (!isOpen || !studentData) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
+      <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
+        
+        {/* Profile Header */}
+        <div className="relative h-32 bg-indigo-600 shrink-0">
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+             <div className="absolute top-0 right-0 w-64 h-64 border-[32px] border-white rounded-full translate-x-1/2 -translate-y-1/2"></div>
+             <div className="absolute bottom-0 left-0 w-32 h-32 border-[16px] border-white rounded-full -translate-x-1/2 translate-y-1/2"></div>
+          </div>
+          
+          <button 
+            onClick={onClose} 
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-20"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5" />
           </button>
-          <h2 className="text-xl font-bold text-gray-900">
-            {language === 'ar' ? 'تفاصيل الطالب' : 'Student Details'}
-          </h2>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1  overflow-y-auto no-scrollbar p-6">
-          <div className="space-y-6">
-            {/* Profile Section */}
-            <div className="flex items-center gap-4 pb-6 border-b border-gray-200">
-              <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl font-bold text-blue-600">
-                  {studentData.user.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div className="text-start flex-1">
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">{studentData.user.name}</h3>
-                <p className="text-gray-600">{studentData.user.email}</p>
+          
+          <div className="absolute -bottom-12 left-8 flex items-end gap-6">
+            <div className="w-24 h-24 rounded-[22px] bg-white p-1.5 shadow-lg">
+              <div className="w-full h-full rounded-[18px] bg-indigo-50 flex items-center justify-center text-indigo-600 text-3xl font-black">
+                {studentData.user.name.charAt(0).toUpperCase()}
               </div>
             </div>
-
-            {/* Student Information Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Email */}
-              <div className="text-start">
-                <label className="text-sm font-medium text-gray-500 block mb-1">
-                  {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
-                </label>
-                <p className="text-base text-gray-900">{studentData.user.email}</p>
-              </div>
-
-              {/* Phone */}
-              <div className="text-start">
-                <label className="text-sm font-medium text-gray-500 block mb-1">
-                  {language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}
-                </label>
-                <WhatsAppPhone
-                  phone={`${studentData.user.code_country} ${studentData.user.phone}`}
-                  className="text-base text-gray-900"
-                />
-              </div>
-
-              {/* Plan */}
-              <div className="text-start">
-                <label className="text-sm font-medium text-gray-500 block mb-1">
-                  {language === 'ar' ? 'الخطة' : 'Plan'}
-                </label>
-                <span className="inline-flex px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                  {studentData.planId || t('noPlan')}
+            <div className="mb-2">
+              <h3 className="text-2xl font-black text-gray-900 leading-tight">{studentData.user.name}</h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-widest uppercase ${
+                  studentData.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                }`}>
+                  {studentData.status === 'approved' ? t('active') : t('pending')}
+                </span>
+                <span className="text-gray-400 text-xs font-bold px-2 border-l border-gray-200">
+                  ID: #{studentData.id.slice(0, 8)}
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
 
-              {/* Country */}
-              <div className="text-start">
-                <label className="text-sm font-medium text-gray-500 block mb-1">
-                  {language === 'ar' ? 'الدولة' : 'Country'}
-                </label>
-                <p className="text-base text-gray-900">{studentData.country}</p>
-              </div>
-
-              {/* Status */}
-              <div className="text-start">
-                <label className="text-sm font-medium text-gray-500 block mb-1">
-                  {language === 'ar' ? 'الحالة' : 'Status'}
-                </label>
-                <span
-                  className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${studentData.status === 'active'
-                    ? 'bg-green-100 text-green-700'
-                    : studentData.status === 'pending'
-                      ? 'bg-orange-100 text-orange-700'
-                      : 'bg-gray-100 text-gray-700'
-                    }`}
-                >
-                  {studentData.status === 'active'
-                    ? t('active')
-                    : studentData.status === 'pending'
-                      ? t('pending')
-                      : t('inactive')}
-                </span>
-              </div>
-
-              {/* Hours Info */}
-              <div className="text-start">
-                <label className="text-sm font-medium text-gray-500 block mb-1">
-                  {t('hours')}
-                </label>
-                <div className="space-y-1">
-                  <p className="text-base text-gray-900">
-                    {studentData.hours_attended} / {studentData.hours} {t('minutes')}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {language === 'ar' ? 'المتبقي:' : 'Remaining:'} {studentData.hours_remaining}
-                  </p>
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto mt-14 p-8 custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            {/* Contact Information */}
+            <div className="space-y-6">
+              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[2px] mb-4">{t('contactInfo')}</h4>
+              
+              <div className="flex items-start gap-4 group">
+                <div className="p-2.5 rounded-xl bg-gray-50 text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t('email')}</p>
+                  <p className="text-sm font-bold text-gray-800 break-all">{studentData.user.email}</p>
                 </div>
               </div>
 
-              {/* Student ID */}
-              <div className="text-start">
-                <label className="text-sm font-medium text-gray-500 block mb-1">
-                  {language === 'ar' ? 'رقم الطالب' : 'Student ID'}
-                </label>
-                <p className="text-base text-gray-900 font-mono">{studentData.id}</p>
+              <div className="flex items-start gap-4 group">
+                <div className="p-2.5 rounded-xl bg-gray-50 text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t('phone')}</p>
+                  <WhatsAppPhone
+                    phone={`${studentData.user.code_country} ${studentData.user.phone}`}
+                    className="text-sm font-bold text-gray-800"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 group">
+                <div className="p-2.5 rounded-xl bg-gray-50 text-gray-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t('country')}</p>
+                  <p className="text-sm font-bold text-gray-800">{studentData.country}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Academic Information */}
+            <div className="space-y-6">
+              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[2px] mb-4">{t('academicInfo')}</h4>
+
+              <div className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100/50">
+                 <div className="flex items-center gap-3 mb-3">
+                   <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                     <ClipboardList className="w-4 h-4" />
+                   </div>
+                   <p className="text-xs font-bold text-indigo-900">{t('plan')}</p>
+                 </div>
+                 <p className="text-sm font-black text-indigo-600">
+                   {studentData.plan?.name_ar || studentData.plan?.name_en || t('noPlan')}
+                 </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                   <div className="flex items-center gap-2 mb-2 text-gray-400">
+                     <Clock className="w-3.5 h-3.5" />
+                     <p className="text-[10px] font-bold uppercase tracking-wider">{t('sessions')}</p>
+                   </div>
+                   <p className="text-lg font-black text-gray-900">
+                     {studentData.sessions_attended} / {studentData.sessions}
+                   </p>
+                   <div className="w-full h-1 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                     <div 
+                        className="h-full bg-indigo-500 transition-all" 
+                        style={{ width: `${(studentData.sessions_attended / (studentData.sessions || 1)) * 100}%` }}
+                      />
+                   </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                   <div className="flex items-center gap-2 mb-2 text-gray-400">
+                     <Clock className="w-3.5 h-3.5" />
+                     <p className="text-[10px] font-bold uppercase tracking-wider">{t('minutes')}</p>
+                   </div>
+                   <p className="text-lg font-black text-gray-900">
+                     {studentData.hours_attended} / {studentData.hours}
+                   </p>
+                   <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tighter">
+                     {t('remaining')}: {studentData.hours_remaining}
+                   </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="px-8 py-6 border-t border-gray-100 bg-white shrink-0">
           <button
             onClick={onClose}
-            className="w-full px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors font-medium"
+            className="w-full px-6 py-3.5 bg-gray-900 hover:bg-black text-white rounded-2xl transition-all font-bold text-xs shadow-lg active:scale-95"
           >
-            {language === 'ar' ? 'إغلاق' : 'Close'}
+            {t('close')}
           </button>
         </div>
       </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 10px;
+        }
+      `}} />
     </div>
   );
 }

@@ -1,19 +1,19 @@
-import { 
-  X, 
-  LogOut, 
-  LayoutDashboard, 
-  UserPlus, 
-  PlayCircle, 
-  BookOpen, 
-  FolderOpen, 
-  Settings, 
-  PlusCircle, 
-  HelpCircle  
+import {
+  X,
+  LogOut,
+  LayoutDashboard,
+  UserPlus,
+  PlayCircle,
+  BookOpen,
+  FolderOpen,
+  Settings,
+  PlusCircle,
+  HelpCircle,
+  User,
+  Clock,
+  Trophy
 } from 'lucide-react';
-import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { useSettings } from '../../contexts/SettingsContext';
-import { adminDashboardRoutes } from './adminDashboardRoutes';
 import { useTranslation } from 'react-i18next';
 import SidebarToggle from '../../components/layout/SidebarToggle';
 
@@ -27,8 +27,7 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollapsed }: AdminSidebarProps) {
   const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
-  const { settings } = useSettings();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['users']);
+  // const [expandedItems, setExpandedItems] = useState<string[]>(['users']);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -53,9 +52,9 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
       >
         {/* Toggle Button for Desktop */}
         <div className="hidden lg:block">
-          <SidebarToggle 
-            isCollapsed={isCollapsed} 
-            onToggle={() => setIsCollapsed(!isCollapsed)} 
+          <SidebarToggle
+            isCollapsed={isCollapsed}
+            onToggle={() => setIsCollapsed(!isCollapsed)}
           />
         </div>
 
@@ -95,19 +94,19 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
                 {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Dashboard</span>}
               </NavLink>
               <NavLink
-                              to="/dashboard/sessions"
-                              onClick={onClose}
-                              className={({ isActive }) => `
+                to="/dashboard/sessions"
+                onClick={onClose}
+                className={({ isActive }) => `
                                 w-full flex items-center gap-4 ${isCollapsed ? 'justify-center px-2' : 'px-5'} py-3.5 rounded-xl font-bold transition-all
                                 ${isActive ? 'bg-[#f0f4ff] text-[#2563eb]' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
                               `}
-                              title={isCollapsed ? "Sessions" : ''}
-                            >
-                              <PlayCircle className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
-                              {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Sessions</span>}
+                title={isCollapsed ? "Sessions" : ''}
+              >
+                <PlayCircle className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
+                {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Sessions</span>}
               </NavLink>
 
-               <NavLink
+              <NavLink
                 to="/dashboard/curriculum"
                 onClick={onClose}
                 className={({ isActive }) => `
@@ -118,6 +117,18 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
               >
                 <BookOpen className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
                 {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Curriculum</span>}
+              </NavLink>
+              <NavLink
+                to="/dashboard/students"
+                onClick={onClose}
+                className={({ isActive }) => `
+                  w-full flex items-center gap-4 ${isCollapsed ? 'justify-center px-2' : 'px-5'} py-3.5 rounded-xl font-bold transition-all
+                  ${isActive ? 'bg-[#f0f4ff] text-[#2563eb]' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+                `}
+                title={isCollapsed ? "Students" : ''}
+              >
+                <User className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
+                {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Students</span>}
               </NavLink>
               <NavLink
                 to="/dashboard/requests"
@@ -131,10 +142,34 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
                 <UserPlus className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
                 {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Requests</span>}
               </NavLink>
+              <NavLink
+                to="/dashboard/teacher-availability"
+                onClick={onClose}
+                className={({ isActive }) => `
+                  w-full flex items-center gap-4 ${isCollapsed ? 'justify-center px-2' : 'px-5'} py-3.5 rounded-xl font-bold transition-all
+                  ${isActive ? 'bg-[#f0f4ff] text-[#2563eb]' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+                `}
+                title={isCollapsed ? "Teacher Availability" : ''}
+              >
+                <Clock className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
+                {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Teacher Availability</span>}
+              </NavLink>
+              <NavLink
+                to="/dashboard/ranks"
+                onClick={onClose}
+                className={({ isActive }) => `
+                  w-full flex items-center gap-4 ${isCollapsed ? 'justify-center px-2' : 'px-5'} py-3.5 rounded-xl font-bold transition-all
+                  ${isActive ? 'bg-[#f0f4ff] text-[#2563eb]' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+                `}
+                title={isCollapsed ? "Ranks" : ''}
+              >
+                <Trophy className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
+                {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Ranks</span>}
+              </NavLink>
 
-              
 
-             
+
+
 
               <NavLink
                 to="/dashboard/library"
@@ -154,7 +189,7 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
           {/* Sidebar Footer Section */}
           <div className="p-4 mt-auto space-y-2 border-t border-gray-100">
             {/* Add New Resource Button */}
-            <button 
+            <button
               className={`w-full flex items-center gap-4 py-3.5 rounded-xl font-bold text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-all shadow-md shadow-indigo-100 ${isCollapsed ? 'justify-center px-2' : 'px-5'}`}
               title={isCollapsed ? "Add New Resource" : ''}
             >

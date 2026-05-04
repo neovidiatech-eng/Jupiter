@@ -21,9 +21,10 @@ export default function Pagination({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   const text = {
-    showing: { ar: 'الصفحة', en: 'Page' },
+    showing: { ar: 'عرض', en: 'Showing' },
+    to: { ar: 'إلى', en: 'to' },
     of: { ar: 'من', en: 'of' },
-    total: { ar: '/ إجمالي', en: '/ Total' },
+    total: { ar: 'إجمالي', en: 'total' },
     previous: { ar: 'السابق', en: 'Previous' },
     next: { ar: 'التالي', en: 'Next' }
   };
@@ -62,7 +63,7 @@ export default function Pagination({
   return (
     <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
       <p className="text-sm text-gray-600">
-        {text.showing[language]} {currentPage} {text.of[language]} {totalPages} {text.total[language]} {totalItems}
+        {text.showing[language]} {startItem} {text.to[language]} {endItem} {text.of[language]} {totalItems}
       </p>
       <div className="flex gap-2">
         <button

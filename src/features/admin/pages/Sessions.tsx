@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, Eye, Trash2, Edit, ExternalLink, MoreVertical, ChevronDown, ChevronLeft, ChevronRight, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSearchSchedules, useCreateSchedule, useCreateRecurringSchedule, useUpdateSchedule, useDeleteSchedule, useDeleteGroupedSchedule } from '../hooks/useSchedules';
+import { useTeacher } from '../hooks/useTeacher';
+import { useTeacherAvailability } from '../hooks/useTeacherAvailabilty';
 import AddSessionModal from '../../../components/modals/AddSessionModal';
-import AddMultipleSessionsModal from '../../../components/modals/AddMultipleSessionsModal';
 import ViewSessionModal from '../../../components/modals/ViewSessionModal';
 import EditSessionModal from '../../../components/modals/EditSessionModal';
 import ConfirmModal from '../../../components/modals/ConfirmModal';
@@ -11,7 +12,10 @@ import { Schedule, UpdateSchedulePayload } from '../../../types/scheduales';
 import { SessionFormData, MultipleSessionsPayload } from '../../../lib/schemas/SessionSchema';
 import { useSubjects } from '../hooks/useSubjects';
 import { Subject } from '../../../types/subject';
-import { Table,Dropdown } from "antd";
+import { Table, Dropdown } from "antd";
+import { Link } from 'react-router-dom';
+
+type GroupedSchedule = Schedule & { groupCount?: number };
 
 export default function Sessions() {
   const { i18n } = useTranslation();
@@ -20,7 +24,6 @@ export default function Sessions() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showAddMultipleModal, setShowAddMultipleModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Schedule | null>(null);
@@ -32,6 +35,11 @@ export default function Sessions() {
   const updateSchedule = useUpdateSchedule();
   const deleteSchedule = useDeleteSchedule();
   const deleteGroupedSchedule = useDeleteGroupedSchedule();
+  const { data: instructors } = useTeacher();
+  
+  // Fetch today's availability
+  const today = new Date().toISOString().split('T')[0];
+  const { data: availabilityData } = useTeacherAvailability(today, today);
 
   const handleUpdateSession = async (id: string, data: UpdateSchedulePayload) => {
     try {
@@ -103,31 +111,70 @@ export default function Sessions() {
   };
 
   useEffect(() => {
-    if (searchTerm.length > 2) {
+    const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-    } else {
-      setDebouncedSearch("");
-    }
+      setCurrentPage(1); // Reset to first page on search
+    }, 300);
+    return () => clearTimeout(handler);
   }, [searchTerm]);
 
   const { data: searchResults } = useSearchSchedules(debouncedSearch);
 
   const itemsPerPage = 5;
-  const scheduleData: Schedule[] = searchResults?.data?.schedule ?? [];
+  const rawScheduleData: Schedule[] = searchResults?.data?.schedule ?? [];
 
-  const groupedSchedules: Schedule[] = [];
-  const seenParents = new Set<string>();
+  const scheduleData = useMemo(() => {
+    if (!searchTerm) return rawScheduleData;
+    const lowerSearch = searchTerm.toLowerCase();
+    return rawScheduleData.filter(s => 
+      s.title?.toLowerCase().includes(lowerSearch) ||
+      s.student?.user?.name?.toLowerCase().includes(lowerSearch) ||
+      s.teacher?.user?.name?.toLowerCase().includes(lowerSearch) ||
+      s.subject?.name_en?.toLowerCase().includes(lowerSearch) ||
+      s.subject?.name_ar?.includes(lowerSearch)
+    );
+  }, [rawScheduleData, searchTerm]);
 
-  scheduleData.forEach((schedule: Schedule) => {
-    if (schedule.parent_recurring_id) {
-      if (!seenParents.has(schedule.parent_recurring_id)) {
-        seenParents.add(schedule.parent_recurring_id);
-        groupedSchedules.push(schedule);
+ const groupedMap = new Map<string, GroupedSchedule>();
+
+scheduleData.forEach((schedule) => {
+  const hasParent = !!schedule.parent_recurring_id;
+
+  const key = hasParent
+    ? schedule.parent_recurring_id!
+    : schedule.id;
+
+  if (!groupedMap.has(key)) {
+    groupedMap.set(key, {
+      ...schedule,
+      groupCount: hasParent ? 1 : undefined,
+    });
+  } else {
+    const existing = groupedMap.get(key)!;
+
+    if (hasParent) {
+      existing.groupCount = (existing.groupCount || 1) + 1;
+
+      const existingDate = new Date(existing.start_time).getTime();
+      const currentDate = new Date(schedule.start_time).getTime();
+
+      if (currentDate > existingDate) {
+        groupedMap.set(key, {
+          ...schedule,
+          groupCount: existing.groupCount,
+        });
       }
-    } else {
-      groupedSchedules.push(schedule);
     }
-  });
+  }
+});
+
+const groupedSchedules: GroupedSchedule[] = Array.from(
+  groupedMap.values()
+).sort(
+  (a, b) =>
+    new Date(b.start_time).getTime() -
+    new Date(a.start_time).getTime()
+);
 
   const totalItems = groupedSchedules.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -155,13 +202,13 @@ export default function Sessions() {
         hour: '2-digit',
         minute: '2-digit'
       });
-      
+
       const endDate = new Date(date.getTime() + 60 * 60 * 1000);
       const endFormattedTime = endDate.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
       });
-      
+
       return { date: formattedDate, time: `${formattedTime} - ${endFormattedTime}` };
     } catch (e) {
       return { date: dateString, time: '' };
@@ -216,7 +263,7 @@ export default function Sessions() {
     {
       title: "Student",
       dataIndex: "student",
-      render: (_: any, record: Schedule) => (
+      render: (_: unknown, record: GroupedSchedule) => (
         <div className="flex items-center gap-3">
           <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${getAvatarStyle(record.student?.user?.name || '')}`}>
             {getInitials(record.student?.user?.name || "")}
@@ -232,7 +279,7 @@ export default function Sessions() {
     },
     {
       title: "Instructor",
-      render: (_: any, record: Schedule) => (
+      render: (_: unknown, record: GroupedSchedule) => (
         <div className="flex items-center gap-3">
           <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(record.teacher?.user?.name || 'T')}&background=f3f4f6&color=4b5563`} alt="Instructor" className="w-8 h-8 rounded-full object-cover border border-gray-100" />
           <span className="text-sm font-bold text-gray-800">{record.teacher?.user?.name || "Unknown"}</span>
@@ -241,7 +288,7 @@ export default function Sessions() {
     },
     {
       title: "Date & Time",
-      render: (_: any, record: Schedule) => {
+      render: (_: unknown, record: GroupedSchedule) => {
         const { date, time } = formatDateTime(record.start_time);
         const isRescheduled = record.status?.toLowerCase() === 'rescheduled';
         return (
@@ -254,15 +301,22 @@ export default function Sessions() {
     },
     {
       title: "Status",
-      render: (_: any, record: Schedule) => (
-        <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] tracking-widest uppercase ${getBadgeStyle(record.status || 'upcoming')}`}>
-          {record.status || 'UPCOMING'}
-        </span>
+      render: (_: unknown, record: GroupedSchedule) => (
+        <div className="flex flex-col gap-1">
+          <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] tracking-widest uppercase ${getBadgeStyle(record.status || 'upcoming')}`}>
+            {record.status || 'UPCOMING'}
+          </span>
+          {record.is_recurring && (
+            <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-tighter">
+              Recurring Series ({record.groupCount} sessions)
+            </span>
+          )}
+        </div>
       ),
     },
     {
       title: "Meeting Details",
-      render: (_: any, record: Schedule) => {
+      render: (_: unknown, record: GroupedSchedule) => {
         const isCompleted = record.status?.toLowerCase() === 'completed';
         return (
           <div className="flex items-center gap-1.5">
@@ -283,13 +337,20 @@ export default function Sessions() {
     {
       title: "Actions",
       align: "right" as const,
-      render: (_: any, record: Schedule) => {
+      render: (_: unknown, record: GroupedSchedule) => {
         const items = [
           {
             key: "view",
             label: <span className="flex items-center gap-2 text-xs font-bold text-gray-700"><Eye className="w-3.5 h-3.5" /> View</span>,
             onClick: () => {
-              setGroupedSessions([record]);
+              const recurringId = record.parent_recurring_id;
+              const relatedSessions = recurringId 
+                ? scheduleData
+                    .filter(s => s.parent_recurring_id === recurringId)
+                    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+                : [record];
+              
+              setGroupedSessions(relatedSessions);
               setSelectedSession(record);
               setShowViewModal(true);
             },
@@ -332,7 +393,7 @@ export default function Sessions() {
             <p className="text-gray-500 text-sm font-medium">Manage and monitor academic interactions across all cohorts.</p>
           </div>
           <div className="mt-4 md:mt-0 flex items-center gap-3">
-        
+
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-5 py-2.5 bg-[#6366f1] hover:bg-[#4f46e5] text-white rounded-full transition-colors font-bold text-sm shadow-sm"
@@ -356,28 +417,28 @@ export default function Sessions() {
             />
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
-             <div className="relative">
-               <select className="appearance-none pl-5 pr-10 py-2.5 bg-gray-50 border-none rounded-full text-sm font-bold text-gray-700 focus:outline-none cursor-pointer">
-                 <option>All Statuses</option>
-               </select>
-               <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-             </div>
-             <div className="relative">
-               <select className="appearance-none pl-5 pr-10 py-2.5 bg-gray-50 border-none rounded-full text-sm font-bold text-gray-700 focus:outline-none cursor-pointer">
-                 <option>This Week</option>
-               </select>
-               <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-             </div>
+            <div className="relative">
+              <select className="appearance-none pl-5 pr-10 py-2.5 bg-gray-50 border-none rounded-full text-sm font-bold text-gray-700 focus:outline-none cursor-pointer">
+                <option>All Statuses</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+            <div className="relative">
+              <select className="appearance-none pl-5 pr-10 py-2.5 bg-gray-50 border-none rounded-full text-sm font-bold text-gray-700 focus:outline-none cursor-pointer">
+                <option>This Week</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <Table 
-            columns={columns} 
-            dataSource={displaySchedules} 
-            rowKey="id" 
-            pagination={false} 
+          <Table
+            columns={columns}
+            dataSource={displaySchedules}
+            rowKey="id"
+            pagination={false}
             className="w-full min-w-[900px]"
             rowClassName="hover:bg-gray-50/50 transition-colors group cursor-pointer"
           />
@@ -389,37 +450,37 @@ export default function Sessions() {
             Showing {(currentPage - 1) * itemsPerPage + (totalItems > 0 ? 1 : 0)} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} sessions
           </span>
           <div className="flex items-center gap-1.5">
-            <button 
+            <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            
+
             {Array.from({ length: totalPages }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => handlePageChange(i + 1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                  currentPage === i + 1 ? 'bg-[#6366f1] text-white shadow-sm' : 'text-gray-500 hover:bg-gray-50'
-                }`}
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${currentPage === i + 1 ? 'bg-[#6366f1] text-white shadow-sm' : 'text-gray-500 hover:bg-gray-50'
+                  }`}
               >
                 {i + 1}
               </button>
             ))}
 
-            <button 
-               onClick={() => handlePageChange(currentPage + 1)}
-               disabled={currentPage === totalPages}
-               className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50"
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         /* Hide scrollbar for the table */
         .ant-table-content::-webkit-scrollbar,
         .overflow-x-auto::-webkit-scrollbar {
@@ -458,38 +519,64 @@ export default function Sessions() {
 
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 mt-8 pb-20">
-        
+
         {/* Instructor Availability Card */}
-        <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 flex flex-col justify-center">
+        <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-gray-900 text-base">Instructor Availability</h3>
-            <a href="#" className="text-xs text-[#6366f1] font-bold hover:underline">View Calendar</a>
+            <Link to="/dashboard/teacher-availability" className="text-xs text-[#6366f1] font-bold hover:underline">View Calendar</Link>
           </div>
-          
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">SC</div>
-                <div>
-                  <p className="text-sm font-bold text-gray-900">Dr. Sarah Chen</p>
-                  <p className="text-xs font-bold text-gray-400 mt-0.5">Available from 2:00 PM</p>
+
+          <div className="space-y-5 flex-1 overflow-y-auto max-h-[350px] pr-2 custom-scrollbar">
+            {(instructors?.teachers || []).slice(0, 5).map((instructor: any) => {
+              // Find matching instructor in availability data
+              const availability = availabilityData?.find((a: any) => a.id === instructor.id);
+              const now = new Date();
+              const currentSchedule = availability?.schedules?.find((s: any) => {
+                const start = new Date(s.start_time);
+                const end = new Date(s.end_time);
+                return now >= start && now <= end;
+              });
+
+              const isBusy = !!currentSchedule;
+
+              return (
+                <div key={instructor.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <img 
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(instructor.user?.name || 'T')}&background=f3f4f6&color=6366f1&bold=true`} 
+                        alt="Instructor" 
+                        className="w-11 h-11 rounded-full object-cover border-2 border-white shadow-sm" 
+                      />
+                      <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isBusy ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900 group-hover:text-[#6366f1] transition-colors">{instructor.user?.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isBusy ? 'text-amber-600' : 'text-emerald-600'}`}>
+                          {isBusy ? 'In Session' : 'Available'}
+                        </span>
+                        <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                        <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">{instructor.hour_price}$/hr</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button className="px-4 py-1.5 bg-indigo-50 text-[#6366f1] rounded-full text-[11px] font-bold hover:bg-[#6366f1] hover:text-white transition-all shadow-sm active:scale-95">
+                    Assign
+                  </button>
                 </div>
-              </div>
-              <button className="px-5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all shadow-sm">
-                Assign
-              </button>
-            </div>
+              );
+            })}
             
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">MT</div>
-                <div>
-                  <p className="text-sm font-bold text-gray-900">Prof. Marcus Thorne</p>
-                  <p className="text-xs font-bold text-gray-400 mt-0.5">In Session (Ends 3:30 PM)</p>
+            {(!instructors?.teachers || instructors.teachers.length === 0) && (
+              <div className="flex flex-col items-center justify-center py-10 opacity-40">
+                <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-3">
+                  <Bell className="w-6 h-6 text-gray-400" />
                 </div>
+                <p className="text-xs font-bold text-gray-400">No instructors found</p>
               </div>
-              <span className="text-[11px] tracking-wider uppercase font-bold text-red-500 mr-2">Busy</span>
-            </div>
+            )}
           </div>
         </div>
 
@@ -497,10 +584,10 @@ export default function Sessions() {
         <div className="bg-[#6366f1] rounded-[24px] shadow-sm p-7 text-white relative overflow-hidden flex flex-col justify-between min-h-[220px]">
           {/* Subtle decoration */}
           <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none translate-x-[20%] translate-y-[20%]">
-             <div className="w-64 h-64 border-[24px] border-white rounded-full"></div>
-             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-[24px] border-white rounded-full"></div>
+            <div className="w-64 h-64 border-[24px] border-white rounded-full"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-[24px] border-white rounded-full"></div>
           </div>
-          
+
           <div className="relative z-10 flex-1">
             <div className="flex items-center gap-2 mb-3">
               <Bell className="w-5 h-5 text-white" />

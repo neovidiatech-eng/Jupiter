@@ -57,7 +57,7 @@ const HOURS = Array.from({ length: 14 }, (_, i) => {
 });
 
 function getWeekDates(weekOffset: number): Date[] {
-  const today = new Date(2026, 3, 1); // Start from April 1st, 2026
+  const today = new Date();
   const startOfWeek = new Date(today);
   const day = today.getDay();
   startOfWeek.setDate(today.getDate() - day + weekOffset * 7);
@@ -69,7 +69,7 @@ function getWeekDates(weekOffset: number): Date[] {
 }
 
 function getMonthDates(monthOffset: number): Date[] {
-  const today = new Date(2026, 3, 1); // Start from April 1st, 2026
+  const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth() + monthOffset;
   const firstDay = new Date(year, month, 1);
@@ -570,9 +570,21 @@ export default function TeacherAvailability() {
 
   const weekDates = getWeekDates(weekOffset);
   const DAYS = language === "ar" ? DAYS_AR : DAYS_EN;
+  
+  const dateRange = useMemo(() => {
+    const start = new Date();
+    start.setMonth(start.getMonth() - 1);
+    const end = new Date();
+    end.setMonth(end.getMonth() + 2);
+    return {
+      start: formatDate(start),
+      end: formatDate(end)
+    };
+  }, []);
+
   const { data: teachersData, isLoading: loading, isError, error } = useTeacherAvailability(
-    "2026-04-01",
-    "2026-05-01"
+    dateRange.start,
+    dateRange.end
   );
 
   const teachers = useMemo(() => teachersData || [], [teachersData]);
@@ -584,13 +596,13 @@ export default function TeacherAvailability() {
       name: t.user?.name || "Unknown",
       subject: "General",
       color: [
-        "bg-blue-500",
-        "bg-green-500",
-        "bg-orange-500",
-        "bg-red-500",
-        "bg-teal-500",
-        "bg-yellow-500",
-        "bg-pink-500",
+        "bg-[#6366f1]",
+        "bg-[#8b5cf6]",
+        "bg-[#ec4899]",
+        "bg-[#f43f5e]",
+        "bg-[#06b6d4]",
+        "bg-[#10b981]",
+        "bg-[#f59e0b]",
       ][index % 7],
     }));
   }, [teachers]);
@@ -727,16 +739,16 @@ export default function TeacherAvailability() {
               : "Weekly teacher availability schedule"}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 bg-gray-100/50 p-1 rounded-xl">
           <button
             onClick={() => setViewMode("week")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === "week" ? "btn-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === "week" ? "bg-white text-[#6366f1] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
           >
             {language === "ar" ? "عرض أسبوعي" : "Week View"}
           </button>
           <button
             onClick={() => setViewMode("teacher")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === "teacher" ? "btn-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === "teacher" ? "bg-white text-[#6366f1] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
           >
             {language === "ar" ? "عرض المعلمين" : "Teacher View"}
           </button>
@@ -747,29 +759,28 @@ export default function TeacherAvailability() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {loading ? (
             Array(6).fill(null).map((_, idx) => (
-              <div key={`skeleton-${idx}`} className="bg-white rounded-2xl border border-gray-200 p-6 h-[256px] animate-pulse">
-                <div className="flex gap-3 mb-6">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div key={`skeleton-${idx}`} className="bg-white rounded-[24px] border border-gray-100 p-6 h-[280px] animate-pulse">
+                <div className="flex gap-4 mb-6">
+                  <div className="w-12 h-12 bg-gray-100 rounded-2xl"></div>
                   <div className="flex-1 space-y-2 mt-2">
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                    <div className="h-3 bg-gray-100 rounded w-1/3"></div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="bg-gray-100 rounded-xl h-16"></div>
-                  <div className="bg-gray-100 rounded-xl h-16"></div>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-gray-50 rounded-2xl h-16"></div>
+                  <div className="bg-gray-50 rounded-2xl h-16"></div>
                 </div>
-                <div className="flex gap-1 mb-4 h-8 bg-gray-100 rounded-lg"></div>
               </div>
             ))
           ) : teacherStats.length === 0 ? (
-            <p className="col-span-full py-10 text-center text-gray-500">
+            <p className="col-span-full py-16 text-center text-gray-400 font-medium">
               {language === "ar" ? "لا يوجد معلمون متاحون" : "No teachers available"}
             </p>
           ) : teacherStats.map((teacher) => (
             <div
               key={teacher.id}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+              className="bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
               <div className={`${teacher.color} px-5 py-4`}>
                 <div className="flex items-center gap-3">
@@ -846,23 +857,23 @@ export default function TeacherAvailability() {
                 <div className="flex items-center justify-between pt-1">
                   <button
                     onClick={() => setSelectedTeacherForModal(teacher)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 icon-btn-primary rounded-lg text-xs font-medium transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 text-[#6366f1] rounded-xl text-xs font-bold transition-all hover:bg-[#6366f1] hover:text-white"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     {language === "ar" ? "عرض الجدول" : "View Schedule"}
                   </button>
                   <div className="flex items-center gap-2">
                     <div
-                      className={`w-2 h-2 rounded-full ${teacher.weekSessions > 0 ? "bg-red-400" : "bg-green-400"}`}
+                      className={`w-2 h-2 rounded-full ${teacher.weekSessions > 0 ? "bg-amber-400" : "bg-emerald-400"}`}
                     />
                     <span
-                      className={`text-xs font-medium ${teacher.weekSessions > 0 ? "text-red-600" : "text-green-600"}`}
+                      className={`text-[10px] font-bold uppercase tracking-wider ${teacher.weekSessions > 0 ? "text-amber-600" : "text-emerald-600"}`}
                     >
                       {teacher.weekSessions > 0
                         ? `${language === "ar" ? "مشغول" : "Busy"} (${teacher.weekSessions})`
                         : language === "ar"
-                          ? "متاح هذا الأسبوع"
-                          : "Available this week"}
+                          ? "متاح"
+                          : "Available"}
                     </span>
                   </div>
                 </div>
@@ -872,21 +883,21 @@ export default function TeacherAvailability() {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shrink-0">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-2xl px-4 py-2.5 shadow-sm">
               <button
                 onClick={() => setWeekOffset((w) => w - 1)}
-                className="p-1 hover:bg-gray-100 rounded-lg"
+                className="p-1.5 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-[#6366f1] transition-all"
               >
-                <ChevronRight className="w-4 h-4 text-gray-600" />
+                {language === 'ar' ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               </button>
-              <span className="text-sm font-medium text-gray-800 px-2 whitespace-nowrap">
-                {weekDates[0].toLocaleDateString("ar-SA", {
+              <span className="text-sm font-bold text-gray-700 px-3 min-w-[180px] text-center">
+                {weekDates[0].toLocaleDateString(language === 'ar' ? "ar-SA" : "en-US", {
                   month: "short",
                   day: "numeric",
                 })}{" "}
                 -{" "}
-                {weekDates[6].toLocaleDateString("ar-SA", {
+                {weekDates[6].toLocaleDateString(language === 'ar' ? "ar-SA" : "en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -894,13 +905,13 @@ export default function TeacherAvailability() {
               </span>
               <button
                 onClick={() => setWeekOffset((w) => w + 1)}
-                className="p-1 hover:bg-gray-100 rounded-lg"
+                className="p-1.5 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-[#6366f1] transition-all"
               >
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
+                {language === 'ar' ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               </button>
             </div>
 
-            <div className="w-64">
+            <div className="w-72">
               <CustomSelect
                 value={selectedTeacherId}
                 options={teacherOptions}
