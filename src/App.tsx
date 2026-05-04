@@ -11,11 +11,7 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import ErrorBoundary from "./components/layout/ErrorBoundary";
-import ErrorService from "./utils/ErrorService";
 import LanguageSwitcher from "./components/ui/LanguageSwitcher";
-// import { adminDashboardRoutes } from './pages/AdminDashboard/adminDashboardRoutes';
-// import { studentDashboardRoutes } from './pages/StudentDashboard/studentDashboardRoutes';
-// import { teacherDashboardRoutes } from './pages/TeacherDashboard/teacherDashboardRoutes.tsx';
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { googleClientId } from "./components/constants";
@@ -36,8 +32,6 @@ const StudentDashboard = lazy(
 const TeacherDashboard = lazy(
   () => import("./pages/TeacherDashboard/TeacherDashboard"),
 );
-import AuthGuard from "./components/guards/AuthGuard";
-import GuestGuard from "./components/guards/GuestGuard";
 
 // Centralized Loading Fallback UI
 const LoadingFallback = () => (
@@ -52,11 +46,6 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-    },
-    mutations: {
-      onError: (error) => {
-        ErrorService.handleError(error);
-      },
     },
   },
 });

@@ -28,8 +28,9 @@ const CustomSelect = forwardRef<any, CustomSelectProps>(({
       <Select
         ref={ref}
         showSearch
-        className={`w-full h-[46px] ${className}`}
+        className={`w-full h-[46px] ${className} bg-slate-50 rounded-lg border-0`}
         optionFilterProp="children"
+        
         placeholder="اختر من القائمة"
         {...props} 
       >

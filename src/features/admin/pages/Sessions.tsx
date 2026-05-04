@@ -11,11 +11,10 @@ import { Schedule, UpdateSchedulePayload } from '../../../types/scheduales';
 import { SessionFormData, MultipleSessionsPayload } from '../../../lib/schemas/SessionSchema';
 import { useSubjects } from '../hooks/useSubjects';
 import { Subject } from '../../../types/subject';
-import { Table, Tag, Dropdown, Button } from "antd";
-import { MoreOutlined } from "@ant-design/icons";
+import { Table,Dropdown } from "antd";
 
 export default function Sessions() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -62,47 +61,44 @@ export default function Sessions() {
     }
   };
 
-  const handleAddSession = async (data: SessionFormData) => {
+  const handleAddSession = async (data: SessionFormData | MultipleSessionsPayload) => {
     try {
-      await createSchedule.mutateAsync({
-        studentId: data.student,
-        teacherId: data.teacher,
-        subject_id: data.subject,
-        title: data.title,
-        description: data.description || '',
-        link: data.meetingLink || '',
-        notes: data.notes || '',
-        start_time: `${data.sessionDate}T${data.startTime}:00.000Z`,
-        type: data.type,
-        notification_Time: data.notification_Time
-      });
+      if ('student' in data) {
+        // Single Session
+        await createSchedule.mutateAsync({
+          studentId: data.student,
+          teacherId: data.teacher,
+          subject_id: data.subject,
+          title: data.title,
+          description: data.description || '',
+          link: data.meetingLink || '',
+          notes: data.notes || '',
+          start_time: `${data.sessionDate}T${data.startTime}:00.000Z`,
+          type: data.type,
+          notification_Time: data.notification_Time
+        });
+      } else {
+        // Batch Session
+        const { formData, sessions } = data;
+        await createRecurringSchedule.mutateAsync({
+          studentId: formData.student,
+          teacherId: formData.teacher,
+          subject_id: formData.subject,
+          title: formData.title,
+          description: formData.description || '',
+          link: formData.meetingLink || '',
+          notes: formData.notes || '',
+          startTime: sessions[0]?.time || '00:00',
+          days: data.selectedDays,
+          startDate: formData.monthYear ? `${formData.monthYear}-01` : new Date().toISOString().split('T')[0],
+          endDate: formData.monthYear ? `${formData.monthYear}-28` : new Date().toISOString().split('T')[0],
+          notification_Time: formData.notification_Time || '10',
+          type: formData.type
+        });
+      }
       setShowAddModal(false);
     } catch (error) {
       console.error('Add session failed:', error);
-    }
-  };
-
-  const handleAddMultipleSessions = async (data: MultipleSessionsPayload) => {
-    const { formData, sessions } = data;
-    try {
-      await createRecurringSchedule.mutateAsync({
-        studentId: formData.student,
-        teacherId: formData.teacher,
-        subject_id: formData.subject,
-        title: formData.title,
-        description: formData.description || '',
-        link: formData.meetingLink || '',
-        notes: formData.notes || '',
-        startTime: sessions[0]?.time || '00:00',
-        days: data.selectedDays,
-        startDate: formData.monthYear ? `${formData.monthYear}-01` : new Date().toISOString().split('T')[0],
-        endDate: formData.monthYear ? `${formData.monthYear}-28` : new Date().toISOString().split('T')[0],
-        notification_Time: formData.notification_Time || '10',
-        type: formData.type
-      });
-      setShowAddMultipleModal(false);
-    } catch (error) {
-      console.error('Add multiple sessions failed:', error);
     }
   };
 
@@ -526,12 +522,6 @@ export default function Sessions() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={handleAddSession}
-      />
-
-      <AddMultipleSessionsModal
-        isOpen={showAddMultipleModal}
-        onClose={() => setShowAddMultipleModal(false)}
-        onAdd={handleAddMultipleSessions}
       />
 
       <ViewSessionModal

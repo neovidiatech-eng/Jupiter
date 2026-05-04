@@ -95,7 +95,7 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
                 {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Dashboard</span>}
               </NavLink>
               <NavLink
-                              to="/dashboard/students"
+                              to="/dashboard/sessions"
                               onClick={onClose}
                               className={({ isActive }) => `
                                 w-full flex items-center gap-4 ${isCollapsed ? 'justify-center px-2' : 'px-5'} py-3.5 rounded-xl font-bold transition-all

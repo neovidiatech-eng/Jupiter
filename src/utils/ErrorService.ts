@@ -2,14 +2,34 @@ import { message } from "antd";
 
 /**
  * Centeralized service for handling and displaying error messages to the user.
+ * Implements deduplication to prevent multiple identical toasts from appearing at once.
  */
 class ErrorService {
+  private static lastMessage: string = "";
+  private static lastTimestamp: number = 0;
+  private static COOLDOWN = 500; // ms
+
+  /**
+   * Checks if a message should be displayed based on deduplication rules.
+   */
+  private static shouldShow(content: string): boolean {
+    const now = Date.now();
+    if (content === this.lastMessage && now - this.lastTimestamp < this.COOLDOWN) {
+      return false;
+    }
+    this.lastMessage = content;
+    this.lastTimestamp = now;
+    return true;
+  }
+
   /**
    * Display a success message toast.
    * @param content Message to display
    */
   static success(content: string) {
-    message.success(content);
+    if (this.shouldShow(content)) {
+      message.success(content);
+    }
   }
 
   /**
@@ -17,7 +37,9 @@ class ErrorService {
    * @param content Message to display
    */
   static error(content: string) {
-    message.error(content);
+    if (this.shouldShow(content)) {
+      message.error(content);
+    }
   }
 
   /**
@@ -25,7 +47,9 @@ class ErrorService {
    * @param content Message to display
    */
   static warning(content: string) {
-    message.warning(content);
+    if (this.shouldShow(content)) {
+      message.warning(content);
+    }
   }
 
   /**
@@ -40,10 +64,17 @@ class ErrorService {
     if (error?.response?.data) {
       const data = error.response.data;
       if (typeof data === 'string') return data;
+      
+      // Handle array of errors
       if (data.errors && Array.isArray(data.errors)) {
-        const detail = data.errors.join(' | ');
-        return data.message ? `${data.message}: ${detail}` : detail;
+        return data.errors.join(' | ');
       }
+      
+      // Handle object with message field
+      if (data.message) return data.message;
+      
+      // Handle object with error field
+      if (data.error) return data.error;
     }
 
     if (error?.message) return error.message;
@@ -56,8 +87,8 @@ class ErrorService {
    * @param error The error object to handle
    */
   static handleError(error: any) {
-    const message = this.parseErrorMessage(error);
-    this.error(message);
+    const msg = this.parseErrorMessage(error);
+    this.error(msg);
   }
 }
 

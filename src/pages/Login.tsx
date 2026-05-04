@@ -70,7 +70,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       }
     } catch (error) {
       console.error("Login failed:", error);
-      ErrorService.error(t("loginFailed"));
     }
   };
 
