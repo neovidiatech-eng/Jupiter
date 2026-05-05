@@ -27,17 +27,17 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   } = useForm<LoginInput>({
     resolver: zodResolver(getLoginSchema(t)),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
       rememberMe: false,
     },
   });
 
   const onSubmit = async (data: LoginInput) => {
-    const { email, password, rememberMe } = data;
+    const { username, password, rememberMe } = data;
 
     try {
-      const result = await login({ email, password });
+      const result = await login({ username, password });
 
       const token = result.data?.accessToken || result.accessToken;
 
@@ -86,21 +86,20 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email */}
         <div>
           <label className="block text-right text-gray-700 font-medium mb-2">
-            {t("email")}
+            {t("username") || "Username"}
           </label>
           <input
-            type="email"
-            {...register("email")}
+            type="text"
+            {...register("username")}
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-right"
-            placeholder="admin@admin.com"
+            placeholder="Super Admin_jupiter"
             dir="ltr"
           />
-          {errors.email && (
+          {errors.username && (
             <p className="text-red-500 text-xs mt-1 text-right">
-              {errors.email.message}
+              {errors.username.message}
             </p>
           )}
         </div>

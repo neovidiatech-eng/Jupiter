@@ -1,4 +1,4 @@
-import { X, User, Mail, Phone, MapPin, ClipboardList, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Mail, Phone, MapPin, ClipboardList, Clock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import WhatsAppPhone from '../ui/WhatsAppPhone';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,7 @@ interface ViewStudentModalProps {
 }
 
 export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewStudentModalProps) {
-  const { language } = useLanguage();
+  const {} = useLanguage();
   const { t } = useTranslation();
 
   if (!isOpen || !studentData) return null;
@@ -19,21 +19,21 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
       <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
-        
+
         {/* Profile Header */}
         <div className="relative h-32 bg-indigo-600 shrink-0">
           <div className="absolute inset-0 opacity-10 pointer-events-none">
-             <div className="absolute top-0 right-0 w-64 h-64 border-[32px] border-white rounded-full translate-x-1/2 -translate-y-1/2"></div>
-             <div className="absolute bottom-0 left-0 w-32 h-32 border-[16px] border-white rounded-full -translate-x-1/2 translate-y-1/2"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 border-[32px] border-white rounded-full translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 border-[16px] border-white rounded-full -translate-x-1/2 translate-y-1/2"></div>
           </div>
-          
-          <button 
-            onClick={onClose} 
+
+          <button
+            onClick={onClose}
             className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-20"
           >
             <X className="w-5 h-5" />
           </button>
-          
+
           <div className="absolute -bottom-12 left-8 flex items-end gap-6">
             <div className="w-24 h-24 rounded-[22px] bg-white p-1.5 shadow-lg">
               <div className="w-full h-full rounded-[18px] bg-indigo-50 flex items-center justify-center text-indigo-600 text-3xl font-black">
@@ -43,9 +43,8 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
             <div className="mb-2">
               <h3 className="text-2xl font-black text-gray-900 leading-tight">{studentData.user.name}</h3>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-widest uppercase ${
-                  studentData.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                }`}>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-widest uppercase ${studentData.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                  }`}>
                   {studentData.status === 'approved' ? t('active') : t('pending')}
                 </span>
                 <span className="text-gray-400 text-xs font-bold px-2 border-l border-gray-200">
@@ -59,11 +58,11 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto mt-14 p-8 custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
+
             {/* Contact Information */}
             <div className="space-y-6">
               <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[2px] mb-4">{t('contactInfo')}</h4>
-              
+
               <div className="flex items-start gap-4 group">
                 <div className="p-2.5 rounded-xl bg-gray-50 text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
                   <Mail className="w-4 h-4" />
@@ -103,46 +102,34 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
               <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[2px] mb-4">{t('academicInfo')}</h4>
 
               <div className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100/50">
-                 <div className="flex items-center gap-3 mb-3">
-                   <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
-                     <ClipboardList className="w-4 h-4" />
-                   </div>
-                   <p className="text-xs font-bold text-indigo-900">{t('plan')}</p>
-                 </div>
-                 <p className="text-sm font-black text-indigo-600">
-                   {studentData.plan?.name_ar || studentData.plan?.name_en || t('noPlan')}
-                 </p>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                    <ClipboardList className="w-4 h-4" />
+                  </div>
+                  <p className="text-xs font-bold text-indigo-900">{t('plan')}</p>
+                </div>
+                <p className="text-sm font-black text-indigo-600">
+                  {studentData.plan?.name}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                   <div className="flex items-center gap-2 mb-2 text-gray-400">
-                     <Clock className="w-3.5 h-3.5" />
-                     <p className="text-[10px] font-bold uppercase tracking-wider">{t('sessions')}</p>
-                   </div>
-                   <p className="text-lg font-black text-gray-900">
-                     {studentData.sessions_attended} / {studentData.sessions}
-                   </p>
-                   <div className="w-full h-1 bg-gray-200 rounded-full mt-2 overflow-hidden">
-                     <div 
-                        className="h-full bg-indigo-500 transition-all" 
-                        style={{ width: `${(studentData.sessions_attended / (studentData.sessions || 1)) * 100}%` }}
-                      />
-                   </div>
+                  <div className="flex items-center gap-2 mb-2 text-gray-400">
+                    <Clock className="w-3.5 h-3.5" />
+                    <p className="text-[10px] font-bold uppercase tracking-wider">{t('sessions')}</p>
+                  </div>
+                  <p className="text-lg font-black text-gray-900">
+                    {studentData.sessions_attended} / {studentData.sessions}
+                  </p>
+                  <div className="w-full h-1 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                    <div
+                      className="h-full bg-indigo-500 transition-all"
+                      style={{ width: `${(studentData.sessions_attended / (studentData.sessions || 1)) * 100}%` }}
+                    />
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                   <div className="flex items-center gap-2 mb-2 text-gray-400">
-                     <Clock className="w-3.5 h-3.5" />
-                     <p className="text-[10px] font-bold uppercase tracking-wider">{t('minutes')}</p>
-                   </div>
-                   <p className="text-lg font-black text-gray-900">
-                     {studentData.hours_attended} / {studentData.hours}
-                   </p>
-                   <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tighter">
-                     {t('remaining')}: {studentData.hours_remaining}
-                   </p>
-                </div>
               </div>
             </div>
           </div>
@@ -158,7 +145,8 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
           </button>
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }

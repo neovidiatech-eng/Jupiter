@@ -77,7 +77,7 @@ export default function EditStudentModal({
   const planOptions = [
     ...(plansData || []).map((p: any) => ({
       value: p.id,
-      label: language === 'ar' ? p.name_ar : p.name_en,
+      label: p.name || (language === 'ar' ? p.name_ar : p.name_en),
     }))
   ];
 
@@ -171,40 +171,6 @@ export default function EditStudentModal({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="text-start">
-                <Controller
-                  name="birthDate"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="text-start">
-                      <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('birthDate')}</label>
-                      <DatePickerField
-                        value={field.value}
-                        onChange={field.onChange}
-                        className="rounded-2xl border-none bg-gray-50"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <Controller
-                name="gender"
-                control={control}
-                render={({ field }) => (
-                  <div className="text-start">
-                    <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('gender')}</label>
-                    <CustomSelect
-                      value={field.value}
-                      options={genderOptions}
-                      onChange={field.onChange}
-                      className="rounded-2xl border-none bg-gray-50"
-                    />
-                  </div>
-                )}
-              />
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Controller
@@ -250,6 +216,39 @@ export default function EditStudentModal({
                     <CustomSelect
                       value={field.value}
                       options={statusOptions}
+                      onChange={field.onChange}
+                      className="rounded-2xl border-none bg-gray-50"
+                    />
+                  </div>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Controller
+                name="birthDate"
+                control={control}
+                render={({ field }) => (
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('birthDate')}</label>
+                    <DatePickerField
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="rounded-2xl border-none bg-gray-50"
+                    />
+                  </div>
+                )}
+              />
+
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('gender')}</label>
+                    <CustomSelect
+                      value={field.value}
+                      options={genderOptions}
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />

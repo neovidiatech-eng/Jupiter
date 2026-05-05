@@ -41,10 +41,12 @@ export const deleteSubscriptionRequest = async (id: string) => {
 export const changeSubscriptionRequestStatus = async (
   id: string,
   status: "approved" | "rejected",
+  rankId?: string
 ) => {
   try {
     const res = await api.put(`/subscription/requests/change-status/${id}`, {
       status,
+      rankId
     });
     return res.data;
   } catch (error) {

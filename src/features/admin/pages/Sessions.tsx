@@ -36,7 +36,7 @@ export default function Sessions() {
   const deleteSchedule = useDeleteSchedule();
   const deleteGroupedSchedule = useDeleteGroupedSchedule();
   const { data: instructors } = useTeacher();
-  
+
   // Fetch today's availability
   const today = new Date().toISOString().split('T')[0];
   const { data: availabilityData } = useTeacherAvailability(today, today);
@@ -83,7 +83,8 @@ export default function Sessions() {
           notes: data.notes || '',
           start_time: `${data.sessionDate}T${data.startTime}:00.000Z`,
           type: data.type,
-          notification_Time: data.notification_Time
+          notification_Time: data.notification_Time,
+          platform: data.platform
         });
       } else {
         // Batch Session
@@ -126,7 +127,7 @@ export default function Sessions() {
   const scheduleData = useMemo(() => {
     if (!searchTerm) return rawScheduleData;
     const lowerSearch = searchTerm.toLowerCase();
-    return rawScheduleData.filter(s => 
+    return rawScheduleData.filter(s =>
       s.title?.toLowerCase().includes(lowerSearch) ||
       s.student?.user?.name?.toLowerCase().includes(lowerSearch) ||
       s.teacher?.user?.name?.toLowerCase().includes(lowerSearch) ||
@@ -135,46 +136,46 @@ export default function Sessions() {
     );
   }, [rawScheduleData, searchTerm]);
 
- const groupedMap = new Map<string, GroupedSchedule>();
+  const groupedMap = new Map<string, GroupedSchedule>();
 
-scheduleData.forEach((schedule) => {
-  const hasParent = !!schedule.parent_recurring_id;
+  scheduleData.forEach((schedule) => {
+    const hasParent = !!schedule.parent_recurring_id;
 
-  const key = hasParent
-    ? schedule.parent_recurring_id!
-    : schedule.id;
+    const key = hasParent
+      ? schedule.parent_recurring_id!
+      : schedule.id;
 
-  if (!groupedMap.has(key)) {
-    groupedMap.set(key, {
-      ...schedule,
-      groupCount: hasParent ? 1 : undefined,
-    });
-  } else {
-    const existing = groupedMap.get(key)!;
+    if (!groupedMap.has(key)) {
+      groupedMap.set(key, {
+        ...schedule,
+        groupCount: hasParent ? 1 : undefined,
+      });
+    } else {
+      const existing = groupedMap.get(key)!;
 
-    if (hasParent) {
-      existing.groupCount = (existing.groupCount || 1) + 1;
+      if (hasParent) {
+        existing.groupCount = (existing.groupCount || 1) + 1;
 
-      const existingDate = new Date(existing.start_time).getTime();
-      const currentDate = new Date(schedule.start_time).getTime();
+        const existingDate = new Date(existing.start_time).getTime();
+        const currentDate = new Date(schedule.start_time).getTime();
 
-      if (currentDate > existingDate) {
-        groupedMap.set(key, {
-          ...schedule,
-          groupCount: existing.groupCount,
-        });
+        if (currentDate > existingDate) {
+          groupedMap.set(key, {
+            ...schedule,
+            groupCount: existing.groupCount,
+          });
+        }
       }
     }
-  }
-});
+  });
 
-const groupedSchedules: GroupedSchedule[] = Array.from(
-  groupedMap.values()
-).sort(
-  (a, b) =>
-    new Date(b.start_time).getTime() -
-    new Date(a.start_time).getTime()
-);
+  const groupedSchedules: GroupedSchedule[] = Array.from(
+    groupedMap.values()
+  ).sort(
+    (a, b) =>
+      new Date(b.start_time).getTime() -
+      new Date(a.start_time).getTime()
+  );
 
   const totalItems = groupedSchedules.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -344,12 +345,12 @@ const groupedSchedules: GroupedSchedule[] = Array.from(
             label: <span className="flex items-center gap-2 text-xs font-bold text-gray-700"><Eye className="w-3.5 h-3.5" /> View</span>,
             onClick: () => {
               const recurringId = record.parent_recurring_id;
-              const relatedSessions = recurringId 
+              const relatedSessions = recurringId
                 ? scheduleData
-                    .filter(s => s.parent_recurring_id === recurringId)
-                    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+                  .filter(s => s.parent_recurring_id === recurringId)
+                  .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
                 : [record];
-              
+
               setGroupedSessions(relatedSessions);
               setSelectedSession(record);
               setShowViewModal(true);
@@ -544,10 +545,10 @@ const groupedSchedules: GroupedSchedule[] = Array.from(
                 <div key={instructor.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 transition-colors group">
                   <div className="flex items-center gap-4">
                     <div className="relative">
-                      <img 
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(instructor.user?.name || 'T')}&background=f3f4f6&color=6366f1&bold=true`} 
-                        alt="Instructor" 
-                        className="w-11 h-11 rounded-full object-cover border-2 border-white shadow-sm" 
+                      <img
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(instructor.user?.name || 'T')}&background=f3f4f6&color=6366f1&bold=true`}
+                        alt="Instructor"
+                        className="w-11 h-11 rounded-full object-cover border-2 border-white shadow-sm"
                       />
                       <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${isBusy ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
                     </div>
@@ -568,7 +569,7 @@ const groupedSchedules: GroupedSchedule[] = Array.from(
                 </div>
               );
             })}
-            
+
             {(!instructors?.teachers || instructors.teachers.length === 0) && (
               <div className="flex flex-col items-center justify-center py-10 opacity-40">
                 <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-3">

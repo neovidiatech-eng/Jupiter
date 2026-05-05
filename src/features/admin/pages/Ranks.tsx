@@ -87,15 +87,6 @@ export default function Ranks() {
                     </div>
                 </div>
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
-                        <Users className="w-6 h-6 text-emerald-600" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Active Cohorts</p>
-                        <p className="text-2xl font-bold text-gray-900">12</p>
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
                     <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center">
                         <Calendar className="w-6 h-6 text-amber-600" />
                     </div>
@@ -198,13 +189,13 @@ function EnhancedRankCard({ rank }: { rank: RankItem }) {
                     >
                         <Trophy className="w-7 h-7 text-white" />
                     </div>
-                    <div className="flex flex-col items-end">
+                    {/* <div className="flex flex-col items-end">
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</span>
                         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold">
                             <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
                             Active
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">

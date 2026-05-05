@@ -1,126 +1,114 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  Building2, Palette, Search, Share2, Phone, Globe, Save, RotateCcw,
-  Upload, X, Check, ChevronRight, Monitor, Type, Image,
-  Facebook, Instagram, Youtube, Send, Linkedin, MessageCircle, Twitter
+  Share2, Phone, MessageCircle,
+  Facebook, Instagram, Twitter,
+  ChevronRight,
+  Save,
+  Settings,
+  Mail,
+  Loader2
 } from 'lucide-react';
-import { useSettings, SocialLink } from '../../../contexts/SettingsContext';
+import { useSettings as useThemeSettings } from '../../../contexts/SettingsContext';
+import { useSettings } from '../hooks/useSettings';
+import { message } from 'antd';
+import { UpdateSettingsRequest } from '../../../types/settings';
 
-const fontOptions = [
-  { value: 'Almarai', label: 'Almarai', preview: 'الخط الافتراضي' },
-  { value: 'Cairo', label: 'Cairo', preview: 'خط القاهرة' },
-  { value: 'Tajawal', label: 'Tajawal', preview: 'خط تجوال' },
-  { value: 'Noto Kufi Arabic', label: 'Noto Kufi Arabic', preview: 'خط كوفي' },
-  { value: 'IBM Plex Sans Arabic', label: 'IBM Plex', preview: 'خط IBM' },
-];
-
-const colorPresets = [
-  { name: 'أزرق', primary: '#2563eb', accent: '#06b6d4' },
-  { name: 'أخضر', primary: '#16a34a', accent: '#0d9488' },
-  { name: 'أحمر', primary: '#dc2626', accent: '#ea580c' },
-  { name: 'رمادي', primary: '#374151', accent: '#6b7280' },
-  { name: 'بني', primary: '#92400e', accent: '#b45309' },
-  { name: 'وردي', primary: '#db2777', accent: '#e11d48' },
-];
-
-const socialPlatforms: { platform: SocialLink['platform']; label: string; placeholder: string; icon: any; color: string }[] = [
-  { platform: 'whatsapp', label: 'WhatsApp', placeholder: '+966501234567', icon: MessageCircle, color: '#25d366' },
+const socialPlatforms = [
   { platform: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/...', icon: Facebook, color: '#1877f2' },
   { platform: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/...', icon: Instagram, color: '#e1306c' },
   { platform: 'twitter', label: 'X (Twitter)', placeholder: 'https://x.com/...', icon: Twitter, color: '#000000' },
-  { platform: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/...', icon: Youtube, color: '#ff0000' },
-  { platform: 'tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@...', icon: Monitor, color: '#010101' },
-  { platform: 'telegram', label: 'Telegram', placeholder: 'https://t.me/...', icon: Send, color: '#0088cc' },
-  { platform: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/...', icon: Linkedin, color: '#0077b5' },
 ];
 
-type Tab = 'general' | 'appearance' | 'seo' | 'social' | 'contact';
+type Tab = 'general' | 'social' | 'contact';
 
 const tabs: { id: Tab; label: string; icon: any }[] = [
-  { id: 'general', label: 'عام', icon: Building2 },
-  { id: 'appearance', label: 'المظهر', icon: Palette },
-  { id: 'seo', label: 'SEO', icon: Search },
-  { id: 'social', label: 'التواصل', icon: Share2 },
-  { id: 'contact', label: 'التواصل معنا', icon: Phone },
+  { id: 'general', label: 'General', icon: Settings },
+  { id: 'social', label: 'Social Media', icon: Share2 },
+  { id: 'contact', label: 'Contact', icon: Phone },
 ];
 
 export default function SettingsPage() {
-  const { settings, updateSettings, updateSeo, updateSocialLink, resetSettings } = useSettings();
+  const { settings: themeSettings } = useThemeSettings();
+  const { settings: apiSettings, isLoading, updateSettings: apiUpdateSettings } = useSettings();
+  
   const [activeTab, setActiveTab] = useState<Tab>('general');
-  const [saved, setSaved] = useState(false);
+  const [formData, setFormData] = useState<UpdateSettingsRequest>({});
+  const [saving, setSaving] = useState(false);
 
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  const faviconInputRef = useRef<HTMLInputElement>(null);
-  const ogImageInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (apiSettings) {
+      setFormData({
+        userPrefix: apiSettings.userPrefix,
+        socialLinks: apiSettings.socialLinks,
+        contactInfo: apiSettings.contactInfo
+      });
+    }
+  }, [apiSettings]);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await apiUpdateSettings(formData);
+      message.success('Settings updated successfully');
+    } catch (error) {
+      message.error('Failed to update settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    updateSettings({ logoUrl: url });
-  };
 
-  const handleFaviconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    updateSettings({ faviconUrl: url });
-  };
-
-  const handleOgImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    updateSeo({ ogImage: url });
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6" dir="ltr">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">الإعدادات</h1>
-          <p className="text-gray-500 text-sm mt-1">تخصيص المنصة وضبط إعداداتها</p>
+          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+          <p className="text-gray-500 text-sm mt-1">Customize your platform and configure settings</p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={resetSettings}
+          {/* <button
+            onClick={handleReset}
             className="flex items-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
-            إعادة تعيين
-          </button>
+            Reset
+          </button> */}
           <button
             onClick={handleSave}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm text-white ${saved ? 'bg-green-600' : ''}`}
-            style={!saved ? { backgroundColor: settings.primaryColor } : {}}
+            disabled={saving}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm text-white`}
+            style={{ backgroundColor: themeSettings.primaryColor }}
           >
-            {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-            {saved ? 'تم الحفظ' : 'حفظ التغييرات'}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </div>
 
       <div className="flex gap-6">
-        {/* Sidebar Tabs */}
+        {/* Sidebar */}
         <div className="w-52 flex-shrink-0">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 space-y-1 sticky top-6">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-right ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab.id ? '' : 'text-gray-600 hover:bg-gray-50'
                 }`}
-                style={activeTab === tab.id ? { backgroundColor: settings.primaryColor + '15', color: settings.primaryColor } : {}}
+                style={activeTab === tab.id ? { backgroundColor: themeSettings.primaryColor + '15', color: themeSettings.primaryColor } : {}}
               >
-                <tab.icon className="w-4 h-4 flex-shrink-0" />
-                <span className="flex-1">{tab.label}</span>
+                <tab.icon className="w-4 h-4" />
+                <span className="flex-1 text-left">{tab.label}</span>
                 {activeTab === tab.id && <ChevronRight className="w-3 h-3" />}
               </button>
             ))}
@@ -128,127 +116,174 @@ export default function SettingsPage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0">
-
-          {/* General Tab */}
+        <div className="flex-1">
+          {/* General */}
           {activeTab === 'general' && (
-            <div className="space-y-5">
-              <SectionCard title="هوية المنصة" icon={Building2} primaryColor={settings.primaryColor}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* Logo */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-3 text-right">شعار المنصة (Logo)</label>
-                    <div className="flex items-center gap-4">
-                      <div
-                        onClick={() => logoInputRef.current?.click()}
-                        className="w-24 h-24 border-2 border-dashed border-gray-200 hover:border-blue-400 rounded-2xl flex items-center justify-center cursor-pointer transition-colors overflow-hidden bg-gray-50"
-                      >
-                        {settings.logoUrl ? (
-                          <img src={settings.logoUrl} alt="logo" className="w-full h-full object-contain p-1" />
-                        ) : (
-                          <div className="text-center">
-                            <Image className="w-6 h-6 text-gray-300 mx-auto mb-1" />
-                            <span className="text-xs text-gray-400">رفع</span>
-                          </div>
-                        )}
-                      </div>
-                      <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                      <div className="flex-1">
-                        <button
-                          onClick={() => logoInputRef.current?.click()}
-                          className="flex items-center gap-2 border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl text-sm transition-colors"
-                        >
-                          <Upload className="w-4 h-4" />
-                          رفع شعار
-                        </button>
-                        {settings.logoUrl && (
-                          <button
-                            onClick={() => updateSettings({ logoUrl: '' })}
-                            className="flex items-center gap-1.5 text-red-500 hover:text-red-700 text-xs mt-2 transition-colors"
-                          >
-                            <X className="w-3 h-3" />
-                            حذف الشعار
-                          </button>
-                        )}
-                        <p className="text-xs text-gray-400 mt-2">PNG, JPG, SVG - الحجم المقترح 200×200px</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Favicon */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 text-right">Favicon</label>
-                    <div className="flex items-center gap-3">
-                      <div
-                        onClick={() => faviconInputRef.current?.click()}
-                        className="w-12 h-12 border-2 border-dashed border-gray-200 hover:border-blue-400 rounded-xl flex items-center justify-center cursor-pointer transition-colors overflow-hidden bg-gray-50 flex-shrink-0"
-                      >
-                        {settings.faviconUrl ? (
-                          <img src={settings.faviconUrl} alt="favicon" className="w-full h-full object-contain" />
-                        ) : (
-                          <Globe className="w-5 h-5 text-gray-300" />
-                        )}
-                      </div>
-                      <input ref={faviconInputRef} type="file" accept="image/*" className="hidden" onChange={handleFaviconUpload} />
-                      <button
-                        onClick={() => faviconInputRef.current?.click()}
-                        className="text-xs transition-colors"
-                        style={{ color: settings.primaryColor }}
-                      >
-                        رفع Favicon
-                      </button>
-                    </div>
-                  </div>
-
-                  <FieldGroup label="اسم المنصة" required>
-                    <input
-                      type="text"
-                      value={settings.name}
-                      onChange={e => updateSettings({ name: e.target.value })}
-                      className={inputCls}
-                      placeholder="اسم منصتك"
-                    />
-                  </FieldGroup>
-
-                  <div className="md:col-span-2">
-                    <FieldGroup label="وصف المنصة">
-                      <textarea
-                        rows={3}
-                        value={settings.description}
-                        onChange={e => updateSettings({ description: e.target.value })}
-                        className={inputCls + ' resize-none'}
-                        placeholder="وصف مختصر عن منصتك"
-                      />
-                    </FieldGroup>
-                  </div>
-
-                  <FieldGroup label="العملة الافتراضية">
-                    <select value={settings.currency} onChange={e => updateSettings({ currency: e.target.value })} className={inputCls + ' bg-white'}>
-                      <option value="SAR">ريال سعودي (SAR)</option>
-                      <option value="AED">درهم إماراتي (AED)</option>
-                      <option value="EGP">جنيه مصري (EGP)</option>
-                      <option value="KWD">دينار كويتي (KWD)</option>
-                      <option value="USD">دولار أمريكي (USD)</option>
-                      <option value="EUR">يورو (EUR)</option>
-                    </select>
-                  </FieldGroup>
-
-                  <FieldGroup label="المنطقة الزمنية">
-                    <select value={settings.timezone} onChange={e => updateSettings({ timezone: e.target.value })} className={inputCls + ' bg-white'}>
-                      <option value="Asia/Riyadh">الرياض (GMT+3)</option>
-                      <option value="Asia/Dubai">دبي (GMT+4)</option>
-                      <option value="Africa/Cairo">القاهرة (GMT+2)</option>
-                      <option value="Asia/Kuwait">الكويت (GMT+3)</option>
-                      <option value="Europe/London">لندن (GMT+0)</option>
-                    </select>
-                  </FieldGroup>
-                </div>
-              </SectionCard>
-            </div>
+            <SectionCard title="General Settings" icon={Settings} primaryColor={themeSettings.primaryColor}>
+              <div className="max-w-md">
+                <FieldGroup label="User Prefix">
+                  <input
+                    type="text"
+                    value={formData.userPrefix || ''}
+                    onChange={e => setFormData({ ...formData, userPrefix: e.target.value })}
+                    className={inputCls}
+                    placeholder="jupiter"
+                  />
+                </FieldGroup>
+              </div>
+            </SectionCard>
           )}
 
-          {/* Appearance Tab */}
-          {activeTab === 'appearance' && (
+          {/* Social */}
+          {activeTab === 'social' && (
+            <SectionCard title="Social Media Links" icon={Share2} primaryColor={themeSettings.primaryColor}>
+              <div className="space-y-4">
+                {socialPlatforms.map(({ platform, label, placeholder, icon: Icon, color }) => (
+                  <div key={platform} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: color + '20' }}>
+                      <Icon className="w-5 h-5" style={{ color }} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
+                      <input
+                        type="text"
+                        value={(formData.socialLinks as any)?.[platform] || ''}
+                        onChange={e => setFormData({
+                          ...formData,
+                          socialLinks: { ...formData.socialLinks, [platform]: e.target.value } as any
+                        })}
+                        className="w-full text-sm border-none p-0 focus:ring-0"
+                        placeholder={placeholder}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          )}
+
+          {/* Contact */}
+          {activeTab === 'contact' && (
+            <SectionCard title="Contact Information" icon={Phone} primaryColor={themeSettings.primaryColor}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-green-500" />
+                    WhatsApp
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={formData.contactInfo?.whatsapp?.phone || ''}
+                      onChange={e => setFormData({
+                        ...formData,
+                        contactInfo: {
+                          ...formData.contactInfo,
+                          whatsapp: { ...formData.contactInfo?.whatsapp, phone: e.target.value, active: true }
+                        } as any
+                      })}
+                      className={inputCls}
+                      placeholder="01069441989"
+                    />
+                    <div
+                      onClick={() => setFormData({
+                        ...formData,
+                        contactInfo: {
+                          ...formData.contactInfo,
+                          whatsapp: { ...formData.contactInfo?.whatsapp, active: !formData.contactInfo?.whatsapp?.active }
+                        } as any
+                      })}
+                      className={`w-12 h-6 rounded-full cursor-pointer relative transition-colors ${formData.contactInfo?.whatsapp?.active ? 'bg-green-500' : 'bg-gray-300'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.contactInfo?.whatsapp?.active ? 'left-7' : 'left-1'}`} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-blue-500" />
+                    Email Address
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="email"
+                      value={formData.contactInfo?.mail?.email || ''}
+                      onChange={e => setFormData({
+                        ...formData,
+                        contactInfo: {
+                          ...formData.contactInfo,
+                          mail: { ...formData.contactInfo?.mail, email: e.target.value, active: true }
+                        } as any
+                      })}
+                      className={inputCls}
+                      placeholder="mneseym@gmail.com"
+                    />
+                    <div
+                      onClick={() => setFormData({
+                        ...formData,
+                        contactInfo: {
+                          ...formData.contactInfo,
+                          mail: { ...formData.contactInfo?.mail, active: !formData.contactInfo?.mail?.active }
+                        } as any
+                      })}
+                      className={`w-12 h-6 rounded-full cursor-pointer relative transition-colors ${formData.contactInfo?.mail?.active ? 'bg-blue-500' : 'bg-gray-300'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.contactInfo?.mail?.active ? 'left-7' : 'left-1'}`} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const inputCls = 'w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm';
+
+function SectionCard({ title, icon: Icon, children, primaryColor }: any) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+      <div className="flex items-center gap-3 px-6 py-4 border-b">
+        <Icon className="w-4 h-4" style={{ color: primaryColor }} />
+        <h2 className="font-semibold">{title}</h2>
+      </div>
+      <div className="p-6">{children}</div>
+    </div>
+  );
+}
+
+function FieldGroup({ label, children }: any) {
+  return (
+    <div>
+      <label className="block text-sm mb-1">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+
+// const fontOptions = [
+//   { value: 'Almarai', label: 'Almarai', preview: 'Default Font' },
+//   { value: 'Cairo', label: 'Cairo', preview: 'Cairo Font' },
+//   { value: 'Tajawal', label: 'Tajawal', preview: 'Tajawal Font' },
+//   { value: 'Noto Kufi Arabic', label: 'Noto Kufi Arabic', preview: 'Kufi Font' },
+//   { value: 'IBM Plex Sans Arabic', label: 'IBM Plex', preview: 'IBM Font' },
+// ];
+
+// const colorPresets = [
+//   { name: 'Blue', primary: '#2563eb', accent: '#06b6d4' },
+//   { name: 'Green', primary: '#16a34a', accent: '#0d9488' },
+//   { name: 'Red', primary: '#dc2626', accent: '#ea580c' },
+//   { name: 'Gray', primary: '#374151', accent: '#6b7280' },
+//   { name: 'Brown', primary: '#92400e', accent: '#b45309' },
+//   { name: 'Pink', primary: '#db2777', accent: '#e11d48' },
+// ];
+{/* Appearance Tab */ }
+{/* {activeTab === 'appearance' && (
             <div className="space-y-5">
               <SectionCard title="الألوان" icon={Palette} primaryColor={settings.primaryColor}>
                 <div className="space-y-5">
@@ -294,7 +329,6 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  {/* Live Preview */}
                   <div className="border-t border-gray-100 pt-4">
                     <p className="text-sm text-gray-500 text-right mb-3">معاينة مباشرة</p>
                     <div className="bg-gray-50 rounded-xl p-4 space-y-3">
@@ -349,10 +383,10 @@ export default function SettingsPage() {
                 </div>
               </SectionCard>
             </div>
-          )}
+          )} */}
 
-          {/* SEO Tab */}
-          {activeTab === 'seo' && (
+{/* SEO Tab */ }
+{/* {activeTab === 'seo' && (
             <div className="space-y-5">
               <SectionCard title="إعدادات SEO" icon={Search} primaryColor={settings.primaryColor}>
                 <div className="space-y-4">
@@ -435,7 +469,6 @@ export default function SettingsPage() {
                 </div>
               </SectionCard>
 
-              {/* Preview */}
               <SectionCard title="معاينة نتيجة البحث" icon={Globe} primaryColor={settings.primaryColor}>
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 max-w-lg">
@@ -451,179 +484,4 @@ export default function SettingsPage() {
               </SectionCard>
             </div>
           )}
-
-          {/* Social Media Tab */}
-          {activeTab === 'social' && (
-            <SectionCard title="روابط السوشيال ميديا" icon={Share2} primaryColor={settings.primaryColor}>
-              <div className="space-y-3">
-                {socialPlatforms.map(({ platform, label, placeholder, icon: Icon, color }) => {
-                  const link = settings.socialLinks.find(l => l.platform === platform);
-                  return (
-                    <div key={platform} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${link?.enabled ? 'border-gray-200 bg-white shadow-sm' : 'border-gray-100 bg-gray-50'}`}>
-                      <div
-                        onClick={() => updateSocialLink(platform, { enabled: !link?.enabled })}
-                        className={`w-10 h-6 rounded-full cursor-pointer transition-colors relative flex-shrink-0 ${link?.enabled ? '' : 'bg-gray-300'}`}
-                        style={link?.enabled ? { backgroundColor: settings.primaryColor } : {}}
-                      >
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${link?.enabled ? 'left-5' : 'left-1'}`} />
-                      </div>
-                      <input
-                        type="text"
-                        value={link?.value || ''}
-                        onChange={e => updateSocialLink(platform, { value: e.target.value, enabled: true })}
-                        className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                        placeholder={placeholder}
-                        dir="ltr"
-                        disabled={!link?.enabled}
-                      />
-                      <div className="flex items-center gap-2 flex-shrink-0 w-28 justify-end">
-                        <span className="text-sm font-medium text-gray-700">{label}</span>
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: color + '20' }}>
-                          <Icon className="w-4 h-4" style={{ color }} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </SectionCard>
-          )}
-
-          {/* Contact Tab */}
-          {activeTab === 'contact' && (
-            <SectionCard title="معلومات التواصل" icon={Phone} primaryColor={settings.primaryColor}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FieldGroup label="رقم الواتساب" hint="سيظهر كزرار تواصل في المنصة">
-                  <div className="relative">
-                    <MessageCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
-                    <input
-                      type="text"
-                      value={settings.whatsappNumber}
-                      onChange={e => updateSettings({ whatsappNumber: e.target.value })}
-                      className={inputCls + ' pr-10'}
-                      placeholder="+966501234567"
-                      dir="ltr"
-                    />
-                  </div>
-                </FieldGroup>
-
-                <FieldGroup label="البريد الإلكتروني">
-                  <input
-                    type="email"
-                    value={settings.email}
-                    onChange={e => updateSettings({ email: e.target.value })}
-                    className={inputCls}
-                    placeholder="info@example.com"
-                    dir="ltr"
-                  />
-                </FieldGroup>
-
-                <FieldGroup label="رقم الهاتف">
-                  <input
-                    type="text"
-                    value={settings.phone}
-                    onChange={e => updateSettings({ phone: e.target.value })}
-                    className={inputCls}
-                    placeholder="+966501234567"
-                    dir="ltr"
-                  />
-                </FieldGroup>
-
-                <FieldGroup label="العنوان">
-                  <input
-                    type="text"
-                    value={settings.address}
-                    onChange={e => updateSettings({ address: e.target.value })}
-                    className={inputCls}
-                    placeholder="المدينة، المملكة العربية السعودية"
-                  />
-                </FieldGroup>
-
-                {/* Whatsapp Preview */}
-                {settings.whatsappNumber && (
-                  <div className="md:col-span-2">
-                    <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                      <p className="text-sm font-medium text-green-800 text-right mb-2">معاينة زرار الواتساب</p>
-                      <a
-                        href={`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        تواصل عبر واتساب
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </SectionCard>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const inputCls = 'w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-right';
-
-function SectionCard({ title, icon: Icon, children, primaryColor }: { title: string; icon: any; children: React.ReactNode; primaryColor?: string }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-        <div className="p-2 rounded-lg" style={{ backgroundColor: (primaryColor || '#2563eb') + '15' }}>
-          <Icon className="w-4 h-4" style={{ color: primaryColor || '#2563eb' }} />
-        </div>
-        <h2 className="font-semibold text-gray-800">{title}</h2>
-      </div>
-      <div className="p-6">{children}</div>
-    </div>
-  );
-}
-
-function FieldGroup({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      {children}
-      {hint && <p className="text-xs text-gray-400 mt-1 text-right">{hint}</p>}
-    </div>
-  );
-}
-
-function ColorPickerField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2 text-right">{label}</label>
-      <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2 bg-white">
-        <span className="text-sm text-gray-600 flex-1 font-mono" dir="ltr">{value}</span>
-        <div className="relative">
-          <div className="w-8 h-8 rounded-lg shadow-sm border border-gray-200 cursor-pointer" style={{ backgroundColor: value }} />
-          <input
-            type="color"
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CharCounter({ current, max }: { current: number; max: number }) {
-  const pct = current / max;
-  return (
-    <div className="flex items-center justify-between mt-1">
-      <div className="h-1 flex-1 ml-2 bg-gray-100 rounded-full overflow-hidden">
-        <div
-          className={`h-1 rounded-full transition-all ${pct > 0.9 ? 'bg-red-500' : pct > 0.7 ? 'bg-yellow-500' : 'bg-green-500'}`}
-          style={{ width: `${Math.min(100, pct * 100)}%` }}
-        />
-      </div>
-      <span className={`text-xs ${pct > 0.9 ? 'text-red-500' : 'text-gray-400'}`}>{current}/{max}</span>
-    </div>
-  );
-}
+          */}

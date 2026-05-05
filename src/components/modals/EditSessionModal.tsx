@@ -25,6 +25,7 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
     end_time: '',
     type: 'full' as 'full' | 'half',
     notification_Time: '10',
+    platform: 'zoom',
   });
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
         end_time: endDate ? endDate.toISOString().slice(0, 16) : '',
         type: (session.type as 'full' | 'half') || 'full',
         notification_Time: '10',
+        platform: 'zoom',
       });
     }
   }, [session, isOpen]);
@@ -58,6 +60,7 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
       start_time: formData.start_time ? new Date(formData.start_time).toISOString() : session.start_time,
       type: formData.type,
       notification_Time: formData.notification_Time,
+      platform: formData.platform,
     });
     onClose();
   };

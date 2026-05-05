@@ -3,7 +3,7 @@ import { Student, StudentsFetchResponse } from "../../../types/student";
 import { StudentFormData } from "../../../lib/schemas/StudentSchema";
 
 export const getStudents = async (): Promise<StudentsFetchResponse> => {
-    const response = await api.get("/students");
+    const response = await api.get("/students?limit=1000");
     return response.data;
 }
 
@@ -16,6 +16,7 @@ export const searchStudent = async (search: string): Promise<StudentsFetchRespon
             return {
                 message: "",
                 status: 404,
+                lang: "en",
                 data: {
                     studentsData: [],
                     pagination: {

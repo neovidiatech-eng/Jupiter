@@ -1,29 +1,17 @@
 import { useState, useEffect } from "react";
-import { Search, CheckCircle, XCircle, Eye, Clock } from "lucide-react";
+import { Search, CheckCircle, XCircle, Eye, Clock, User, Package, Calendar } from "lucide-react";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import Pagination from "../../../components/ui/Pagination";
-import WhatsAppPhone from "../../../components/ui/WhatsAppPhone";
 import ViewSubscriptionRequestModal from "../../../components/modals/ViewSubscriptionRequestModal";
+import UpdateSubscriptionStatusModal from "../../../components/modals/UpdateSubscriptionStatusModal";
 import CustomSelect from "../../../components/ui/CustomSelect";
 import { TableSkeleton } from "../../../components/ui/CustomSkeleton";
 import {
   changeSubscriptionRequestStatus,
   getSubscriptionRequests,
 } from "../services/subscriptionRequestServices";
+import { SubscriptionRequest } from "../../../types/subscription";
 
-interface SubscriptionRequest {
-  id: string;
-  studentName: string;
-  parentName: string;
-  phone: string;
-  email: string;
-  planName: string;
-  planPrice: string;
-  sessionsCount: number;
-  requestDate: string;
-  status: "pending" | "approved" | "rejected";
-  notes?: string;
-}
 
 export default function SubscriptionRequests() {
   const { language } = useLanguage();
@@ -33,6 +21,8 @@ export default function SubscriptionRequests() {
     "all" | "pending" | "approved" | "rejected"
   >("all");
   const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [initialModalStatus, setInitialModalStatus] = useState<"approved" | "rejected">("approved");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] =
     useState<SubscriptionRequest | null>(null);
@@ -40,6 +30,7 @@ export default function SubscriptionRequests() {
 
   const text = {
     title: { ar: "طلبات الاشتراك", en: "Subscription Requests" },
+    subtitle: { ar: "إدارة ومراجعة جميع طلبات الاشتراك الجديدة في المنصة", en: "Manage and review all new subscription requests on the platform" },
     search: {
       ar: "بحث عن اسم الطالب أو ولي الأمر...",
       en: "Search for student or parent name...",
@@ -85,16 +76,11 @@ export default function SubscriptionRequests() {
         }
 
         const formatted = data.map((item: any) => ({
-          id: item.id,
-          studentName: typeof item.user?.name === 'string' ? item.user.name : "—",
-          parentName: typeof item.user?.name === 'string' ? item.user.name : "—",
-          phone: typeof item.user?.phone === 'string' ? item.user.phone : "—",
-          email: typeof item.user?.email === 'string' ? item.user.email : "—",
-          planName: item.plan?.name_ar || item.plan?.name_en || "—",
-          planPrice: item.plan?.price || "—",
-          sessionsCount: typeof item.plan?.hours === 'number' ? item.plan.hours : 0,
-          requestDate: typeof item.createdAt === 'string' ? item.createdAt.split("T")[0] : "—",
-          status: item.status,
+          ...item,
+          plan: {
+            ...item.plan,
+            name: item.plan?.name || item.plan?.name_ar || item.plan?.name_en || "—"
+          }
         }));
         setRequests(formatted);
       } catch (error) {
@@ -109,8 +95,8 @@ export default function SubscriptionRequests() {
 
   const filteredRequests = requests.filter((request) => {
     const matchesSearch =
-      request.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.parentName.toLowerCase().includes(searchTerm.toLowerCase());
+      request.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "all" || request.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -123,38 +109,57 @@ export default function SubscriptionRequests() {
     startIndex + itemsPerPage,
   );
 
-  const getStatusStyle = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-50 text-yellow-700 border-yellow-200";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100">
+            <Clock size={12} />
+            {text.pending[language]}
+          </span>
+        );
       case "approved":
-        return "bg-green-50 text-green-700 border-green-200";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
+            <CheckCircle size={12} />
+            {text.approved[language]}
+          </span>
+        );
       case "rejected":
-        return "bg-red-50 text-red-700 border-red-200";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-red-50 text-red-600 border border-red-100">
+            <XCircle size={12} />
+            {text.rejected[language]}
+          </span>
+        );
       default:
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return null;
     }
   };
 
-  const handleApprove = async (id: string) => {
-    try {
-      await changeSubscriptionRequestStatus(id, "approved");
-      setRequests((prev) =>
-        prev.map((req) => (req.id === id ? { ...req, status: "approved" } : req))
-      );
-    } catch (error) {
-      console.log(error);
-    }
+  const handleApprove = (request: SubscriptionRequest) => {
+    setSelectedRequest(request);
+    setInitialModalStatus("approved");
+    setStatusModalOpen(true);
   };
 
-  const handleReject = async (id: string) => {
+  const handleReject = (request: SubscriptionRequest) => {
+    setSelectedRequest(request);
+    setInitialModalStatus("rejected");
+    setStatusModalOpen(true);
+  };
+
+  const handleStatusChange = async (status: "approved" | "rejected", rankId?: string) => {
+    if (!selectedRequest) return;
+
     try {
-      await changeSubscriptionRequestStatus(id, "rejected");
+      await changeSubscriptionRequestStatus(selectedRequest.id, status, rankId);
       setRequests((prev) =>
-        prev.map((req) => (req.id === id ? { ...req, status: "rejected" } : req))
+        prev.map((req) => (req.id === selectedRequest.id ? { ...req, status } : req))
       );
     } catch (error) {
       console.log(error);
+      throw error;
     }
   };
 
@@ -164,167 +169,152 @@ export default function SubscriptionRequests() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">
+    <div className="p-8 space-y-8 animate-in fade-in duration-700">
+      <div className={`${language === 'ar' ? 'text-right' : 'text-left'} space-y-2`}>
+        <h1 className="text-4xl font-black text-slate-900 tracking-tight">
           {text.title[language]}
         </h1>
+        <p className="text-slate-500 font-medium">{text.subtitle[language]}</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder={text.search[language]}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full ${language === 'ar' ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent text-start transition-all`}
-            />
-          </div>
+      <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
+        {/* Filters Header */}
+        <div className="p-8 border-b border-slate-50 bg-slate-50/30">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-1 relative group">
+              <Search className={`absolute ${language === 'ar' ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors`} />
+              <input
+                type="text"
+                placeholder={text.search[language]}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`w-full ${language === 'ar' ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-slate-700 font-medium transition-all shadow-sm`}
+              />
+            </div>
 
-          <div className="flex items-center gap-2">
-            <CustomSelect
-              value={statusFilter}
-              onChange={(value) =>
-                setStatusFilter(
-                  value as "all" | "pending" | "approved" | "rejected"
-                )
-              }
-              options={[
-                { value: "all", label: text.all[language] },
-                { value: "pending", label: text.pending[language] },
-                { value: "approved", label: text.approved[language] },
-                { value: "rejected", label: text.rejected[language] },
-              ]}
-              placeholder={text.filter[language]}
-            />
+            <div className="w-full lg:w-64">
+              <CustomSelect
+                value={statusFilter}
+                onChange={(value) =>
+                  setStatusFilter(
+                    value as "all" | "pending" | "approved" | "rejected"
+                  )
+                }
+                options={[
+                  { value: "all", label: text.all[language] },
+                  { value: "pending", label: text.pending[language] },
+                  { value: "approved", label: text.approved[language] },
+                  { value: "rejected", label: text.rejected[language] },
+                ]}
+                placeholder={text.filter[language]}
+              />
+            </div>
           </div>
         </div>
 
-        {isLoading ? (
-          <TableSkeleton rows={itemsPerPage} columns={9} />
-        ) : paginatedRequests.length === 0 ? (
-          <div className="text-center py-12">
-            <Clock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">{text.noRequests[language]}</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        {/* Table Content */}
+        <div className="overflow-x-auto no-scrollbar">
+          {isLoading ? (
+            <div className="p-8">
+              <TableSkeleton rows={8} columns={8} />
+            </div>
+          ) : paginatedRequests.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-slate-50/20">
+              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-4">
+                <Package size={40} />
+              </div>
+              <p className="text-slate-500 text-lg font-bold">{text.noRequests[language]}</p>
+            </div>
+          ) : (
+            <table className="w-full border-collapse" dir={language === 'ar' ? 'rtl' : 'ltr'}>
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.studentName[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.phone[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.email[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.plan[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.price[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.sessionsCount[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.requestDate[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.status[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.actions[language]}
-                  </th>
+                <tr className="bg-slate-50/50 border-b border-slate-100">
+                  {[
+                    { label: text.studentName[language], icon: User },
+                    { label: text.plan[language], icon: Package },
+                    { label: text.price[language], icon: Clock },
+                    { label: text.requestDate[language], icon: Calendar },
+                    { label: text.status[language], icon: CheckCircle },
+                    { label: text.actions[language], icon: null }
+                  ].map((head, i) => (
+                    <th key={i} className="px-6 py-5 text-start">
+                      <div className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest">
+                        {head.icon && <head.icon size={14} />}
+                        {head.label}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-50">
                 {paginatedRequests.map((request) => (
-                  <tr
-                    key={request.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-4 py-4 text-start text-sm font-medium text-gray-900">
-                      {request.studentName}
+                  <tr key={request.id} className="hover:bg-blue-50/30 transition-colors group">
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{request.user.name}</span>
+                        <span className="text-xs text-slate-400 font-medium">{request.user.email}</span>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-start text-sm text-gray-600" dir="ltr">
-                      <WhatsAppPhone phone={request.phone} />
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                          <Package size={16} />
+                        </div>
+                        <span className="text-sm font-bold text-slate-700">{request.plan.name}</span>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-start text-sm text-gray-600" dir="ltr">
-                      {request.email}
+                    <td className="px-6 py-5">
+                      <span className="text-sm font-black text-slate-900">{request.plan.price}</span>
                     </td>
-                    <td className="px-4 py-4 text-start text-sm text-gray-900">
-                      {request.planName}
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                        <Calendar size={14} />
+                        {request.createdAt.substring(0, 10)}
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-start text-sm font-semibold text-gray-900">
-                      {request.planPrice}
+                    <td className="px-6 py-5">
+                      {getStatusBadge(request.status)}
                     </td>
-                    <td className="px-4 py-4 text-start text-sm text-gray-900">
-                      <span className="font-semibold">{request.sessionsCount}</span>{" "}
-                      {text.session[language]}
-                    </td>
-                    <td className="px-4 py-4 text-start text-sm text-gray-900">
-                      {request.requestDate}
-                    </td>
-                    <td className="px-4 py-4 text-start">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(
-                          request.status
-                        )}`}
-                      >
-                        {text[request.status][language]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2 justify-start">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleView(request)}
-                          className="p-2 icon-btn-primary rounded-lg transition-colors group"
+                          className="p-2.5 bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95"
                           title={text.view[language]}
                         >
-                          <Eye className="w-5 h-5" />
+                          <Eye size={18} />
                         </button>
-                        <button
-                          onClick={() => handleReject(request.id)}
-                          disabled={request.status !== "pending"}
-                          className={`p-2 rounded-lg transition-colors ${
-                            request.status === "pending"
-                              ? "text-red-600 hover:bg-red-50"
-                              : "text-gray-300 cursor-not-allowed"
-                          }`}
-                          title={text.reject[language]}
-                        >
-                          <XCircle className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleApprove(request.id)}
-                          disabled={request.status !== "pending"}
-                          className={`p-2 rounded-lg transition-colors ${
-                            request.status === "pending"
-                              ? "text-green-600 hover:bg-green-50"
-                              : "text-gray-300 cursor-not-allowed"
-                          }`}
-                          title={text.approve[language]}
-                        >
-                          <CheckCircle className="w-5 h-5" />
-                        </button>
+
+                        {request.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(request)}
+                              className="p-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95"
+                              title={text.approve[language]}
+                            >
+                              <CheckCircle size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleReject(request)}
+                              className="p-2.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95"
+                              title={text.reject[language]}
+                            >
+                              <XCircle size={18} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+        </div>
 
+        {/* Footer with Pagination */}
         {!isLoading && paginatedRequests.length > 0 && (
-          <div className="mt-6 border-t border-gray-100 pt-6">
+          <div className="p-8 border-t border-slate-50 bg-slate-50/10">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -346,6 +336,17 @@ export default function SubscriptionRequests() {
           request={selectedRequest}
         />
       )}
+
+      <UpdateSubscriptionStatusModal
+        isOpen={statusModalOpen}
+        onClose={() => {
+          setStatusModalOpen(false);
+          setSelectedRequest(null);
+        }}
+        onRequestStatusChange={handleStatusChange}
+        request={selectedRequest}
+        initialStatus={initialModalStatus}
+      />
     </div>
   );
 }

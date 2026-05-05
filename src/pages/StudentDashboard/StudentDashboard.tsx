@@ -7,6 +7,7 @@ import {
   MessageSquare,
   Lock,
   ChevronRight,
+  CreditCard
 } from "lucide-react";
 import { useState } from "react";
 import { Outlet, useLocation, Routes, Route, useNavigate } from "react-router-dom";
@@ -148,6 +149,14 @@ export default function StudentDashboard() {
                 </p>
               </div>
             </div>
+
+            <button 
+              onClick={() => navigate('/student-dashboard/subscription')}
+              className="w-full mt-6 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <CreditCard size={18} />
+              Manage Subscription
+            </button>
           </div>
         </div>
 

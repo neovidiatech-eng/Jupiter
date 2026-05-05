@@ -3,6 +3,7 @@ import { Search, Eye, Pencil, Trash2, Plus, Users, UserCheck, UserX, ClipboardLi
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 import { useTranslation } from 'react-i18next';
 import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } from '../hooks/useStudents';
+import { usePlans } from '../hooks/usePlans';
 import { Student } from '../../../types/student';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { TableSkeleton } from '../../../components/ui/CustomSkeleton';
@@ -25,7 +26,7 @@ export default function Students() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const itemsPerPage = 7;
+  const itemsPerPage = 5;
 
   const { data: apiResponse, isLoading } = useStudents();
 
@@ -34,6 +35,7 @@ export default function Students() {
   const { mutateAsync: createStudent } = useCreateStudent();
   const { mutateAsync: updateStudent } = useUpdateStudent();
   const { mutateAsync: deleteStudent } = useDeleteStudent();
+  const { data: plansData } = usePlans();
   const { confirm, ConfirmDialog } = useConfirm();
 
   const stats = useMemo(() => [
@@ -75,10 +77,14 @@ export default function Students() {
     },
   ], [studentsList, t]);
 
-  const grades = [
+  const plans = plansData || [];
+  const planFilterOptions = [
     { id: 'all', label: t('allPlans'), labelEn: 'All Plans' },
-    { id: 'secondary_1', label: t('secondary1'), labelEn: 'Secondary 1' },
-    { id: 'secondary_2', label: t('secondary2'), labelEn: 'Secondary 2' },
+    ...plans.map(p => ({
+      id: p.id,
+      label: p.name,
+      labelEn: p.name
+    }))
   ];
 
   const countries = [
@@ -98,7 +104,7 @@ export default function Students() {
       const matchesCountry = selectedCountry === 'all' || student.country === selectedCountry;
 
       return matchesSearch && matchesGrade && matchesCountry;
-    });
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [studentsList, searchTerm, selectedGrade, selectedCountry]);
 
   const totalPages = Math.ceil((filteredStudents?.length || 0) / itemsPerPage);
@@ -161,7 +167,15 @@ export default function Students() {
       title: t('plan'),
       render: (_: any, record: Student) => (
         <span className="inline-flex px-3 py-1 bg-fuchsia-50 text-fuchsia-600 rounded-full text-[10px] font-bold border border-fuchsia-100 uppercase tracking-wider">
-          {record.plan?.name_ar || record.plan?.name_en || t('noPlan')}
+          {record.plan?.name || t('noPlan')}
+        </span>
+      ),
+    },
+    {
+      title: t('academicRank') || 'Rank',
+      render: (_: any, record: Student) => (
+        <span className="inline-flex px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-bold border border-indigo-100 uppercase tracking-wider">
+          {record.rank?.name || '---'}
         </span>
       ),
     },
@@ -174,8 +188,8 @@ export default function Students() {
             <span>{Math.round((record.sessions_attended / (record.sessions || 1)) * 100)}%</span>
           </div>
           <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-indigo-500 rounded-full transition-all duration-500" 
+            <div
+              className="h-full bg-indigo-500 rounded-full transition-all duration-500"
               style={{ width: `${(record.sessions_attended / (record.sessions || 1)) * 100}%` }}
             />
           </div>
@@ -191,9 +205,8 @@ export default function Students() {
     {
       title: t('status'),
       render: (_: any, record: Student) => (
-        <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold tracking-widest uppercase ${
-          record.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-        }`}>
+        <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold tracking-widest uppercase ${record.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+          }`}>
           {record.status === 'approved' ? t('active') : t('pending')}
         </span>
       ),
@@ -235,7 +248,7 @@ export default function Students() {
 
   return (
     <div className="space-y-6 max-w-[1200px] mx-auto p-2" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
@@ -284,10 +297,10 @@ export default function Students() {
               className={`w-full ${language === 'ar' ? 'pr-11 pl-4' : 'pl-11 pr-4'} py-2.5 bg-gray-50 border-none rounded-full text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:bg-white transition-colors placeholder:text-gray-400`}
             />
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <div className="relative flex-1 min-w-[140px]">
-              <select 
+              <select
                 value={selectedCountry}
                 onChange={(e) => setSelectedCountry(e.target.value)}
                 className="appearance-none w-full pl-5 pr-10 py-2.5 bg-gray-50 border-none rounded-full text-sm font-bold text-gray-700 focus:outline-none cursor-pointer hover:bg-gray-100 transition-colors"
@@ -298,12 +311,12 @@ export default function Students() {
             </div>
 
             <div className="relative flex-1 min-w-[140px]">
-              <select 
+              <select
                 value={selectedGrade}
                 onChange={(e) => setSelectedGrade(e.target.value)}
                 className="appearance-none w-full pl-5 pr-10 py-2.5 bg-gray-50 border-none rounded-full text-sm font-bold text-gray-700 focus:outline-none cursor-pointer hover:bg-gray-100 transition-colors"
               >
-                {grades.map(g => <option key={g.id} value={g.id}>{language === 'ar' ? g.label : g.labelEn}</option>)}
+                {planFilterOptions.map(g => <option key={g.id} value={g.id}>{language === 'ar' ? g.label : g.labelEn}</option>)}
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
@@ -333,30 +346,29 @@ export default function Students() {
               Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredStudents.length)} of {filteredStudents.length} students
             </span>
             <div className="flex items-center gap-1.5">
-              <button 
+              <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              
+
               {Array.from({ length: totalPages }).map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all ${
-                    currentPage === i + 1 ? 'bg-[#6366f1] text-white shadow-sm scale-110' : 'text-gray-500 hover:bg-gray-50'
-                  }`}
+                  className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all ${currentPage === i + 1 ? 'bg-[#6366f1] text-white shadow-sm scale-110' : 'text-gray-500 hover:bg-gray-50'
+                    }`}
                 >
                   {i + 1}
                 </button>
               ))}
 
-              <button 
-                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                 disabled={currentPage === totalPages}
-                 className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50 transition-colors"
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50 transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -365,7 +377,8 @@ export default function Students() {
         )}
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .ant-table-thead > tr > th {
           background-color: white !important;
           color: #9ca3af !important;
@@ -408,6 +421,7 @@ export default function Students() {
               payload.password = studentData.password;
             }
             await createStudent(payload);
+            setCurrentPage(1);
             setIsAddModalOpen(false);
           } catch (error) {
             console.error('Error adding student:', error);

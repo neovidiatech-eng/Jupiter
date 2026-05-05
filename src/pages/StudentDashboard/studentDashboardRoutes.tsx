@@ -10,6 +10,7 @@ import {
   User,
   MessageSquare,
   Send,
+  CreditCard
 } from "lucide-react";
 
 export interface StudentRouteConfig {
@@ -51,6 +52,9 @@ const CurriculumDetails = lazy(
 const RecordedVideos = lazy(
   () => import("../../features/student/pages/Materials/RecordedVideos"),
 );
+const SubscriptionPage = lazy(
+  () => import("../../features/student/pages/Subscription"),
+);
 
 export const studentDashboardRoutes: StudentRouteConfig[] = [
   {
@@ -58,6 +62,13 @@ export const studentDashboardRoutes: StudentRouteConfig[] = [
     label: "sidebar_dashboard",
     icon: Home,
     path: "",
+  },
+  {
+    id: "student-subscription",
+    label: "sidebar_subscription",
+    icon: CreditCard,
+    path: "subscription",
+    element: <SubscriptionPage />,
   },
   {
     id: "student-lms",

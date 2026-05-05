@@ -12,6 +12,8 @@ import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import ErrorBoundary from "./components/layout/ErrorBoundary";
 import LanguageSwitcher from "./components/ui/LanguageSwitcher";
+import AuthGuard from "./components/guards/AuthGuard";
+import GuestGuard from "./components/guards/GuestGuard";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { googleClientId } from "./components/constants";
@@ -78,48 +80,56 @@ function App() {
                 <Suspense fallback={<LoadingFallback />}>
                   <Routes>
                     {/* Auth Routes */}
-                    {/* <Route element={<GuestGuard />}> */}
-                    <Route element={<AuthLayout />}>
-                      <Route
-                        path="/login"
-                        element={<Login onLoginSuccess={handleLogin} />}
-                      />
-                      <Route
-                        path="/register"
-                        element={<Register onRegisterSuccess={handleLogin} />}
-                      />
-                      <Route
-                        path="/forgot-password"
-                        element={<ForgotPassword />}
-                      />
-                      <Route
-                        path="/reset-password"
-                        element={<ResetPassword />}
-                      />
-                      <Route
-                        path="/verify-account"
-                        element={<VerifyAccount />}
-                      />
+                    <Route element={<GuestGuard />}>
+                      <Route element={<AuthLayout />}>
+                        <Route
+                          path="/login"
+                          element={<Login onLoginSuccess={handleLogin} />}
+                        />
+                        <Route
+                          path="/register"
+                          element={<Register onRegisterSuccess={handleLogin} />}
+                        />
+                        <Route
+                          path="/forgot-password"
+                          element={<ForgotPassword />}
+                        />
+                        <Route
+                          path="/reset-password"
+                          element={<ResetPassword />}
+                        />
+                        <Route
+                          path="/verify-account"
+                          element={<VerifyAccount />}
+                        />
+                      </Route>
                     </Route>
-                    {/*  </Route> */}
 
                     {/* Protected Dashboard Routes */}
-                    <Route path="/dashboard/*" element={<AdminDashboard />} />
-                    <Route
-                      path="/student-dashboard/*"
-                      element={<StudentDashboard />}
-                    />
-                    <Route
-                      path="/teacher-dashboard/*"
-                      element={<TeacherDashboard />}
-                    />
+                    <Route element={<AuthGuard allowedRoles={['admin', 'super_admin']} />}>
+                      <Route path="/dashboard/*" element={<AdminDashboard />} />
+                    </Route>
+
+                    <Route element={<AuthGuard allowedRoles={['student']} />}>
+                      <Route
+                        path="/student-dashboard/*"
+                        element={<StudentDashboard />}
+                      />
+                    </Route>
+
+                    <Route element={<AuthGuard allowedRoles={['teacher']} />}>
+                      <Route
+                        path="/teacher-dashboard/*"
+                        element={<TeacherDashboard />}
+                      />
+                    </Route>
 
                     <Route
                       path="/"
                       element={
                         isAuthenticated ? (
                           <Navigate to={
-                            localStorage.getItem('role') === 'admin' ? "/dashboard" :
+                            localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' ? "/dashboard" :
                             localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
                             "/student-dashboard"
                           } replace />
@@ -133,7 +143,7 @@ function App() {
                       element={
                         isAuthenticated ? (
                           <Navigate to={
-                            localStorage.getItem('role') === 'admin' ? "/dashboard" :
+                            localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' ? "/dashboard" :
                             localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
                             "/student-dashboard"
                           } replace />

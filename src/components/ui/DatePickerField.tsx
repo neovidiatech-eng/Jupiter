@@ -47,7 +47,7 @@ export default function DatePickerField({
   };
 
   return (
-    <div className={className}>
+    <div className={`relative ${className}`}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
           {label}
@@ -72,6 +72,8 @@ export default function DatePickerField({
           style={{ width: '100%' }}
           disabled={disabled}
           size="large"
+          placement="bottomLeft"
+          getPopupContainer={(trigger) => trigger.parentElement!}
           status={error ? 'error' : undefined}
         />
       </ConfigProvider>

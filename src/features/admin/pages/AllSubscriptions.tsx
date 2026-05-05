@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Edit, Trash2, Eye, CreditCard } from "lucide-react";
+import { Search, Edit, Trash2, Eye, CreditCard, User, Package, Calendar, CheckCircle, Clock, TrendingUp } from "lucide-react";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import Pagination from "../../../components/ui/Pagination";
 import ViewSubscriptionDetailsModal from "../../../components/modals/ViewSubscriptionDetailsModal";
@@ -35,13 +35,16 @@ export default function AllSubscriptions() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedSubscription, setSelectedSubscription] =
     useState<Subscription | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { confirm, ConfirmDialog } = useConfirm();
+  const [isLoading, setIsLoading] = useState(false);
+
   const itemsPerPage = 10;
 
   const text = {
     title: { ar: "كل الاشتراكات", en: "All Subscriptions" },
+    subtitle: { ar: "قائمة شاملة بجميع الاشتراكات الحالية والسابقة في المنصة", en: "A comprehensive list of all current and past subscriptions on the platform" },
     search: {
       ar: "بحث عن اسم الطالب أو الخطة...",
       en: "Search for student name or plan...",
@@ -75,12 +78,11 @@ export default function AllSubscriptions() {
     },
   };
 
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const mapSubscriptionToUI = (item: any): Subscription => {
     return {
       id: item.id,
       studentName: item.user?.name || "—",
-      planName: item.plan?.name_ar || item.plan?.name_en || "—",
+      planName: item.plan?.name || item.plan?.name_ar || item.plan?.name_en || "—",
       planPrice: `${item.plan?.price || 0} $`,
       startDate: item.createdAt?.split("T")[0] || "",
       endDate: "",
@@ -138,22 +140,37 @@ export default function AllSubscriptions() {
     startIndex + itemsPerPage,
   );
 
-  const getStatusStyle = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-50 text-green-700 border-green-200";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
+            <CheckCircle size={12} />
+            {text.active[language]}
+          </span>
+        );
       case "expired":
-        return "bg-red-50 text-red-700 border-red-200";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-red-50 text-red-600 border border-red-100">
+            <Clock size={12} />
+            {text.expired[language]}
+          </span>
+        );
       case "cancelled":
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-100">
+            <Trash2 size={12} />
+            {text.cancelled[language]}
+          </span>
+        );
       default:
-        return "bg-gray-50 text-gray-700 border-gray-200";
+        return null;
     }
   };
 
   const calculateProgress = (remaining: number, total: number) => {
     const used = total - remaining;
-    return (used / total) * 100;
+    return (used / (total || 1)) * 100;
   };
 
   const handleView = (subscription: Subscription) => {
@@ -191,134 +208,114 @@ export default function AllSubscriptions() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">
+    <div className="p-8 space-y-8 animate-in fade-in duration-700">
+      <div className={`${language === 'ar' ? 'text-right' : 'text-left'} space-y-2`}>
+        <h1 className="text-4xl font-black text-slate-900 tracking-tight">
           {text.title[language]}
         </h1>
+        <p className="text-slate-500 font-medium">{text.subtitle[language]}</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder={text.search[language]}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent text-right transition-all"
-            />
-          </div>
-          <div className="w-full md:w-[220px]">
-            <CustomSelect
-              value={statusFilter}
-              onChange={(value) =>
-                setStatusFilter(
-                  value as "all" | "active" | "expired" | "cancelled",
-                )
-              }
-              options={[
-                { value: "all", label: text.all[language] },
-                { value: "active", label: text.active[language] },
-                { value: "expired", label: text.expired[language] },
-                { value: "cancelled", label: text.cancelled[language] },
-              ]}
-              placeholder={text.filter[language]}
-            />
+      <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
+        {/* Filters Header */}
+        <div className="p-8 border-b border-slate-50 bg-slate-50/30">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-1 relative group">
+              <Search className={`absolute ${language === 'ar' ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors`} />
+              <input
+                type="text"
+                placeholder={text.search[language]}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`w-full ${language === 'ar' ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-slate-700 font-medium transition-all shadow-sm`}
+              />
+            </div>
+            <div className="w-full lg:w-64">
+              <CustomSelect
+                value={statusFilter}
+                onChange={(value) =>
+                  setStatusFilter(
+                    value as "all" | "active" | "expired" | "cancelled",
+                  )
+                }
+                options={[
+                  { value: "all", label: text.all[language] },
+                  { value: "active", label: text.active[language] },
+                  { value: "expired", label: text.expired[language] },
+                  { value: "cancelled", label: text.cancelled[language] },
+                ]}
+                placeholder={text.filter[language]}
+              />
+            </div>
           </div>
         </div>
 
-        {isLoading ? (
-          <TableSkeleton rows={itemsPerPage} columns={9} />
-        ) : paginatedSubscriptions.length === 0 ? (
-          <div className="text-center py-12">
-            <CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">
-              {text.noSubscriptions[language]}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full" dir={language === "ar" ? "rtl" : "ltr"}>
+        {/* Table Content */}
+        <div className="overflow-x-auto no-scrollbar">
+          {isLoading ? (
+            <div className="p-8">
+              <TableSkeleton rows={8} columns={8} />
+            </div>
+          ) : paginatedSubscriptions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-slate-50/20">
+              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-4">
+                <CreditCard size={40} />
+              </div>
+              <p className="text-slate-500 text-lg font-bold">{text.noSubscriptions[language]}</p>
+            </div>
+          ) : (
+            <table className="w-full border-collapse" dir={language === "ar" ? "rtl" : "ltr"}>
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.studentName[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.plan[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.price[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.sessionsCount[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.startDate[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.endDate[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.status[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.progress[language]}
-                  </th>
-                  <th className="px-4 py-4 text-start text-sm font-semibold text-gray-700">
-                    {text.actions[language]}
-                  </th>
+                <tr className="bg-slate-50/50 border-b border-slate-100">
+                  {[
+                    { label: text.studentName[language], icon: User },
+                    { label: text.plan[language], icon: Package },
+                    { label: text.status[language], icon: CheckCircle },
+                    { label: text.progress[language], icon: TrendingUp },
+                    { label: text.startDate[language], icon: Calendar },
+                    { label: text.actions[language], icon: null }
+                  ].map((head, i) => (
+                    <th key={i} className="px-6 py-5 text-start">
+                      <div className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest">
+                        {head.icon && <head.icon size={14} />}
+                        {head.label}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-50">
                 {paginatedSubscriptions.map((subscription) => (
-                  <tr
-                    key={subscription.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-4 py-4 text-start text-sm font-medium text-gray-900">
-                      {subscription.studentName}
+                  <tr key={subscription.id} className="hover:bg-blue-50/30 transition-colors group">
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{subscription.studentName}</span>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-start text-sm text-gray-900">
-                      {subscription.planName}
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                          <Package size={16} />
+                        </div>
+                        <span className="text-sm font-bold text-slate-700">{subscription.planName}</span>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 text-start text-sm font-semibold text-gray-900">
-                      {subscription.planPrice}
+                    <td className="px-6 py-5">
+                      {getStatusBadge(subscription.status)}
                     </td>
-                    <td className="px-4 py-4 text-start text-sm text-gray-900">
-                      <span className="font-semibold">
-                        {subscription.totalSessions}
-                      </span>{" "}
-                      {text.session[language]}
-                    </td>
-                    <td className="px-4 py-4 text-start text-sm text-gray-900">
-                      {subscription.startDate}
-                    </td>
-                    <td className="px-4 py-4 text-start text-sm text-gray-900">
-                      {subscription.endDate}
-                    </td>
-                    <td className="px-4 py-4 text-start">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(
-                          subscription.status
-                        )}`}
-                      >
-                        {text[subscription.status][language]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-start">
-                      <div className="w-32">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-gray-600">
-                            {subscription.sessionsRemaining}/
-                            {subscription.totalSessions}
+                    <td className="px-6 py-5">
+                      <div className="w-40">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            {subscription.sessionsRemaining} / {subscription.totalSessions} {text.sessions[language]}
+                          </span>
+                          <span className="text-[10px] font-black text-blue-600">
+                            {Math.round(calculateProgress(subscription.sessionsRemaining, subscription.totalSessions))}%
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden p-0.5 border border-slate-200">
                           <div
-                            className="progress-primary h-2 rounded-full transition-all"
+                            className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-1000"
                             style={{
                               width: `${calculateProgress(
                                 subscription.sessionsRemaining,
@@ -329,28 +326,35 @@ export default function AllSubscriptions() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2 justify-end">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                        <Calendar size={14} />
+                        {subscription.startDate}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleView(subscription)}
-                          className="p-2 icon-btn-primary rounded-lg transition-colors group"
+                          className="p-2.5 bg-slate-100 text-slate-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95"
                           title={text.view[language]}
                         >
-                          <Eye className="w-5 h-5" />
+                          <Eye size={18} />
                         </button>
                         <button
                           onClick={() => handleEdit(subscription)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors group"
+                          className="p-2.5 bg-slate-100 text-slate-600 hover:bg-emerald-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95"
                           title={text.edit[language]}
                         >
-                          <Edit className="w-5 h-5" />
+                          <Edit size={18} />
                         </button>
                         <button
                           disabled={deletingId === subscription.id}
                           onClick={() => handleDelete(subscription.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 group"
+                          className="p-2.5 bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                          title={text.delete[language]}
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </td>
@@ -358,11 +362,12 @@ export default function AllSubscriptions() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+        </div>
 
+        {/* Footer with Pagination */}
         {!isLoading && paginatedSubscriptions.length > 0 && (
-          <div className="mt-6 border-t border-gray-100 pt-6">
+          <div className="p-8 border-t border-slate-50 bg-slate-50/10">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

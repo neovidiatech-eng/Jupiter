@@ -8,12 +8,12 @@ export type Currency = {
 
 export type Plan = {
   id: string;
-  name_en: string;
-  name_ar: string;
+  name: string;
   description: string;
   price: string | number;
   duration: number;
   sessionsCount: number;
+  rescheduleCount: number;
   features: string[];
   currencyId: string;
   active: boolean;

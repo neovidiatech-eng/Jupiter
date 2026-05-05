@@ -12,8 +12,7 @@ export interface ProfileUser {
 
 export interface ProfilePlan {
   id: string;
-  name_en: string;
-  name_ar: string;
+  name: string;
   description: string;
   price: string;
   duration: number;

@@ -13,6 +13,7 @@ const getBaseSession = (t: TFunc) => z.object({
   notification_Time: z.string(),
   meetingLink: z.string().url(t("validation.email")).optional().or(z.literal('')), // Adjust key if 'url' specific exists
   notes: z.string().min(10, t("validation.min", { count: 10 })),
+  platform: z.string().min(1, 'Platform is required'),
 });
 
 export const getSessionSchema = (t: TFunc) => getBaseSession(t).extend({

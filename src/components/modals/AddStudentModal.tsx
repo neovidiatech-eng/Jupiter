@@ -15,7 +15,7 @@ interface AddStudentModalProps {
 }
 
 export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStudentModalProps) {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const { data: plansData } = usePlans();
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<StudentFormData>({
@@ -24,8 +24,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
       phone_code: '+20',
       status: 'approved',
       gender: '',
-      plan: '',
-      country: 'مصر'
+      country: 'مصر',
     }
   });
   const onFormSubmit = (data: StudentFormData) => {
@@ -46,10 +45,10 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
   const plans = plansData || [];
 
   const planOptions = [
-    { value: '', label: t('noPlan') },
+    { value: '', label: t('Free Plan') },
     ...plans.map((p: any) => ({
       value: p.id,
-      label: language === 'ar' ? p.name_ar : p.name_en,
+      label: p.name,
     }))
   ];
 
@@ -107,7 +106,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="text-start">
                 <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                   {t('name')} *
+                  {t('name')} *
                 </label>
                 <input
                   type="text"
@@ -279,8 +278,8 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
               >
                 {t('cancel')}
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="flex-1 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-2xl transition-all shadow-[0_10px_20px_-5px_rgba(79,70,229,0.3)] active:scale-95"
               >
                 {t('save')}
@@ -289,7 +288,8 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
           </form>
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { X, Search, Video, ChevronDown, AlertCircle, Calendar, MonitorPlay, AlertTriangle, Clock, Bell, BookOpen, Layers } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,7 +21,6 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
   const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
   const [schedulingMode, setSchedulingMode] = useState<'single' | 'batch'>('batch');
-  const [meetingPlatform, setMeetingPlatform] = useState<'zoom' | 'google' | null>('zoom');
 
   const { data: students } = useStudents();
   const { data: instructors } = useTeacher();
@@ -30,11 +29,14 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
   const singleSchema = getSessionSchema(t);
   const batchSchema = getMultipleSessionsSchema(t);
 
+  const subjects = subjectsData?.subjects || [];
+
   const {
     register,
     handleSubmit,
     control,
     watch,
+    reset,
     setValue,
     formState: { errors },
   } = useForm<any>({
@@ -48,6 +50,7 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
       title: '',
       description: '',
       notes: '',
+      platform: 'zoom',
       meetingLink: '',
       sessionDate: new Date().toISOString().split('T')[0],
       startTime: '14:00',
@@ -61,7 +64,27 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
   const watchTitle = watch('title');
   const watchSubject = watch('subject');
   const watchStudent = watch('student');
+  const watchType = watch('type');
+  const watchStartTime = watch('startTime');
+  const watchPlatform = watch('platform');
   const watchSelectedDays = (watch('selectedDays') as DayOfWeek[]) || [];
+
+  // Auto-calculate end time based on session type and start time
+  useEffect(() => {
+    if (watchStartTime && watchType) {
+      const durationMinutes = watchType === 'full' ? 60 : 30;
+      setValue('duration', durationMinutes.toString());
+
+      const [hours, minutes] = watchStartTime.split(':').map(Number);
+      const date = new Date();
+      date.setHours(hours, minutes, 0, 0);
+      date.setMinutes(date.getMinutes() + durationMinutes);
+
+      const endHours = String(date.getHours()).padStart(2, '0');
+      const endMinutes = String(date.getMinutes()).padStart(2, '0');
+      setValue('endTime', `${endHours}:${endMinutes}`);
+    }
+  }, [watchType, watchStartTime, setValue]);
 
   // Find selected student data and compute plan info
   const selectedStudentData = useMemo(() => {
@@ -72,9 +95,7 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
   const studentPlanInfo = useMemo(() => {
     if (!selectedStudentData) return null;
     return {
-      planName: language === 'ar'
-        ? selectedStudentData.plan?.name_ar
-        : selectedStudentData.plan?.name_en || null,
+      planName: selectedStudentData.plan?.name || null,
       totalSessions: selectedStudentData.sessions || 0,
       sessionsAttended: selectedStudentData.sessions_attended || 0,
       sessionsRemaining: selectedStudentData.sessions_remaining || 0,
@@ -236,9 +257,9 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                   control={control}
                   render={({ field }) => (
                     <CustomSelect
-                      options={subjectsData?.subjects?.map((s: any) => ({
+                      options={subjects?.map((s: any) => ({
                         value: s.id,
-                        label: language === 'ar' ? s.name_ar : s.name_en
+                        label: s.name
                       })) || []}
                       value={field.value}
                       onChange={field.onChange}
@@ -328,8 +349,8 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                             else setValue('selectedDays', [...current, day]);
                           }}
                           className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${isSelected
-                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
-                              : 'bg-white border-transparent text-gray-500 hover:border-indigo-100'
+                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
+                            : 'bg-white border-transparent text-gray-500 hover:border-indigo-100'
                             }`}
                         >
                           {day.substring(0, 3)}
@@ -366,7 +387,8 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                       <input
                         type="time"
                         {...register('endTime')}
-                        className="w-full px-4 py-2 bg-white border border-emerald-50 rounded-2xl text-sm font-bold text-gray-900"
+                        readOnly
+                        className="w-full px-4 py-2 bg-gray-50 border border-emerald-50 rounded-2xl text-sm font-bold text-gray-400 cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -425,20 +447,22 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={() => setMeetingPlatform('zoom')}
-                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${meetingPlatform === 'zoom'
-                      ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]'
-                      : 'bg-white border-gray-100 text-gray-700 hover:border-indigo-100'
+                  type="button"
+                  onClick={() => setValue('platform', 'zoom')}
+                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${watchPlatform === 'zoom'
+                    ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]'
+                    : 'bg-white border-gray-100 text-gray-700 hover:border-indigo-100'
                     }`}
                 >
                   <Video className="w-4 h-4" />
                   Zoom Meet
                 </button>
                 <button
-                  onClick={() => setMeetingPlatform('google')}
-                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${meetingPlatform === 'google'
-                      ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]'
-                      : 'bg-white border-gray-100 text-gray-700 hover:border-indigo-100'
+                  type="button"
+                  onClick={() => setValue('platform', 'google')}
+                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${watchPlatform === 'google'
+                    ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]'
+                    : 'bg-white border-gray-100 text-gray-700 hover:border-indigo-100'
                     }`}
                 >
                   <MonitorPlay className="w-4 h-4" />
@@ -589,6 +613,7 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
                     ]
                   };
                   onAdd(batchData);
+                  reset();
                 }
               })}
               className="flex-1 sm:flex-none px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_-5px_rgba(79,70,229,0.3)] active:scale-95"

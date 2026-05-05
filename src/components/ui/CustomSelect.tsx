@@ -16,6 +16,14 @@ const CustomSelect = forwardRef<any, CustomSelectProps>(({
   className, 
   ...props 
 }, ref) => {
+  React.useEffect(() => {
+    if ((props.value === undefined || props.value === null || props.value === '') && options && options.length > 0 && props.onChange) {
+      if (props.value !== options[0].value) {
+        props.onChange(options[0].value as any, options[0] as any);
+      }
+    }
+  }, [options, props.value, props.onChange]);
+
   return (
     <div className="w-full flex flex-col gap-1 text-start">
       {/* Label */}

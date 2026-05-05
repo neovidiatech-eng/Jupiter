@@ -11,6 +11,7 @@ export interface CreateSchedulePayload {
     start_time: string;
     type: ScheduleType;
     notification_Time: string;
+    platform: string;
 }
 
 export interface UpdateSchedulePayload {
@@ -22,6 +23,7 @@ export interface UpdateSchedulePayload {
     start_time: string;
     type: ScheduleType;
     notification_Time: string;
+    platform: string;
 }
 export type DayOfWeek =
     | 'Saturday'

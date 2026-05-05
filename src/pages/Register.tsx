@@ -2,7 +2,9 @@ import { useState } from "react";
 import {
   Eye,
   EyeOff,
-  Check
+  Check,
+  Zap,
+  Star
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { ConfigProvider, DatePicker, Input, Select } from "antd";
@@ -315,27 +317,44 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
                     key={pkg.id}
                     type="button"
                     onClick={() => setValue("plan_id", pkg.id, { shouldValidate: true })}
-                    className={`w-full p-4 rounded-xl border-2 transition-all text-right ${selectedPackage === pkg.id
-                      ? "border-primary bg-white shadow-md scale-[1.02]"
-                      : "border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white"
-                      }`}
+                    className={`group relative w-full p-6 rounded-3xl border-2 transition-all text-right flex flex-col ${
+                      selectedPackage === pkg.id
+                        ? "border-primary bg-white shadow-xl shadow-blue-500/10 scale-[1.02]"
+                        : "border-gray-100 bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-slate-200/50"
+                    }`}
                   >
-                    <div className="flex items-start justify-between min-h-[60px]">
-                      <div className="flex-1">
-                        <div className={`font-bold text-lg mb-1 ${selectedPackage === pkg.id ? "text-primary" : "text-gray-900"}`}>
-                          {language === "ar" ? pkg.name_ar : pkg.name_en}
-                        </div>
-                        <div className="text-gray-600 text-sm">
-                          {pkg.duration} {t("sessionsCount")} • {pkg.currency?.symbol} {pkg.price}
-                        </div>
+                    {pkg.bestSeller && (
+                      <div className="absolute -top-3 right-4 px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg z-10 flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-current" />
+                        {language === "ar" ? "الأكثر مبيعاً" : "Best Seller"}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
+                        selectedPackage === pkg.id ? "bg-primary text-white" : "bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500"
+                      }`}>
+                         <Zap size={24} />
                       </div>
                       {selectedPackage === pkg.id && (
-                        <div className={`${language === "ar" ? "mr-3" : "ml-3"}`}>
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <Check className="w-4 h-4 text-white" />
-                          </div>
+                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-blue-500/30">
+                          <Check className="w-4 h-4 text-white" />
                         </div>
                       )}
+                    </div>
+
+                    <div className="space-y-1 mb-4 flex-1">
+                      <div className={`font-black text-xl tracking-tight transition-colors ${selectedPackage === pkg.id ? "text-primary" : "text-slate-800"}`}>
+                        {language === "ar" ? pkg.name_ar : pkg.name_en}
+                      </div>
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                         {pkg.sessionsCount} {t("sessionsCount")}
+                      </p>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-50 flex items-baseline gap-1">
+                       <span className="text-2xl font-black text-slate-800">{pkg.price}</span>
+                       <span className="text-sm font-bold text-slate-400 uppercase">{pkg.currency?.symbol || "EGP"}</span>
                     </div>
                   </button>
                 ))}
