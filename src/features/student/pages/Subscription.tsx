@@ -2,16 +2,20 @@ import { useTranslation } from 'react-i18next';
 import { 
   CreditCard, Zap, Shield, Crown, Star, 
   CheckCircle, ArrowRight, Package,
-  History, AlertCircle, TrendingUp
+  History, AlertCircle, TrendingUp,
+  ArrowLeft
 } from 'lucide-react';
 import { usePlans } from '../../admin/hooks/usePlans';
 import { useProfile } from '../hooks/useProfile';
 import { Plan } from '../../../types/plan';
+import { useNavigate } from 'react-router-dom';
 
 export default function SubscriptionPage() {
   const { i18n } = useTranslation();
   const language = i18n.language.split('-')[0] as 'ar' | 'en';
   const isRtl = language === 'ar';
+
+  const navigate = useNavigate();
   
   const { data: plans = [], isLoading: plansLoading } = usePlans();
   const { data: profileResponse, isLoading: profileLoading } = useProfile();
@@ -58,7 +62,17 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 p-4 md:p-8">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+     <div>
+ <button
+          onClick={() => navigate("/student-dashboard")}
+          className="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-bold text-sm"
+        >
+          <ArrowLeft size={18} />
+          Back to Dashboard
+        </button>
+      
+     </div>
       {/* Header */}
       <div className={`${isRtl ? 'text-right' : 'text-left'} space-y-2`}>
         <h1 className="text-4xl font-black text-slate-800 tracking-tight">{text.title[language]}</h1>

@@ -18,6 +18,9 @@ import GuestGuard from "./components/guards/GuestGuard";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { googleClientId } from "./components/constants";
 
+import { Provider } from "react-redux";
+import { store } from "./store/store";
+
 // --- Lazy Loading Core Layouts & Pages ---
 const AuthLayout = lazy(() => import("./pages/AuthLayout/AuthLayout"));
 const Login = lazy(() => import("./pages/Login"));
@@ -73,7 +76,8 @@ function App() {
     <ErrorBoundary>
       <GoogleOAuthProvider clientId={googleClientId}>
         <QueryClientProvider client={queryClient}>
-          <SettingsProvider>
+        <Provider store={store}>
+            <SettingsProvider>
             <SessionsProvider>
               <Router>
                 {!isAuthenticated && <LanguageSwitcher />}
@@ -157,6 +161,7 @@ function App() {
               </Router>
             </SessionsProvider>
           </SettingsProvider>
+        </Provider>
         </QueryClientProvider>
       </GoogleOAuthProvider>
     </ErrorBoundary>

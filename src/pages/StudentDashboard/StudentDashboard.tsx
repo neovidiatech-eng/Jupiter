@@ -10,7 +10,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { useState } from "react";
-import { Outlet, useLocation, Routes, Route, useNavigate } from "react-router-dom";
+import { Outlet , Routes, Route, useNavigate } from "react-router-dom";
 // import { useSettings } from '../../contexts/SettingsContext';
 import SubscribePlanModal from "../../components/modals/SubscribePlanModal";
 // import { useTranslation } from 'react-i18next';

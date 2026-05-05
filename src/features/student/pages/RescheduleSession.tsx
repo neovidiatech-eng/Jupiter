@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -7,32 +7,69 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useMyRequests } from "../../../hooks/useMyRequests";
 
 export default function RescheduleSession() {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<number | null>(new Date().getDate());
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  const history = [
-    {
-      original: "Feb 15, 2026",
-      new: "Feb 18, 2026",
-      reason: "School exam conflict",
-      status: "Approved",
-    },
-    {
-      original: "Jan 20, 2026",
-      new: "Jan 22, 2026",
-      reason: "Family emergency",
-      status: "Approved",
-    },
-    {
-      original: "Dec 10, 2025",
-      new: "Dec 12, 2025",
-      reason: "Medical appointment",
-      status: "Approved",
-    },
-  ];
+  const { data: requestsData, isLoading } = useMyRequests();
+
+  const history = useMemo(() => {
+    // 1. Safely extract the raw requests array from various possible structures
+    let rawRequests: any[] = [];
+    const dataObj = requestsData as any;
+    if (dataObj) {
+      if (Array.isArray(dataObj)) {
+        rawRequests = dataObj;
+      } else if (dataObj.data) {
+        if (Array.isArray(dataObj.data)) {
+          rawRequests = dataObj.data;
+        } else if (dataObj.data.student_requests) {
+          rawRequests = dataObj.data.student_requests;
+        } else if (dataObj.data.requests) {
+          rawRequests = dataObj.data.requests;
+        }
+      }
+    }
+
+    if (rawRequests.length === 0) return [];
+    
+    console.log("My Requests Raw Data:", rawRequests);
+
+    return rawRequests
+      .filter(req => req.type?.toLowerCase().includes('reschedule'))
+      .map(req => {
+        const requestedData = req.requestedData;
+        const formatDate = (dateString: string) => {
+          if (!dateString) return "N/A";
+          try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return "Invalid Date";
+            return date.toLocaleString('en-US', {
+              month: 'short',
+              day: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            });
+          } catch(e) {
+            return "Invalid Date";
+          }
+        };
+
+        return {
+          id: req.id,
+          original: req.schedule?.start_time ? formatDate(req.schedule.start_time) : "N/A",
+          new: requestedData?.new_start_time ? formatDate(requestedData.new_start_time) : 
+               requestedData?.newStartTime ? formatDate(requestedData.newStartTime) : "N/A",
+          reason: req.reason || "No reason provided",
+          status: req.status ? (req.status.charAt(0).toUpperCase() + req.status.slice(1)) : "Pending",
+        };
+      });
+  }, [requestsData]);
 
   // Calendar Logic
   const monthName = currentDate.toLocaleString('default', { month: 'long' });
@@ -187,26 +224,49 @@ export default function RescheduleSession() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {history.map((item, i) => (
-                <tr
-                  key={i}
-                  className="group hover:bg-slate-50/50 transition-colors"
-                >
-                  <td className="py-6 font-bold text-slate-600">
-                    {item.original}
-                  </td>
-                  <td className="py-6 font-bold text-slate-600">{item.new}</td>
-                  <td className="py-6 text-slate-500 font-medium">
-                    {item.reason}
-                  </td>
-                  <td className="py-6">
-                    <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
-                      <CheckCircle2 size={12} />
-                      {item.status}
-                    </span>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={4} className="py-10 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <p className="text-slate-400 font-medium">Loading history...</p>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : history.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-10 text-center text-slate-400 font-medium">
+                    No reschedule history found
+                  </td>
+                </tr>
+              ) : (
+                history.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="group hover:bg-slate-50/50 transition-colors"
+                  >
+                    <td className="py-6 font-bold text-slate-600">
+                      {item.original}
+                    </td>
+                    <td className="py-6 font-bold text-slate-600">{item.new}</td>
+                    <td className="py-6 text-slate-500 font-medium">
+                      {item.reason}
+                    </td>
+                    <td className="py-6">
+                      <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${
+                        item.status.toLowerCase() === 'approved' 
+                          ? 'bg-emerald-50 text-emerald-600' 
+                          : item.status.toLowerCase() === 'pending'
+                          ? 'bg-amber-50 text-amber-600'
+                          : 'bg-rose-50 text-rose-600'
+                      }`}>
+                        <CheckCircle2 size={12} />
+                        {item.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { CustomCheckbox } from "../components/ui/CustomCheckbox";
 import { GoogleLogin } from "@react-oauth/google";
 import ErrorService from "../utils/ErrorService";
+import { connectSocket } from "../lib/socket";
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -66,6 +67,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         }
 
         onLoginSuccess();
+        connectSocket(token);
         ErrorService.success(t("loginSuccess"));
       }
     } catch (error) {

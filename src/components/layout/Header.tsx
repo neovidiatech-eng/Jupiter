@@ -3,6 +3,7 @@ import { useSettings } from "../../contexts/SettingsContext";
 import { useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useProfile } from "../../features/student/hooks/useProfile";
+import { disconnectSocket } from "../../lib/socket";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -81,6 +82,9 @@ export default function Header({
   const handleLogout = useCallback(() => {
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("role");
+    disconnectSocket();
     navigate("/");
   }, [navigate]);
 
