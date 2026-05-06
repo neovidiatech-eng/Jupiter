@@ -49,3 +49,16 @@ export interface GetRequestsResponse {
         teachers_requests: UserRequest[];
     };
 }
+
+export interface CreateRequestType {
+    sessionId?: string;
+    type: RequestType;
+    reason: string;
+    requestedData: {
+        new_start_time?: string;
+        new_end_time?: string;
+        suggested_notes?: string;
+        subject?: string;
+        preferred_time?: string;
+    };
+}

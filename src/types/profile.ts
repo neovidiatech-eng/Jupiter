@@ -8,6 +8,14 @@ export interface ProfileUser {
   createdAt: string;
   code_country: string;
   status: string;
+  gender: string | null;
+  age: number | null;
+}
+
+export interface ProfilePlanCurrency {
+  id: string;
+  name_en: string;
+  symbol: string;
 }
 
 export interface ProfilePlan {
@@ -16,24 +24,28 @@ export interface ProfilePlan {
   description: string;
   price: string;
   duration: number;
-  sessionsCount: number;
   features: string[];
+  sessionsCount: number;
+  rescheduleCount: number;
+  currency: ProfilePlanCurrency;
 }
 
 export interface ProfileData {
   id: string;
   user_id: string;
   birth_date: string;
-  gender: 'male' | 'female';
   active: boolean;
+  planId: string;
+  country: string;
+  status: string;
   createdAt: string;
   updatedAt: string;
   sessions: number;
   sessions_attended: number;
   sessions_remaining: number;
-  planId: string;
-  country: string;
-  status: string;
+  avgRating: number;
+  totalReviews: number;
+  rankId: string | null;
   user: ProfileUser;
   schedules: any[];
   plan: ProfilePlan;
@@ -43,4 +55,10 @@ export interface StudentProfileResponse {
   message: string;
   status: number;
   data: ProfileData;
+}
+
+export interface UpdateProfile {
+  name?: string;
+  email?: string;
+  age?: string;
 }

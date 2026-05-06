@@ -1,4 +1,4 @@
-import { lazy, ReactNode } from "react";
+import React, { lazy, ReactNode } from "react";
 import {
   Home,
   BookOpen,

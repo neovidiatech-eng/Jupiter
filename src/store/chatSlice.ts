@@ -2,7 +2,7 @@ import { Message } from "../types/chat";
 import { createSlice } from "@reduxjs/toolkit";
 
 interface ChatState {
-   messages: Message[];
+  messages: Message[];
   typingUsers: Record<string, boolean>;
   onlineUsers: Record<string, string>;
 }
@@ -14,10 +14,10 @@ const initialState: ChatState = {
 };
 
 const chatSlice = createSlice({
-    name: "chat",
-    initialState,
-    reducers: {
-       setMessages: (state, action) => {
+  name: "chat",
+  initialState,
+  reducers: {
+    setMessages: (state, action) => {
       state.messages = action.payload;
     },
     addMessage: (state, action) => {
@@ -31,7 +31,16 @@ const chatSlice = createSlice({
       const { userId, status } = action.payload;
       state.onlineUsers[userId] = status;
     },
+    setOnlineUsers: (state, action) => {
+      if (Array.isArray(action.payload)) {
+        action.payload.forEach((user: any) => {
+          state.onlineUsers[user.userId || user.id] = user.status;
+        });
+      } else if (typeof action.payload === 'object' && action.payload !== null) {
+        state.onlineUsers = { ...state.onlineUsers, ...action.payload };
+      }
     },
+  },
 });
 
 export const {
@@ -39,6 +48,7 @@ export const {
   addMessage,
   setTyping,
   setOnlineStatus,
+  setOnlineUsers
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

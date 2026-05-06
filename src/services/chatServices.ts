@@ -1,5 +1,5 @@
 import api from "../lib/axios";
-import { Conversation } from "../types/chat";
+import { Conversation, Message } from "../types/chat";
 
 export const getConversations = async (): Promise<{ conversations: Conversation[] }> => {
     const response = await api.get('/chat/conversations/');
@@ -11,4 +11,24 @@ export const createConversation = async (data: {
 }): Promise<Conversation> => {
     const res = await api.post("/chat/conversations", data);
     return res.data.data;
+};
+
+
+export const getConversationMessages = async (
+  conversationId: string,
+  page = 1,
+  limit = 50
+): Promise<{
+  messages: Message[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+}> => {
+  const res = await api.get(
+    `/chat/conversations/${conversationId}/messages?page=${page}&limit=${limit}`
+  );
+
+  return res.data.data;
 };

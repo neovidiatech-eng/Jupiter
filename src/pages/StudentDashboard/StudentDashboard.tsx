@@ -7,23 +7,87 @@ import {
   MessageSquare,
   Lock,
   ChevronRight,
-  CreditCard
 } from "lucide-react";
-import { useState } from "react";
-import { Outlet , Routes, Route, useNavigate } from "react-router-dom";
+// Student Dashboard Page
+import React, { useState, useEffect, useMemo } from "react";
+import { Outlet, Routes, Route, useNavigate } from "react-router-dom";
 // import { useSettings } from '../../contexts/SettingsContext';
 import SubscribePlanModal from "../../components/modals/SubscribePlanModal";
 // import { useTranslation } from 'react-i18next';
 import StudentDashboardLayout from "./StudentDashboardLayout";
 import { studentDashboardRoutes } from "./studentDashboardRoutes";
-import { useSessions } from "../../contexts/SessionsContext";
+import { useDashboardData } from "../../features/student/hooks/useDashboardData";
+import { useMutation } from "@tanstack/react-query";
+import { createConversation } from "../../services/chatServices";
 
 export default function StudentDashboard() {
   // const { t } = useTranslation();
   // const { settings } = useSettings();
   const navigate = useNavigate();
-  const { countdown, isSessionReady } = useSessions();
   const [showSubscribeModal, setShowSubscribeModal] = useState(false);
+
+  const { data: dashboardResponse, isLoading: isDashboardLoading } = useDashboardData();
+  const dashboardData = dashboardResponse?.data;
+  const metadata = dashboardData?.metadata;
+  const nextSession = dashboardData?.nextSchedule;
+
+  const { mutate: startChat, isPending } = useMutation({
+    mutationFn: createConversation,
+    onSuccess: (data) => {
+      navigate("/student-dashboard/chat", {
+        state: {
+          conversationId: data.id,
+          teacherId: nextSession?.teacher?.id,
+          teacherUserId: nextSession?.teacher?.user?.id,
+          teacherName: nextSession?.teacher?.user?.name || "Instructor",
+          teacherSubject: nextSession?.subject?.name || "General",
+          sessionTitle: nextSession?.title || "Not scheduled",
+          sessionTime: nextSession?.start_time,
+        },
+      });
+    },
+  });
+
+
+
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  useEffect(() => {
+    if (!nextSession) {
+      setTimeLeft(0);
+      return;
+    }
+    const targetDate = new Date(nextSession.start_time);
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const dist = targetDate.getTime() - now;
+      setTimeLeft(Math.max(0, dist));
+    };
+
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, [nextSession]);
+
+  const countdown = useMemo(() => {
+    const totalSeconds = Math.floor(timeLeft / 1000);
+    const d = Math.floor(totalSeconds / (3600 * 24));
+    const h = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+
+    return {
+      days: d.toString().padStart(2, '0'),
+      hours: h.toString().padStart(2, '0'),
+      minutes: m.toString().padStart(2, '0'),
+      seconds: s.toString().padStart(2, '0'),
+      totalSeconds
+    };
+  }, [timeLeft]);
+
+  const JOIN_THRESHOLD_SECONDS = 2 * 60;
+  const isSessionReady = nextSession && countdown.totalSeconds <= JOIN_THRESHOLD_SECONDS;
 
   const renderStudentHome = () => (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -46,43 +110,56 @@ export default function StudentDashboard() {
 
             <div className="space-y-4 pt-4">
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                Advanced Data Structures - Trees and Graphs
+                {nextSession ? nextSession.title : "No upcoming sessions"}
               </h1>
               <div className="flex flex-wrap items-center gap-6 text-blue-100/80 font-medium">
-                <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
-                  <BookOpen size={16} />
-                  <span className="text-sm">Python Fundamentals</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
-                  <User size={16} />
-                  <span className="text-sm">Dr. Sarah Mitchell</span>
-                </div>
+                {nextSession && (
+                  <>
+                    <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+                      <BookOpen size={16} />
+                      <span className="text-sm">{nextSession?.subject?.name || "-"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+                      <User size={16} />
+                      <span className="text-sm">{nextSession?.teacher?.user?.name || "-"}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             <div className="flex flex-wrap gap-4 pt-6">
               <button
                 disabled={!isSessionReady}
-                className={`px-8 py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${
-                  isSessionReady
-                    ? "bg-white text-blue-600 hover:bg-blue-50 hover:-translate-y-1"
-                    : "bg-white/20 text-white/50 cursor-not-allowed"
-                }`}
+                className={`px-8 py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${isSessionReady
+                  ? "bg-white text-blue-600 hover:bg-blue-50 hover:-translate-y-1"
+                  : "bg-white/20 text-white/50 cursor-not-allowed"
+                  }`}
               >
                 {isSessionReady ? "Join Now" : "Join Now"}
               </button>
-              <button 
+              <button
                 onClick={() => navigate('/student-dashboard/reschedule')}
                 className="flex items-center gap-2 bg-white/10 border border-white/20 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-bold hover:bg-white/20 transition-all active:scale-95"
               >
                 <Calendar size={18} />
                 Reschedule
               </button>
-              <button 
-              onClick={()=> navigate('/student-dashboard/chat')}
-              className="flex items-center gap-2 text-white/80 hover:text-white px-4 py-4 rounded-2xl font-bold transition-all">
+              <button
+                onClick={() => {
+                  if (nextSession) {
+                    startChat({
+                      teacherId: nextSession?.teacher?.id,
+                      studentId: metadata?.id || "",
+                    });
+                  }
+                }}
+                disabled={isPending || !nextSession}
+                className={`flex items-center gap-2 px-4 py-4 rounded-2xl font-bold transition-all ${(!nextSession) ? "text-white/40 cursor-not-allowed" : "text-white/80 hover:text-white"
+                  }`}
+              >
                 <MessageSquare size={18} />
-                Message Instructor
+                {isPending ? "Opening..." : "Message Instructor"}
               </button>
             </div>
           </div>
@@ -105,7 +182,7 @@ export default function StudentDashboard() {
                 Your Subscription
               </h3>
               <p className="text-slate-400 font-bold text-sm tracking-wide">
-                4 Curriculums - Full Level
+                {metadata?.plan?.name || "No Plan"}
               </p>
             </div>
             <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
@@ -120,43 +197,37 @@ export default function StudentDashboard() {
                   Sessions Progress
                 </span>
                 <span className="text-sm font-black text-slate-800 tracking-tighter">
-                  18 / 48
+                  {metadata?.sessions_attended || 0} / {metadata?.sessions || 0}
                 </span>
               </div>
               <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
                 <div
-                  className="h-full bg-blue-500 rounded-full transition-all duration-1000 group-hover:w-[37.5%]"
-                  style={{ width: "37.5%" }}
+                  className="h-full bg-blue-500 rounded-full transition-all duration-1000"
+                  style={{ width: `${((metadata?.sessions_attended || 0) / (metadata?.sessions || 1)) * 100}%` }}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-8 pt-4">
+            <div className="grid grid-cols-2 gap-8 pt-4 pb-0">
               <div className="space-y-1">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                   Sessions Remaining
                 </p>
                 <p className="text-3xl font-black text-slate-800 tracking-tighter">
-                  30
+                  {metadata?.sessions_remaining || 0}
                 </p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Expires On
+                  Price
                 </p>
                 <p className="text-3xl font-black text-slate-800 tracking-tighter">
-                  Aug 24, 2026
+                  {metadata?.plan?.price}  {metadata?.plan?.currency?.symbol}
                 </p>
               </div>
             </div>
 
-            <button 
-              onClick={() => navigate('/student-dashboard/subscription')}
-              className="w-full mt-6 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95 flex items-center justify-center gap-2"
-            >
-              <CreditCard size={18} />
-              Manage Subscription
-            </button>
+         
           </div>
         </div>
 
@@ -181,7 +252,7 @@ export default function StudentDashboard() {
               },
               {
                 label: "Joined On",
-                value: "Aug 2025",
+                value: metadata?.joindate ? new Date(metadata.joindate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "Aug 2025",
                 icon: Calendar,
                 color: "bg-emerald-50 text-emerald-500",
               },
@@ -215,7 +286,7 @@ export default function StudentDashboard() {
           <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
             Learning Path
           </h3>
-          <button 
+          <button
             onClick={() => navigate('/student-dashboard/recorded-videos')}
             className="flex items-center gap-2 bg-slate-50 text-slate-600 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-100 transition-all"
           >
@@ -287,29 +358,35 @@ export default function StudentDashboard() {
   return (
     <>
       <StudentDashboardLayout>
-        <Routes>
-          <Route index element={renderStudentHome()} />
-          {studentDashboardRoutes.flatMap((route) => {
-            if (route.subItems) {
-              return route.subItems.map((subItem) => (
-                <Route
-                  key={subItem.id}
-                  path={subItem.path}
-                  element={subItem.element}
-                />
-              ));
-            }
-            return route.element
-              ? [
+        {isDashboardLoading ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <Routes>
+            <Route index element={renderStudentHome()} />
+            {studentDashboardRoutes.flatMap((route) => {
+              if (route.subItems) {
+                return route.subItems.map((subItem) => (
+                  <Route
+                    key={subItem.id}
+                    path={subItem.path}
+                    element={subItem.element}
+                  />
+                ));
+              }
+              return route.element
+                ? [
                   <Route
                     key={route.id}
                     path={route.path}
                     element={route.element}
                   />,
                 ]
-              : [];
-          })}
-        </Routes>
+                : [];
+            })}
+          </Routes>
+        )}
         <Outlet />
       </StudentDashboardLayout>
       <SubscribePlanModal

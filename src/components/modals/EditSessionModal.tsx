@@ -1,4 +1,4 @@
-import { X, Calendar, Clock, Link as LinkIcon, FileText, User, GraduationCap, Bell, MonitorPlay, Video, AlertTriangle } from 'lucide-react';
+import { X, Calendar, Clock, FileText, User, GraduationCap, Bell, MonitorPlay, Video, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Schedule } from '../../types/scheduales';
@@ -25,7 +25,6 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
     end_time: '',
     type: 'full' as 'full' | 'half',
     notification_Time: '10',
-    platform: 'zoom',
   });
 
   useEffect(() => {
@@ -37,12 +36,11 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
         description: session.description || '',
         link: session.link || '',
         notes: session.notes || '',
-        status: session.status || 'scheduled',
+        status: session.status === 'scheduled' ? 'planned' : (session.status || 'planned'),
         start_time: startDate ? startDate.toISOString().slice(0, 16) : '',
         end_time: endDate ? endDate.toISOString().slice(0, 16) : '',
         type: (session.type as 'full' | 'half') || 'full',
         notification_Time: '10',
-        platform: 'zoom',
       });
     }
   }, [session, isOpen]);
@@ -60,7 +58,6 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
       start_time: formData.start_time ? new Date(formData.start_time).toISOString() : session.start_time,
       type: formData.type,
       notification_Time: formData.notification_Time,
-      platform: formData.platform,
     });
     onClose();
   };
@@ -153,8 +150,9 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
                   value={formData.status}
                   onChange={(val) => handleChange('status', val as string)}
                   options={[
-                    { value: 'scheduled', label: t('scheduled') },
+                    { value: 'planned', label: t('scheduled') },
                     { value: 'completed', label: t('completed') },
+                    { value: 'missed', label: t('missed') || 'Missed' },
                     { value: 'cancelled', label: t('cancelled') },
                   ]}
                   className="rounded-2xl border-none bg-gray-50"

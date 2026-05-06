@@ -10,7 +10,6 @@ export interface AgendaSession {
   title: string;
   description: string;
   type: SessionType;
-
   start_time: string;
   end_time: string;
 

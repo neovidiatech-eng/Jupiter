@@ -1,25 +1,21 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import  { useState, useMemo } from 'react';
 import { 
-  User, Mail, Calendar, MapPin, Phone, 
-  Award, Clock, CheckCircle, RefreshCw, 
-  Package, GraduationCap, Star, BookOpen, 
-  ShieldCheck, ArrowLeft, Edit3
-} from 'lucide-react';
-import { useSettings } from '../../../contexts/SettingsContext';
-import { useProfile } from '../hooks/useProfile';
+Calendar,Award, ShieldCheck, ArrowLeft, Edit3, 
+BookOpen} from 'lucide-react';
+import { useProfile, useUpdateProfile } from '../hooks/useProfile';
 import SubscribePlanModal from "../../../components/modals/SubscribePlanModal";
+import UpdateProfileModal from "../../../components/modals/UpdateProfileModal";
 import { useNavigate } from 'react-router-dom';
+import { baseURL } from '../../../consts';
+import { UpdateProfile } from '../../../types/profile';
 
 export default function StudentProfile() {
   const navigate = useNavigate();
-  const { settings } = useSettings();
-  const { i18n } = useTranslation();
   const { data: profileResponse, isLoading, isError } = useProfile();
+  const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const language = i18n.language.split('-')[0];
-  const isRtl = language === 'ar';
 
   // Safe data extraction
   const profileData = profileResponse?.data;
@@ -30,19 +26,31 @@ export default function StudentProfile() {
     email: profileData?.user?.email || "---",
     phone: profileData?.user?.phone || profileData?.country || "---",
     birthDate: profileData?.birth_date || "---",
-    age: profileData?.birth_date ? `${new Date().getFullYear() - new Date(profileData.birth_date).getFullYear()} years old` : "---",
+    age: profileData?.user?.age ? `${profileData.user.age} years old` : (profileData?.birth_date ? `${new Date().getFullYear() - new Date(profileData.birth_date).getFullYear()} years old` : "---"),
     joinDate: profileData?.user?.createdAt ? new Date(profileData.user.createdAt).toLocaleDateString() : "---",
     country: profileData?.country || "---"
   };
 
   const subscriptionInfo = {
     status: profileData?.status || 'Inactive',
-    planName: isRtl ? profileData?.plan?.name_ar : (profileData?.plan?.name_en || 'Free Plan'),
+    planName: profileData?.plan?.name || 'Free Plan',
     totalSessions: profileData?.sessions || 0,
     sessionsUsed: profileData?.sessions_attended || 0,
     sessionsRemaining: profileData?.sessions_remaining || 0,
-    expirationDate: 'August 24, 2026'
+    duration: profileData?.plan?.duration || 'August 24, 2026'
   };
+
+  const handleUpdateProfile = (data: UpdateProfile) => {
+    updateProfile(data, {
+      onSuccess: () => setIsEditModalOpen(false),
+    });
+  };
+
+  const initialUpdateData: UpdateProfile = useMemo(() => ({
+    name: studentInfo.name !== "---" ? studentInfo.name : "",
+    email: studentInfo.email !== "---" ? studentInfo.email : "",
+    age: profileData?.user?.age?.toString() || (profileData?.birth_date ? (new Date().getFullYear() - new Date(profileData.birth_date).getFullYear()).toString() : "")
+  }), [studentInfo.name, studentInfo.email, profileData?.birth_date, profileData?.user?.age]);
 
   if (isLoading) {
     return (
@@ -61,7 +69,7 @@ export default function StudentProfile() {
         </div>
         <div className="text-center">
           <h3 className="text-xl font-bold text-slate-800">Connection Error</h3>
-          <p className="text-slate-500">The server (perfect-due.com) returned a 500 error. Please try again later.</p>
+          <p className="text-slate-500">The server (${baseURL}) returned a 500 error. Please try again later.</p>
         </div>
         <button 
           onClick={() => navigate("/student-dashboard")}
@@ -74,8 +82,8 @@ export default function StudentProfile() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 p-20 ">
-      {/* 1. Header Navigation */}
+<div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700 px-20 pt-6 pb-10">
+        {/* 1. Header Navigation */}
       <div className="space-y-4">
         <button
           onClick={() => navigate("/student-dashboard")}
@@ -111,7 +119,10 @@ export default function StudentProfile() {
             </div>
           </div>
 
-          <button className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95">
+          <button 
+            onClick={() => setIsEditModalOpen(true)}
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
+          >
             <Edit3 size={18} />
             Edit Profile
           </button>
@@ -191,16 +202,16 @@ export default function StudentProfile() {
             </div>
 
             <div className="bg-[#FFF9E5] p-6 rounded-[24px] border border-amber-100">
-               <p className="text-xs font-bold text-amber-600/80 uppercase tracking-widest mb-1">Subscription Expires</p>
-               <p className="text-xl font-bold text-amber-900">{subscriptionInfo.expirationDate}</p>
+               <p className="text-xs font-bold text-amber-600/80 uppercase tracking-widest mb-1">Duration</p>
+               <p className="text-xl font-bold text-amber-900">{subscriptionInfo.duration} Days</p>
             </div>
 
-            <button 
+            {/* <button 
               onClick={() => setIsPlanModalOpen(true)}
               className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95"
             >
               Renew Subscription
-            </button>
+            </button> */}
           </div>
 
         </div>
@@ -209,6 +220,14 @@ export default function StudentProfile() {
       <SubscribePlanModal
         isOpen={isPlanModalOpen}
         onClose={() => setIsPlanModalOpen(false)}
+      />
+
+      <UpdateProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleUpdateProfile}
+        initialData={initialUpdateData}
+        isLoading={isUpdating}
       />
     </div>
   );

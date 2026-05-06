@@ -10,10 +10,12 @@ export interface Conversation {
     id: string;
     teacher: {
         id: string;
+        user_id: string;
         name: string;
     };
     student: {
         id: string;
+        user_id: string;
         name: string;
     };
     lastMessage?: {

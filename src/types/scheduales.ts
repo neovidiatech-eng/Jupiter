@@ -23,7 +23,6 @@ export interface UpdateSchedulePayload {
     start_time: string;
     type: ScheduleType;
     notification_Time: string;
-    platform: string;
 }
 export type DayOfWeek =
     | 'Saturday'
@@ -95,8 +94,7 @@ export interface Teacher {
 
 export interface ScheduleSubject {
     id: string;
-    name_en: string;
-    name_ar: string;
+    name:string;
     active: boolean;
     color: string;
     createdAt: string;

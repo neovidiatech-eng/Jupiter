@@ -20,6 +20,7 @@ import { googleClientId } from "./components/constants";
 
 import { Provider } from "react-redux";
 import { store } from "./store/store";
+import { connectSocket, disconnectSocket } from "./lib/socket";
 
 // --- Lazy Loading Core Layouts & Pages ---
 const AuthLayout = lazy(() => import("./pages/AuthLayout/AuthLayout"));
@@ -62,6 +63,17 @@ function App() {
   const { i18n } = useTranslation();
 
   useEffect(() => {
+    if (isAuthenticated) {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (token) {
+        connectSocket(token);
+      }
+    } else {
+      disconnectSocket();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
     const lang = i18n.language.split("-")[0];
     const dir = lang === "ar" ? "rtl" : "ltr";
     document.documentElement.dir = dir;
@@ -76,92 +88,92 @@ function App() {
     <ErrorBoundary>
       <GoogleOAuthProvider clientId={googleClientId}>
         <QueryClientProvider client={queryClient}>
-        <Provider store={store}>
+          <Provider store={store}>
             <SettingsProvider>
-            <SessionsProvider>
-              <Router>
-                {!isAuthenticated && <LanguageSwitcher />}
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    {/* Auth Routes */}
-                    <Route element={<GuestGuard />}>
-                      <Route element={<AuthLayout />}>
+              <SessionsProvider>
+                <Router>
+                  {!isAuthenticated && <LanguageSwitcher />}
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                      {/* Auth Routes */}
+                      <Route element={<GuestGuard />}>
+                        <Route element={<AuthLayout />}>
+                          <Route
+                            path="/login"
+                            element={<Login onLoginSuccess={handleLogin} />}
+                          />
+                          <Route
+                            path="/register"
+                            element={<Register onRegisterSuccess={handleLogin} />}
+                          />
+                          <Route
+                            path="/forgot-password"
+                            element={<ForgotPassword />}
+                          />
+                          <Route
+                            path="/reset-password"
+                            element={<ResetPassword />}
+                          />
+                          <Route
+                            path="/verify-account"
+                            element={<VerifyAccount />}
+                          />
+                        </Route>
+                      </Route>
+
+                      {/* Protected Dashboard Routes */}
+                      <Route element={<AuthGuard allowedRoles={['admin', 'super_admin']} />}>
+                        <Route path="/dashboard/*" element={<AdminDashboard />} />
+                      </Route>
+
+                      <Route element={<AuthGuard allowedRoles={['student']} />}>
                         <Route
-                          path="/login"
-                          element={<Login onLoginSuccess={handleLogin} />}
-                        />
-                        <Route
-                          path="/register"
-                          element={<Register onRegisterSuccess={handleLogin} />}
-                        />
-                        <Route
-                          path="/forgot-password"
-                          element={<ForgotPassword />}
-                        />
-                        <Route
-                          path="/reset-password"
-                          element={<ResetPassword />}
-                        />
-                        <Route
-                          path="/verify-account"
-                          element={<VerifyAccount />}
+                          path="/student-dashboard/*"
+                          element={<StudentDashboard />}
                         />
                       </Route>
-                    </Route>
 
-                    {/* Protected Dashboard Routes */}
-                    <Route element={<AuthGuard allowedRoles={['admin', 'super_admin']} />}>
-                      <Route path="/dashboard/*" element={<AdminDashboard />} />
-                    </Route>
+                      <Route element={<AuthGuard allowedRoles={['teacher']} />}>
+                        <Route
+                          path="/teacher-dashboard/*"
+                          element={<TeacherDashboard />}
+                        />
+                      </Route>
 
-                    <Route element={<AuthGuard allowedRoles={['student']} />}>
                       <Route
-                        path="/student-dashboard/*"
-                        element={<StudentDashboard />}
+                        path="/"
+                        element={
+                          isAuthenticated ? (
+                            <Navigate to={
+                              localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' ? "/dashboard" :
+                                localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
+                                  "/student-dashboard"
+                            } replace />
+                          ) : (
+                            <Navigate to="/login" replace />
+                          )
+                        }
                       />
-                    </Route>
-
-                    <Route element={<AuthGuard allowedRoles={['teacher']} />}>
                       <Route
-                        path="/teacher-dashboard/*"
-                        element={<TeacherDashboard />}
+                        path="*"
+                        element={
+                          isAuthenticated ? (
+                            <Navigate to={
+                              localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' ? "/dashboard" :
+                                localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
+                                  "/student-dashboard"
+                            } replace />
+                          ) : (
+                            <Navigate to="/login" replace />
+                          )
+                        }
                       />
-                    </Route>
-
-                    <Route
-                      path="/"
-                      element={
-                        isAuthenticated ? (
-                          <Navigate to={
-                            localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' ? "/dashboard" :
-                            localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
-                            "/student-dashboard"
-                          } replace />
-                        ) : (
-                          <Navigate to="/login" replace />
-                        )
-                      }
-                    />
-                    <Route
-                      path="*"
-                      element={
-                        isAuthenticated ? (
-                          <Navigate to={
-                            localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' ? "/dashboard" :
-                            localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
-                            "/student-dashboard"
-                          } replace />
-                        ) : (
-                          <Navigate to="/login" replace />
-                        )
-                      }
-                    />
-                  </Routes>
-                </Suspense>
-              </Router>
-            </SessionsProvider>
-          </SettingsProvider>
-        </Provider>
+                    </Routes>
+                  </Suspense>
+                </Router>
+              </SessionsProvider>
+            </SettingsProvider>
+          </Provider>
         </QueryClientProvider>
       </GoogleOAuthProvider>
     </ErrorBoundary>
