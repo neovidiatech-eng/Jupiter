@@ -1,6 +1,7 @@
 import { X, LogOut } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { teacherDashboardRoutes } from "./teacherDashboardRoutes.tsx";
+import { getSocket } from "../../lib/socket";
 
 interface TeacherSidebarProps {
   isOpen: boolean;
@@ -20,6 +21,10 @@ export default function TeacherSidebar({
   };
 
   const handleLogout = () => {
+    const socket = getSocket();
+    if (socket) {
+      socket.disconnect();
+    }
     localStorage.clear();
     sessionStorage.clear();
     window.location.href = "/login";

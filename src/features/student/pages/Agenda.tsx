@@ -207,8 +207,8 @@ export default function Agenda() {
                 <div
                   key={i}
                   className={`aspect-square border p-2 ${isToday(d)
-                      ? "bg-green-50 border-green-300"
-                      : "hover:bg-gray-50"
+                    ? "bg-green-50 border-green-300"
+                    : "hover:bg-gray-50"
                     }`}
                 >
                   <div className="text-sm font-medium">{d.getDate()}</div>

@@ -1,45 +1,42 @@
 import React from "react";
-import { Search, FileText, Monitor, Pencil, Star } from "lucide-react";
+import { Search, FileText, Monitor, Pencil } from "lucide-react";
 import { Table, Tag, Space, Button } from "antd";
 import type { ColumnsType } from "antd/es/table";
-
-interface DataType {
-  key: string;
-  student: {
-    name: string;
-    initials: string;
-    color: string;
-    textColor: string;
-  };
-  lesson: string;
-  type: string;
-  language: string;
-  schedule: string;
-  group: string;
-  review: number;
-}
+import { useUserSessions } from "../../../hooks/useSessions";
+import { Schedule, Student, ScheduleSubject } from "../../../types/scheduales";
 
 const ClassesPage: React.FC = () => {
-  const columns: ColumnsType<DataType> = [
+  const [search, setSearch] = React.useState("");
+  const { data: userSessions, isLoading } = useUserSessions(search);
+  const sessions = userSessions?.data || [];
+
+  const columns: ColumnsType<Schedule> = [
     {
       title: "STUDENT",
       dataIndex: "student",
       key: "student",
-      render: (student) => (
-        <div className="flex items-center gap-4">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[12px] border-2 border-white shadow-sm"
-            style={{ background: student.color, color: student.textColor }}
-          >
-            {student.initials}
+      render: (student: Student) => {
+        const initials = student.user.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2);
+        return (
+          <div className="flex items-center gap-4">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[12px] border-2 border-white shadow-sm bg-blue-50 text-blue-600"
+            >
+              {initials}
+            </div>
+            <span className="font-bold text-slate-700">{student.user.name}</span>
           </div>
-          <span className="font-bold text-slate-700">{student.name}</span>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: "LESSON",
-      dataIndex: "lesson",
+      dataIndex: "title",
       key: "lesson",
       render: (text) => (
         <span className="font-semibold text-slate-600">{text}</span>
@@ -59,41 +56,56 @@ const ClassesPage: React.FC = () => {
       ),
     },
     {
-      title: "LANGUAGE",
-      dataIndex: "language",
-      key: "language",
-      render: (lang) => (
+      title: "SUBJECT",
+      dataIndex: "subject",
+      key: "subject",
+      render: (subject: ScheduleSubject) => (
         <span className="px-3 py-1 bg-slate-50 border border-gray-100 rounded-lg text-[11px] font-bold text-slate-500">
-          {lang}
+          {subject?.name || "N/A"}
         </span>
       ),
     },
     {
       title: "SCHEDULE",
-      dataIndex: "schedule",
+      dataIndex: "start_time",
       key: "schedule",
       render: (time) => (
-        <span className="text-sm font-bold text-slate-600">{time}</span>
+        <span className="text-sm font-bold text-slate-600">
+          {new Date(time).toLocaleString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </span>
       ),
     },
     {
-      title: "GROUP",
-      dataIndex: "group",
-      key: "group",
-      render: (text) => (
-        <span className="text-sm font-semibold text-slate-500">{text}</span>
+      title: "STATUS",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <span className="text-sm font-semibold text-slate-500 uppercase">{status}</span>
       ),
     },
     {
       title: "MATERIAL",
       key: "material",
-      render: () => (
+      render: (record: Schedule) => (
         <Space size="middle">
-          <button className="flex items-center gap-2 px-3 py-1.5 border border-blue-100 bg-blue-50/30 rounded-full text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition-all">
-            <FileText size={12} /> Manual
-          </button>
+          {record.link && (
+            <a 
+              href={record.link} 
+              target="_blank" 
+              rel="noreferrer"
+              className="flex items-center gap-2 px-3 py-1.5 border border-blue-100 bg-blue-50/30 rounded-full text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition-all"
+            >
+              <Monitor size={12} /> Join Class
+            </a>
+          )}
           <button className="flex items-center gap-2 px-3 py-1.5 border border-slate-100 bg-slate-50 rounded-full text-[10px] font-bold text-slate-600 hover:bg-slate-100 transition-all">
-            <Monitor size={12} /> Slides
+            <FileText size={12} /> Manual
           </button>
         </Space>
       ),
@@ -108,51 +120,6 @@ const ClassesPage: React.FC = () => {
           className="bg-[#2563eb] h-9 w-9 flex items-center justify-center rounded-lg shadow-blue-500/20"
         />
       ),
-    },
-    {
-      title: "REVIEW",
-      dataIndex: "review",
-      key: "review",
-      render: (stars) => (
-        <div className="flex gap-0.5">
-          {[...Array(stars)].map((_, i) => (
-            <Star key={i} size={14} fill="#fbbf24" className="text-amber-400" />
-          ))}
-        </div>
-      ),
-    },
-  ];
-
-  const data: DataType[] = [
-    {
-      key: "1",
-      student: {
-        name: "Alex Johnson",
-        initials: "AJ",
-        color: "#eff6ff",
-        textColor: "#2563eb",
-      },
-      lesson: "Introduction to Python",
-      type: "Upcoming",
-      language: "Arabic",
-      schedule: "Today, 2:00 PM",
-      group: "Beginner",
-      review: 5,
-    },
-    {
-      key: "2",
-      student: {
-        name: "Sarah Chen",
-        initials: "SC",
-        color: "#fdf2f8",
-        textColor: "#db2777",
-      },
-      lesson: "React Components",
-      type: "Live",
-      language: "English",
-      schedule: "Today, 4:00 PM",
-      group: "Intermediate",
-      review: 5,
     },
   ];
 
@@ -178,10 +145,12 @@ const ClassesPage: React.FC = () => {
             type="text"
             className="w-full pl-12 sm:pl-14 pr-6 py-3.5 sm:py-4 rounded-xl border border-gray-100 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all text-sm sm:text-base placeholder:text-slate-400"
             placeholder="Search by student or lesson..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
+        {/* <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
           <div className="flex bg-slate-100/80 p-1.5 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
             {["History", "Today", "Upcoming"].map((tab) => (
               <button
@@ -201,15 +170,20 @@ const ClassesPage: React.FC = () => {
               <option>All Status</option>
             </select>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Classes Table using Ant Design */}
       <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-white dashboard-table">
         <Table
           columns={columns}
-          dataSource={data}
-          pagination={false}
+          dataSource={sessions}
+          loading={isLoading}
+          rowKey="id"
+          pagination={{
+            pageSize: 10,
+            className: "px-6 py-4",
+          }}
           className="custom-antd-table"
           scroll={{ x: 1000 }}
         />

@@ -4,6 +4,7 @@ export interface TeacherStudentSubject {
 
 export interface TeacherStudent {
     id: string;
+    user_id: string;
     name: string;
     code: string;
     email: string;

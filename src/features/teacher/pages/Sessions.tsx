@@ -115,10 +115,10 @@ export default function Sessions() {
 
   const getSubjectName = (session: Schedule) => {
     if (session.subject) {
-      return language === 'ar' ? session.subject.name_ar : session.subject.name_en;
+      return session.subject.name;
     }
     const subject = dynamicsubjects.find((s: Subject) => s.id === session.subjectId);
-    return subject ? (language === 'ar' ? subject.name_ar : subject.name_en) : 'subject';
+    return subject ? subject.name_en : 'subject';
   };
 
 

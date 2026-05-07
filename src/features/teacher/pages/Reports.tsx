@@ -1,12 +1,54 @@
-import React from "react";
-import { Calendar, BarChart3, ChevronRight, Info, Send, Save   } from "lucide-react";
+import { Calendar, ChevronRight, Info, Send, Loader2, Star } from "lucide-react";
+import { useTeacherReports, useTeacherInsights, useAddTeacherReport } from "../hooks/useTeacherReports";
+import { format, startOfWeek, endOfWeek } from "date-fns";
+import { useState } from "react";
+import ReportDetailsModal from "../components/ReportDetailsModal";
+import { useForm } from "react-hook-form";
+import { CreateTeacherReport } from "../../../types/reports";
+import { reportSchema } from "../../../lib/schemas/ReportSchema";
+import { notification } from "antd";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function ReportsPage() {
-  const previousReports = [
-    { date: "Feb 10 - Feb 16", status: "Submitted" },
-    { date: "Feb 3 - Feb 9", status: "Submitted" },
-    { date: "Jan 27 - Feb 2", status: "Submitted" },
-  ];
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const { data: reports, isLoading: reportsLoading } = useTeacherReports();
+  const { mutateAsync: addReport, isPending: isSubmitting } = useAddTeacherReport();
+
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<CreateTeacherReport>({
+    resolver: zodResolver(reportSchema),
+    defaultValues: {
+      totalClasses: 0,
+      studentsTaught: 0,
+      avgSessionDuration: 0,
+      materialsUploaded: 0,
+      overallRating: 5,
+    }
+  });
+  
+  // Calculate current week range for insights
+  const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 6 }), "yyyy-MM-dd");
+  const weekEnd = format(endOfWeek(new Date(), { weekStartsOn: 6 }), "yyyy-MM-dd");
+  
+  const { data: insights, isLoading: insightsLoading } = useTeacherInsights({
+    weekStarting: weekStart,
+    weekEnding: weekEnd,
+  });
+
+  const onSubmit = async (data: CreateTeacherReport) => {
+    try {
+      await addReport(data);
+      notification.success({
+        message: "Success",
+        description: "Report submitted successfully",
+      });
+      reset();
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "Failed to submit report",
+      });
+    }
+  };
 
   return (
     <div className="animate-fade-in max-w-[1600px] mx-auto pb-12 p-7">
@@ -19,7 +61,7 @@ export default function ReportsPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 xl:grid-cols-3 gap-10">
         {/* Main Form Section */}
         <div className="xl:col-span-2 space-y-8">
           <div className="bg-white p-8 sm:p-10 rounded-3xl border border-gray-100 shadow-sm">
@@ -38,11 +80,12 @@ export default function ReportsPage() {
                     size={18}
                   />
                   <input
-                    type="text"
-                    placeholder="Select date"
+                    type="date"
+                    {...register("weekStarting", { required: true })}
                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600"
                   />
                 </div>
+                {errors.weekStarting && <p className="text-red-500 text-xs mt-1">{errors.weekStarting.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-500 ml-1">
@@ -54,11 +97,12 @@ export default function ReportsPage() {
                     size={18}
                   />
                   <input
-                    type="text"
-                    placeholder="Select date"
+                    type="date"
+                    {...register("weekEnding", { required: true })}
                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600"
                   />
                 </div>
+                {errors.weekEnding && <p className="text-red-500 text-xs mt-1">{errors.weekEnding.message}</p>}
               </div>
             </div>
 
@@ -73,8 +117,10 @@ export default function ReportsPage() {
                 <input
                   type="number"
                   placeholder="12"
+                  {...register("totalClasses", { required: true, valueAsNumber: true })}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none transition-all font-medium text-slate-600"
                 />
+                {errors.totalClasses && <p className="text-red-500 text-xs mt-1">{errors.totalClasses.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-500 ml-1">
@@ -83,8 +129,10 @@ export default function ReportsPage() {
                 <input
                   type="number"
                   placeholder="18"
+                  {...register("studentsTaught", { required: true, valueAsNumber: true })}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none transition-all font-medium text-slate-600"
                 />
+                {errors.studentsTaught && <p className="text-red-500 text-xs mt-1">{errors.studentsTaught.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-500 ml-1">
@@ -93,8 +141,10 @@ export default function ReportsPage() {
                 <input
                   type="number"
                   placeholder="55"
+                  {...register("avgSessionDuration", { required: true, valueAsNumber: true })}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none transition-all font-medium text-slate-600"
                 />
+                {errors.avgSessionDuration && <p className="text-red-500 text-xs mt-1">{errors.avgSessionDuration.message}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-500 ml-1">
@@ -103,8 +153,10 @@ export default function ReportsPage() {
                 <input
                   type="number"
                   placeholder="8"
+                  {...register("materialsUploaded", { required: true, valueAsNumber: true })}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none transition-all font-medium text-slate-600"
                 />
+                {errors.materialsUploaded && <p className="text-red-500 text-xs mt-1">{errors.materialsUploaded.message}</p>}
               </div>
             </div>
 
@@ -115,9 +167,11 @@ export default function ReportsPage() {
                 </label>
                 <textarea
                   rows={4}
+                  {...register("teachingSummary", { required: true })}
                   placeholder="Provide a summary of topics covered, teaching methods used, and overall progress..."
                   className="w-full p-6 bg-slate-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600 resize-none"
                 />
+                {errors.teachingSummary && <p className="text-red-500 text-xs mt-1">{errors.teachingSummary.message}</p>}
               </div>
               <div className="space-y-3">
                 <label className="text-sm font-bold text-slate-500 ml-1">
@@ -125,9 +179,11 @@ export default function ReportsPage() {
                 </label>
                 <textarea
                   rows={4}
+                  {...register("studentProgress", { required: true })}
                   placeholder="Highlight notable student achievements, improvements, or areas needing attention..."
                   className="w-full p-6 bg-slate-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600 resize-none"
                 />
+                {errors.studentProgress && <p className="text-red-500 text-xs mt-1">{errors.studentProgress.message}</p>}
               </div>
               <div className="space-y-3">
                 <label className="text-sm font-bold text-slate-500 ml-1">
@@ -135,20 +191,45 @@ export default function ReportsPage() {
                 </label>
                 <textarea
                   rows={4}
+                  {...register("challenges", { required: true })}
                   placeholder="Describe any challenges encountered during the week..."
                   className="w-full p-6 bg-slate-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600 resize-none"
                 />
+                {errors.challenges && <p className="text-red-500 text-xs mt-1">{errors.challenges.message}</p>}
+              </div>
+              <div className="space-y-3">
+                <label className="text-sm font-bold text-slate-500 ml-1">
+                  Overall Rating (1-5)
+                </label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    step="0.5"
+                    {...register("overallRating", { valueAsNumber: true })}
+                    className="flex-1 accent-blue-600"
+                  />
+                  <div className="flex items-center gap-1 bg-blue-50 px-4 py-2 rounded-xl text-blue-700 font-bold">
+                    <Star size={16} className="fill-blue-700" />
+                    {watch("overallRating")}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="mt-12 flex gap-4 justify-end ">
-              <button className=" flex flex-row items-center justify-center bg-[#2563eb] text-white px-12 py-4 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all h-[45px] w-[70%] text-[12px] lg:text-[15px] ">
-                <Send className="inline-block mr-1" size={20} />
+            <div className="mt-12 flex gap-4 justify-center ">
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className=" flex flex-row items-center justify-center bg-[#2563eb] text-white px-12 py-4 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all h-[45px] w-[70%] text-[12px] lg:text-[15px] disabled:opacity-50 "
+              >
+                {isSubmitting ? (
+                  <Loader2 className="animate-spin mr-2" size={20} />
+                ) : (
+                  <Send className="inline-block mr-1" size={20} />
+                )}
                 Submit Report
-              </button>
-              <button className="flex flex-row items-center justify-center bg-[#F8FAFC] text-black px-1 py-4 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:bg-gray-200 transition-all h-[45px] w-[30%] text-[10px] lg:text-[15px] ">
-                <Save className="inline-block mr-1" size={20}/>
-                Save Draft
               </button>
             </div>
           </div>
@@ -158,13 +239,16 @@ export default function ReportsPage() {
         <div className="space-y-8">
           {/* This Week Stats */}
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">This Week</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center justify-between">
+              This Week
+              {insightsLoading && <Loader2 className="animate-spin text-blue-500" size={16} />}
+            </h3>
             <div className="space-y-5">
               {[
-                { label: "Classes", val: 12, color: "text-blue-500" },
-                { label: "Students", val: 18, color: "text-purple-500" },
-                { label: "Hours", val: 11, color: "text-green-500" },
-                { label: "Materials", val: 8, color: "text-orange-500" },
+                { label: "Classes", val: insights?.data?.totalClasses || 0, color: "text-blue-500" },
+                { label: "Students", val: insights?.data?.studentsTaught || 0, color: "text-purple-500" },
+                { label: "Hours", val: `${insights?.data?.avgSessionDuration || 0}m`, color: "text-green-500" },
+                { label: "Materials", val: insights?.data?.materialsUploaded || 0, color: "text-orange-500" },
               ].map((item, i) => (
                 <div
                   key={i}
@@ -183,24 +267,31 @@ export default function ReportsPage() {
 
           {/* Previous Reports */}
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center justify-between">
               Previous Reports
+              {reportsLoading && <Loader2 className="animate-spin text-blue-500" size={16} />}
             </h3>
-            <div className="space-y-4">
-              {previousReports.map((report, i) => (
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {reports?.data?.length === 0 && !reportsLoading && (
+                <p className="text-sm text-slate-400 text-center py-4">No reports found</p>
+              )}
+              {reports?.data?.map((report, i) => (
                 <div
-                  key={i}
+                  key={report.id || i}
                   className="p-4 bg-slate-50/50 border border-slate-50 rounded-2xl flex justify-between items-center group"
                 >
                   <div>
                     <h4 className="text-sm font-bold text-slate-700 mb-1">
-                      {report.date}
+                      {format(new Date(report.weekStarting), "MMM dd")} - {format(new Date(report.weekEnding), "MMM dd")}
                     </h4>
                     <span className="text-[10px] font-black uppercase tracking-widest text-green-500">
-                      {report.status}
+                      Submitted
                     </span>
                   </div>
-                  <button className="text-[11px] font-bold text-slate-500 group-hover:text-blue-600 flex items-center gap-1 transition-all">
+                  <button 
+                    onClick={() => setSelectedReportId(report.id)}
+                    className="text-[11px] font-bold text-slate-500 group-hover:text-blue-600 flex items-center gap-1 transition-all"
+                  >
                     View
                     <ChevronRight size={14} />
                   </button>
@@ -233,7 +324,12 @@ export default function ReportsPage() {
             </ul>
           </div>
         </div>
-      </div>
+      </form>
+
+      <ReportDetailsModal 
+        reportId={selectedReportId} 
+        onClose={() => setSelectedReportId(null)} 
+      />
     </div>
   );
 }
