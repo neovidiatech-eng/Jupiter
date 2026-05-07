@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Users,
   MessageSquare,
@@ -6,9 +5,107 @@ import {
   TrendingUp,
   Smile,
   Send,
+  MoreVertical,
 } from "lucide-react";
-
+import { useMystudents } from "../hooks/useMystudents";
+import { TeacherStudent } from "../../../types/teacherStudents";
+import { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { 
+  getConversationMessages, 
+  sendMessage, 
+  createConversation 
+} from "../../../services/chatServices";
+import { useChatSocket } from "../../../hooks/useChat";
+import { addMessage, setMessages, clearMessages } from "../../../store/chatSlice";
+import { getSocket } from "../../../lib/socket";
+import { format } from "date-fns";
 export default function CommunityPage() {
+  const dispatch = useDispatch();
+  const { data: students } = useMystudents();
+  const [selectedStudent, setSelectedStudent] = useState<TeacherStudent | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [messageText, setMessageText] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Read from Redux
+  const { messages, onlineUsers, typingUsers } = useSelector((rootState: any) => rootState.chat);
+  const socket = getSocket();
+
+  // Initialize socket for the conversation
+  useChatSocket(conversationId || undefined);
+
+  const { mutate: openChat } = useMutation({
+    mutationFn: (studentId: string) => {
+      const teacherId = localStorage.getItem("userId") || "";
+
+      return createConversation({ teacherId, studentId });
+    },
+    onSuccess: (data) => {
+      setConversationId(data.id);
+    }
+  });
+
+  const { data: historyData, isLoading: isHistoryLoading } = useQuery({
+    queryKey: ["messages", conversationId],
+    queryFn: () => getConversationMessages(conversationId!, 1, 50),
+    enabled: !!conversationId,
+  });
+
+  useEffect(() => {
+    if (historyData?.messages) {
+      dispatch(setMessages(historyData.messages));
+    }
+  }, [historyData, dispatch]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageText.trim() || !conversationId) return;
+
+    const tempId = Date.now().toString();
+    const messageData = {
+      conversationId,
+      content: messageText,
+      type: "text",
+    };
+
+    // Optimistic update
+    dispatch(addMessage({
+      id: tempId,
+      content: messageText,
+      senderId: "me", // Will be replaced by actual user ID from server
+      createdAt: new Date().toISOString(),
+      status: "sending"
+    }));
+
+    setMessageText("");
+
+    try {
+      await sendMessage(messageData);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
+  };
+
+  const handleTyping = () => {
+    if (socket && conversationId) {
+      socket.emit("typing:start", { conversationId });
+      
+      const timeout = setTimeout(() => {
+        socket.emit("typing:stop", { conversationId });
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
+    }
+  };
+
+  const isStudentOnline = selectedStudent ? onlineUsers[selectedStudent.id] === "online" : false;
+  const isStudentTyping = selectedStudent ? typingUsers[conversationId || ""] : false;
+
   const stats = [
     { label: "Active Members", value: "342", icon: Users, color: "blue" },
     {
@@ -19,12 +116,6 @@ export default function CommunityPage() {
     },
     { label: "Helpful Posts", value: "856", icon: Heart, color: "pink" },
     { label: "This Week", value: "+48", icon: TrendingUp, color: "green" },
-  ];
-
-  const sidebarChats = [
-    { id: 1, name: "Sarah Johnson", posts: "196 posts", rank: "#1" },
-    { id: 2, name: "Mike Chen", posts: "142 posts", rank: "#2" },
-    { id: 3, name: "Emma Davis", posts: "128 posts", rank: "#3" },
   ];
 
   return (
@@ -72,66 +163,105 @@ export default function CommunityPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Chat Area */}
         <div className="lg:col-span-2 flex flex-col h-[700px] bg-white rounded-3xl border border-gray-100/50 shadow-sm overflow-hidden content-chat pt-8">
-          <div className="flex-1 overflow-y-auto p-8 space-y-12 no-scrollbar">
-            {/* Incoming Message Example */}
-            <div className="flex gap-4 max-w-[85%]">
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center font-bold text-blue-500 text-xs shrink-0 border-2 border-white shadow-sm mt-1 uppercase italic">
-                JM
+          {selectedStudent ? (
+            <>
+              {/* Chat Header */}
+              <div className="px-8 pb-6 border-b border-slate-50 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center font-bold text-blue-500 uppercase italic border-2 border-white shadow-sm">
+                      {selectedStudent.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    {isStudentOnline && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">{selectedStudent.name}</h3>
+                    <p className="text-xs font-medium text-slate-400">
+                      {isStudentTyping ? (
+                        <span className="text-blue-500 animate-pulse">Typing...</span>
+                      ) : (
+                        isStudentOnline ? 'Online' : 'Offline'
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                  <MoreVertical size={20} />
+                </button>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold text-slate-800">
-                    Jennifer Martinez
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-300 uppercase">
-                    Student
-                  </span>
-                </div>
-                <div className="bg-slate-50 p-6 rounded-3xl rounded-tl-none text-slate-600 font-medium leading-relaxed shadow-sm">
-                  Just finished an amazing session on async/await in JavaScript!
-                  My students grasped the concept much faster when I used
-                  real-world examples like API calls. What teaching methods work
-                  best for you when explaining asynchronous programming?
-                </div>
+
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar bg-slate-50/30">
+                {messages.length === 0 && !isHistoryLoading ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-4 opacity-60">
+                    <MessageSquare size={48} />
+                    <p className="font-medium">No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  messages.map((msg: any) => {
+                    const isMe = msg.senderId === "me" || msg.sender?.role === "teacher"; // Adjust based on your auth logic
+                    return (
+                      <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] space-y-1`}>
+                          <div className={`p-4 rounded-2xl shadow-sm text-sm font-medium leading-relaxed ${
+                            isMe 
+                              ? 'bg-blue-600 text-white rounded-tr-none' 
+                              : 'bg-white text-slate-600 rounded-tl-none border border-slate-100'
+                          }`}>
+                            {msg.content}
+                          </div>
+                          <p className={`text-[10px] font-bold text-slate-300 uppercase ${isMe ? 'text-right' : 'text-left'}`}>
+                            {msg.createdAt ? format(new Date(msg.createdAt), 'hh:mm a') : 'Just now'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Chat Input */}
+              <div className="p-6 border-t border-slate-50">
+                <form onSubmit={handleSendMessage} className="relative flex items-center gap-3">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      value={messageText}
+                      onChange={(e) => {
+                        setMessageText(e.target.value);
+                        handleTyping();
+                      }}
+                      placeholder="Type your message..."
+                      className="w-full px-6 py-4 bg-slate-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all text-sm font-medium"
+                    />
+                    <button type="button" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      <Smile size={20} />
+                    </button>
+                  </div>
+                  <button 
+                    type="submit"
+                    disabled={!messageText.trim()}
+                    className="p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:shadow-none"
+                  >
+                    <Send size={20} />
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-6 animate-pulse">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">
+                <Users size={40} className="text-slate-200" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">Select a Student</h3>
+                <p className="text-sm font-medium">Choose a student from the list to start chatting</p>
               </div>
             </div>
-
-            {/* Outgoing Message Example */}
-            <div className="flex flex-col items-end gap-2 ml-auto max-w-[85%]">
-              <div className="flex items-center gap-3 mr-1 mb-1">
-                <span className="text-sm font-bold text-slate-800">
-                  Muhamed Ali
-                </span>
-                <span className="text-[10px] font-bold text-slate-300 uppercase">
-                  Instructor
-                </span>
-                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center font-bold text-blue-500 text-xs shrink-0 border-2 border-white shadow-sm uppercase italic">
-                  MA
-                </div>
-              </div>
-              <div className="bg-[#f8faff] p-6 rounded-3xl rounded-tr-none text-slate-600 font-medium leading-relaxed shadow-sm">
-                Just finished an amazing session on async/await in JavaScript!
-                My students grasped the concept much faster when I used
-                real-world examples like API calls. What teaching methods work
-                best for you when explaining asynchronous programming?
-              </div>
-            </div>
-
-            {/* Additional Bubble if needed... */}
-          </div>
-
-          {/* Chat Input */}
-          <div className="p-6 border-t border-slate-50">
-            <div className="relative flex justify-center items-center">
-              <Smile className="inline-block text-gray-400 hover:text-gray-600 cursor-pointer mr-2 " />
-              <input
-                type="text"
-                placeholder="Type Message ...."
-                className="w-full px-8 py-4 bg-slate-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all text-sm font-medium italic"
-              />
-              <Send className="inline-block text-blue-600 hover:text-blue-400 cursor-pointer ml-2" />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Students Sidebar */}
@@ -140,23 +270,38 @@ export default function CommunityPage() {
             Students Chat
           </h3>
           <div className="space-y-6 flex-1 overflow-y-auto no-scrollbar">
-            {sidebarChats.map((chat) => (
+            {students?.map((student: TeacherStudent) => (
               <div
-                key={chat.id}
-                className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-2xl transition-all cursor-pointer group"
+                key={student.id}
+                onClick={() => {
+                  setSelectedStudent(student);
+                  openChat(student.id);
+                }}
+                className={`flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer group border ${
+                  selectedStudent?.id === student.id 
+                    ? "bg-blue-50/50 border-blue-100 shadow-sm" 
+                    : "hover:bg-slate-50 border-transparent"
+                }`}
               >
                 <div className="flex items-center gap-4">
-                  <span
-                    className={`text-xs font-black w-6 ${chat.id === 1 ? "text-orange-400" : chat.id === 2 ? "text-blue-400" : "text-orange-600"}`}
-                  >
-                    {chat.rank}
-                  </span>
+                  <div className="relative">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                      selectedStudent?.id === student.id ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"
+                    }`}>
+                      {student.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    {onlineUsers[student.id] === "online" && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
+                    )}
+                  </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
-                      {chat.name}
+                    <h4 className={`text-sm font-bold transition-colors ${
+                      selectedStudent?.id === student.id ? "text-blue-600" : "text-slate-800"
+                    }`}>
+                      {student.name}
                     </h4>
                     <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                      {chat.posts}
+                      {student.code}
                     </p>
                   </div>
                 </div>

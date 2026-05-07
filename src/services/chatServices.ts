@@ -13,6 +13,15 @@ export const createConversation = async (data: {
     return res.data.data;
 };
 
+export const sendMessage = async (data: {
+  conversationId: string;
+  content: string;
+  type?: string;
+}): Promise<Message> => {
+  const res = await api.post(`/chat/messages`, data);
+  return res.data.data;
+};
+
 
 export const getConversationMessages = async (
   conversationId: string,

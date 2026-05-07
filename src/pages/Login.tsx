@@ -124,9 +124,8 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={`absolute ${
-                language === "ar" ? "left" : "right"
-              }-4 top-1/2 -translate-y-1/2 text-gray-400`}
+              className={`absolute ${language === "ar" ? "left" : "right"
+                }-4 top-1/2 -translate-y-1/2 text-gray-400`}
             >
               {showPassword ? (
                 <EyeOff className="w-5 h-5" />

@@ -11,7 +11,7 @@ import {
   User,
   Clock,
   Trophy,
-  Layers
+  Layers,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

@@ -240,13 +240,13 @@ export default function StudentDashboard() {
             {[
               {
                 label: "Videos Watched",
-                value: "80",
+                value: `${metadata?.sessions_attended || 0} / ${metadata?.sessions || 0}`,
                 icon: Play,
                 color: "bg-blue-50 text-blue-500",
               },
               {
                 label: "Current Level",
-                value: "Silver",
+                value: `${metadata?.rank||`Silver`}`,
                 icon: Award,
                 color: "bg-amber-50 text-amber-500",
               },

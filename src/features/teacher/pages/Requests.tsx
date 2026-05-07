@@ -8,6 +8,8 @@ import {
   AlertCircle,
   RefreshCcw,
 } from "lucide-react";
+import { useState } from "react";
+import NewRequestModal from "../components/NewRequestModal";
 
 const RequestCard = ({
   title,
@@ -77,6 +79,7 @@ const RequestCard = ({
 };
 
 export default function TeacherRequests() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const stats = [
     { label: "Vacation", value: 15, color: "bg-blue-500" },
     { label: "Sick Leave", value: 30, color: "bg-pink-500" },
@@ -103,7 +106,10 @@ export default function TeacherRequests() {
             Manage leave, reschedule, and issue requests
           </p>
         </div>
-        <button className="flex items-center gap-2 w-[150px] h-[45px] bg-[#2563eb] text-white px-6 py-2.5 rounded-full text-[12px] font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center justify-center gap-2 w-[150px] h-[45px] bg-[#2563eb] text-white rounded-full text-[12px] font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all"
+        >
           <Plus size={18} strokeWidth={3} />
           New Request
         </button>
@@ -227,6 +233,11 @@ export default function TeacherRequests() {
           />
         </div>
       </section>
+
+      <NewRequestModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   );
 }

@@ -61,6 +61,7 @@ const CurriculumPage = lazy(() => import("../../features/admin/pages/Curriculum"
 const LibraryPage = lazy(() => import("../../features/admin/pages/Library"));
 const RanksPage = lazy(() => import("../../features/admin/pages/Ranks"));
 
+
 export const adminDashboardRoutes: RouteConfig[] = [
   {
     id: "dashboard",
@@ -165,7 +166,7 @@ export const adminDashboardRoutes: RouteConfig[] = [
         id: "curriculum",
         label: "Curriculum Shelf",
         icon: Layers,
-        path: "curriculum",
+        path: "curriculum/:courseId?",
         element: <CurriculumPage />,
       },
       {
