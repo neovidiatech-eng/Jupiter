@@ -21,7 +21,7 @@ export default function StudentDashboardLayout({
       <div className="flex-1 w-full overflow-hidden">
         <main className="overflow-x-hidden overflow-y-auto w-full transition-all duration-300">
           <div className="min-h-full w-full">
-             <div className="p-4 md:p-8">
+            <div className="p-4 md:p-8">
               {children}
             </div>
           </div>

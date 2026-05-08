@@ -1,54 +1,64 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import {
-  setMessages,
-  addMessage,
-  setTyping,
-  setOnlineStatus,
-  setOnlineUsers,
-} from "../store/chatSlice";
-import { getSocket } from "../lib/socket";
+import { getSocket, connectSocket } from "../lib/socket";
+import { setMessages, addMessage, setTyping, setOnlineUsers } from "../store/chatSlice";
 
-export const useChatSocket = (conversationId?: string) => {
+export const useChatSocket = (conversationId?: string, teacherUserId?: string) => {
   const dispatch = useDispatch();
-  const socket = getSocket();
+  let socket = getSocket();
+
+  if (!socket) {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (token) {
+      socket = connectSocket(token);
+    }
+  }
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !conversationId) return;
 
-    // open conversation
-    if (conversationId) {
-      console.log("🔌 Socket connected:", socket.connected);
-      socket.emit("conversation:open", { conversationId });
-      // Request initial statuses for participants in this conversation
-      socket.emit("user:status:get", { conversationId });
+    socket.emit("conversation:open", { conversationId });
+    if (teacherUserId) {
+      socket.emit("user:status:check", { userIds: [teacherUserId] });
     }
 
-    socket.on("messages:history", ({ messages }) => {
-      dispatch(setMessages(messages));
-    });
+    const onHistory = (data: any) => {
+      dispatch(
+        setMessages({
+          conversationId: data.conversationId,
+          messages: data.messages,
+        })
+      );
+    };
 
-    socket.on("message:new", (message) => {
+    const onNewMessage = (message: any) => {
       dispatch(addMessage(message));
-    });
+    };
 
-    socket.on("typing:update", (data) => {
+    const onTyping = (data: any) => {
       dispatch(setTyping(data));
-    });
+    };
 
-    socket.on("user:status", (data) => {
-      dispatch(setOnlineStatus(data));
-    });
-    socket.on("user:status:list", ({ statuses }) => {
-  dispatch(setOnlineUsers(statuses));
-});
+    const onStatusList = ({ statuses }: any) => {
+      const mapped: Record<string, "online" | "offline"> = {};
+
+      statuses.forEach((u: any) => {
+        mapped[u.userId] = u.status;
+      });
+
+      dispatch(setOnlineUsers(mapped));
+    };
+
+    socket.on("messages:history", onHistory);
+    socket.on("message:new", onNewMessage);
+    socket.on("typing:update", onTyping);
+    socket.on("user:status:list", onStatusList);
 
     return () => {
-      socket.off("messages:history");
-      socket.off("message:new");
-      socket.off("typing:update");
-      socket.off("user:status");
-      socket.off("user:status:list");
+      socket.off("messages:history", onHistory);
+      socket.off("message:new", onNewMessage);
+      socket.off("typing:update", onTyping);
+      socket.off("user:status:list", onStatusList);
     };
-  }, [conversationId, socket]);
+  }, [socket, conversationId]);
 };

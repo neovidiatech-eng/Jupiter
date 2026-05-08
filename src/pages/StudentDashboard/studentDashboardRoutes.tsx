@@ -1,4 +1,4 @@
-import React, { lazy, ReactNode } from "react";
+import  { lazy, ReactNode } from "react";
 import {
   Home,
   BookOpen,
@@ -36,7 +36,7 @@ const ProfilePage = lazy(() => import("../../features/student/pages/Profile"));
 const LMSCoursesPage = lazy(
   () => import("../../features/student/pages/LMSCourses/LMSCourses"),
 );
-const ChatPage = lazy(() => import("../../features/student/pages/Chat"));
+const ChatPage = lazy(() => import("../../features/student/pages/Chat/Chat"));
 const RequestsPage = lazy(
   () => import("../../features/student/pages/Requests"),
 );

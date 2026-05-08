@@ -1,26 +1,16 @@
-import {
-  Users,
-  MessageSquare,
-  Heart,
-  TrendingUp,
-  Smile,
-  Send,
-  MoreVertical,
-} from "lucide-react";
 import { useMystudents } from "../hooks/useMystudents";
 import { TeacherStudent } from "../../../types/teacherStudents";
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { 
-  getConversationMessages, 
-  sendMessage, 
-  createConversation 
-} from "../../../services/chatServices";
-import { useChatSocket } from "../../../hooks/useChat";
-import { addMessage, setMessages, clearMessages } from "../../../store/chatSlice";
+import { addMessage, setMessages } from "../../../store/chatSlice";
 import { getSocket } from "../../../lib/socket";
 import { format } from "date-fns";
+import { useCreateConversation, useMessages } from "../../../hooks/useMessages";
+import { sendMessage } from "../../../services/chatServices";
+import { useChatSocket } from "../../../hooks/useChat";
+import { useTeacherProfile } from "../hooks/useTeacherProfile";
+import { Users, MessageSquare, Smile, Send, MoreVertical } from "lucide-react";
+
 export default function CommunityPage() {
   const dispatch = useDispatch();
   const { data: students } = useMystudents();
@@ -29,38 +19,31 @@ export default function CommunityPage() {
   const [messageText, setMessageText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // Read from Redux
-  const { messages, onlineUsers, typingUsers } = useSelector((rootState: any) => rootState.chat);
+  const { messages: allMessages, onlineUsers, typingUsers } = useSelector((rootState: any) => rootState.chat);
+  const {data: teacherData} = useTeacherProfile()
+  const teacherId = teacherData?.data.teacher.id;
+  const teacherUserId = teacherData?.data.teacher.user_id;
+  const currentMessages = conversationId ? allMessages[conversationId] || [] : [];
+  const studentUserId = selectedStudent?.user_id;
+  
   const socket = getSocket();
 
   // Initialize socket for the conversation
-  useChatSocket(conversationId || undefined);
+  useChatSocket(conversationId || undefined, studentUserId);
 
-  const { mutate: openChat } = useMutation({
-    mutationFn: (studentId: string) => {
-      const teacherId = localStorage.getItem("userId") || "";
+  const { mutate: openChat } = useCreateConversation();
 
-      return createConversation({ teacherId, studentId });
-    },
-    onSuccess: (data) => {
-      setConversationId(data.id);
-    }
-  });
-
-  const { data: historyData, isLoading: isHistoryLoading } = useQuery({
-    queryKey: ["messages", conversationId],
-    queryFn: () => getConversationMessages(conversationId!, 1, 50),
-    enabled: !!conversationId,
-  });
+  const { data: historyData, isLoading: isHistoryLoading } = useMessages(conversationId || undefined);
 
   useEffect(() => {
-    if (historyData?.messages) {
-      dispatch(setMessages(historyData.messages));
+    if (historyData?.messages && conversationId) {
+      dispatch(setMessages({ conversationId, messages: historyData.messages }));
     }
-  }, [historyData, dispatch]);
+  }, [historyData, dispatch, conversationId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [currentMessages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,19 +56,10 @@ export default function CommunityPage() {
       type: "text",
     };
 
-    // Optimistic update
-    dispatch(addMessage({
-      id: tempId,
-      content: messageText,
-      senderId: "me", // Will be replaced by actual user ID from server
-      createdAt: new Date().toISOString(),
-      status: "sending"
-    }));
-
     setMessageText("");
 
     try {
-      await sendMessage(messageData);
+      socket.emit("message:send", messageData);
     } catch (error) {
       console.error("Failed to send message:", error);
     }
@@ -103,20 +77,10 @@ export default function CommunityPage() {
     }
   };
 
-  const isStudentOnline = selectedStudent ? onlineUsers[selectedStudent.id] === "online" : false;
-  const isStudentTyping = selectedStudent ? typingUsers[conversationId || ""] : false;
+  const isStudentOnline = studentUserId ? onlineUsers[studentUserId] === "online" : false;
+  const isStudentTyping = conversationId && studentUserId ? typingUsers[conversationId]?.includes(studentUserId) : false;
 
-  const stats = [
-    { label: "Active Members", value: "342", icon: Users, color: "blue" },
-    {
-      label: "Discussions",
-      value: "1,248",
-      icon: MessageSquare,
-      color: "purple",
-    },
-    { label: "Helpful Posts", value: "856", icon: Heart, color: "pink" },
-    { label: "This Week", value: "+48", icon: TrendingUp, color: "green" },
-  ];
+
 
   return (
     <div className="animate-fade-in max-w-[1600px] mx-auto pb-12 p-7">
@@ -131,7 +95,7 @@ export default function CommunityPage() {
       </header>
 
       {/* Stats Cards Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {stats.map((stat, i) => (
           <div
             key={i}
@@ -158,7 +122,7 @@ export default function CommunityPage() {
             <h3 className="text-2xl font-black text-slate-800">{stat.value}</h3>
           </div>
         ))}
-      </div>
+      </div>  */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Chat Area */}
@@ -188,20 +152,20 @@ export default function CommunityPage() {
                   </div>
                 </div>
                 <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                  <MoreVertical size={20} />
+                  <MoreVertical  size={20} />
                 </button>
               </div>
 
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar bg-slate-50/30">
-                {messages.length === 0 && !isHistoryLoading ? (
+                {currentMessages.length === 0 && !isHistoryLoading ? (
                   <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-4 opacity-60">
                     <MessageSquare size={48} />
                     <p className="font-medium">No messages yet. Start the conversation!</p>
                   </div>
                 ) : (
-                  messages.map((msg: any) => {
-                    const isMe = msg.senderId === "me" || msg.sender?.role === "teacher"; // Adjust based on your auth logic
+                  currentMessages.map((msg: any) => {
+                    const isMe = msg.senderId === teacherUserId || msg.senderId === "me" || msg.sender?.role === "teacher";
                     return (
                       <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] space-y-1`}>
@@ -275,7 +239,13 @@ export default function CommunityPage() {
                 key={student.id}
                 onClick={() => {
                   setSelectedStudent(student);
-                  openChat(student.id);
+                  if (teacherId) {
+                    openChat({ teacherId, studentId: student.id }, {
+                      onSuccess: (data) => {
+                        setConversationId(data.id);
+                      }
+                    });
+                  }
                 }}
                 className={`flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer group border ${
                   selectedStudent?.id === student.id 
@@ -290,7 +260,7 @@ export default function CommunityPage() {
                     }`}>
                       {student.name.split(' ').map(n => n[0]).join('')}
                     </div>
-                    {onlineUsers[student.id] === "online" && (
+                    {student.user_id && onlineUsers[student.user_id] === "online" && (
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
                     )}
                   </div>

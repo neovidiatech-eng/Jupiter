@@ -9,20 +9,15 @@ import {
   ChevronRight,
 } from "lucide-react";
 // Student Dashboard Page
-import React, { useState, useEffect, useMemo } from "react";
-import { Outlet, Routes, Route, useNavigate } from "react-router-dom";
-// import { useSettings } from '../../contexts/SettingsContext';
+import { useState, useEffect, useMemo } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import SubscribePlanModal from "../../components/modals/SubscribePlanModal";
-// import { useTranslation } from 'react-i18next';
 import StudentDashboardLayout from "./StudentDashboardLayout";
 import { studentDashboardRoutes } from "./studentDashboardRoutes";
 import { useDashboardData } from "../../features/student/hooks/useDashboardData";
-import { useMutation } from "@tanstack/react-query";
-import { createConversation } from "../../services/chatServices";
+import { useCreateConversation } from "../../hooks/useMessages";
 
 export default function StudentDashboard() {
-  // const { t } = useTranslation();
-  // const { settings } = useSettings();
   const navigate = useNavigate();
   const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
@@ -31,23 +26,7 @@ export default function StudentDashboard() {
   const metadata = dashboardData?.metadata;
   const nextSession = dashboardData?.nextSchedule;
 
-  const { mutate: startChat, isPending } = useMutation({
-    mutationFn: createConversation,
-    onSuccess: (data) => {
-      navigate("/student-dashboard/chat", {
-        state: {
-          conversationId: data.id,
-          teacherId: nextSession?.teacher?.id,
-          teacherUserId: nextSession?.teacher?.user?.id,
-          teacherName: nextSession?.teacher?.user?.name || "Instructor",
-          teacherSubject: nextSession?.subject?.name || "General",
-          sessionTitle: nextSession?.title || "Not scheduled",
-          sessionTime: nextSession?.start_time,
-        },
-      });
-    },
-  });
-
+  const { mutate: startChat, isPending } = useCreateConversation();
 
 
   const [timeLeft, setTimeLeft] = useState(0);
@@ -136,7 +115,7 @@ export default function StudentDashboard() {
                   : "bg-white/20 text-white/50 cursor-not-allowed"
                   }`}
               >
-                {isSessionReady ? "Join Now" : "Join Now"}
+                {isSessionReady ? "Join Now" : "Wait for Session"}
               </button>
               <button
                 onClick={() => navigate('/student-dashboard/reschedule')}
@@ -148,10 +127,27 @@ export default function StudentDashboard() {
               <button
                 onClick={() => {
                   if (nextSession) {
-                    startChat({
-                      teacherId: nextSession?.teacher?.id,
-                      studentId: metadata?.id || "",
-                    });
+                    startChat(
+                      {
+                        teacherId: nextSession?.teacher?.id,
+                        studentId: metadata?.id || "",
+                      },
+                      {
+                        onSuccess: (data) => {
+                          navigate("/student-dashboard/chat", {
+                            state: {
+                              conversationId: data.id,
+                              teacherId: nextSession?.teacher?.id,
+                              teacherUserId: nextSession?.teacher?.user?.id,
+                              teacherName: nextSession?.teacher?.user?.name || "Instructor",
+                              teacherSubject: nextSession?.subject?.name || "General",
+                              sessionTitle: nextSession?.title || "Not scheduled",
+                              sessionTime: nextSession?.start_time,
+                            },
+                          });
+                        },
+                      }
+                    );
                   }
                 }}
                 disabled={isPending || !nextSession}
@@ -387,7 +383,7 @@ export default function StudentDashboard() {
             })}
           </Routes>
         )}
-        <Outlet />
+
       </StudentDashboardLayout>
       <SubscribePlanModal
         isOpen={showSubscribeModal}

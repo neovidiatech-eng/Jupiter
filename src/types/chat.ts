@@ -1,9 +1,24 @@
+// types/chat.ts
 export interface Message {
-    id: string;
-    senderId: string;
-    content: string;
-    createdAt: string;
-    isMine?: boolean;
+  id: string;
+  conversationId: string;
+  tempId?: string;
+  senderId: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+  status?: "sending" | "sent" | "failed";
+}
+
+export interface TypingPayload {
+  userId: string;
+  conversationId: string;
+  isTyping: boolean;
+}
+
+export interface OnlineStatus {
+  userId: string;
+  status: "online" | "offline";
 }
 
 export interface Conversation {
