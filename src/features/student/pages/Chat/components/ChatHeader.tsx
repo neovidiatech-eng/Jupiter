@@ -3,9 +3,10 @@
 interface ChatHeaderProps {
   teacherName: string;
   isTeacherOnline: boolean;
+  isTyping?: boolean;
 }
 
-export default function ChatHeader({ teacherName, isTeacherOnline }: ChatHeaderProps) {
+export default function ChatHeader({ teacherName, isTeacherOnline, isTyping }: ChatHeaderProps) {
   return (
     <div className="px-6 py-4 border-b border-slate-100 shrink-0 bg-white/80 backdrop-blur-md sticky top-0 z-10">
       <div className="flex items-center justify-between">
@@ -23,11 +24,24 @@ export default function ChatHeader({ teacherName, isTeacherOnline }: ChatHeaderP
               {teacherName}
             </h3>
             <div className="flex items-center gap-1.5 mt-1">
-              <span className={`text-[11px] font-semibold uppercase tracking-wider ${isTeacherOnline ? 'text-emerald-600' : 'text-slate-400'}`}>
-                {isTeacherOnline ? 'Online Now' : 'Offline'}
-              </span>
-              <span className="w-1 h-1 rounded-full bg-slate-300" />
-              <span className="text-[11px] text-slate-400 font-medium">Instructor</span>
+              {isTyping ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] font-bold text-blue-600 animate-pulse">typing...</span>
+                  <div className="flex gap-0.5">
+                    <span className="w-0.5 h-0.5 rounded-full bg-blue-600 animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-0.5 h-0.5 rounded-full bg-blue-600 animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-0.5 h-0.5 rounded-full bg-blue-600 animate-bounce" />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <span className={`text-[11px] font-semibold uppercase tracking-wider ${isTeacherOnline ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {isTeacherOnline ? 'Online Now' : 'Offline'}
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300" />
+                  <span className="text-[11px] text-slate-400 font-medium">Instructor</span>
+                </>
+              )}
             </div>
           </div>
         </div>

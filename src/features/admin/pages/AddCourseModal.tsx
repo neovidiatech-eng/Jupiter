@@ -1,9 +1,9 @@
-import { Modal, Form, Input, Select, Button } from 'antd';
+import { Modal, Form, Input, Select, Button, Upload } from 'antd';
 import { useCreateCourse, useUpdateCourse } from '../../../hooks/useCourses';
 import { useQueryClient } from '@tanstack/react-query';
-import { BookOpen, AlignLeft, Trophy } from 'lucide-react';
+import { BookOpen, AlignLeft, Trophy, Image, Upload as UploadIcon } from 'lucide-react';
 import { useGetRanks } from '../hooks/useRank';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface AddCourseModalProps {
     visible: boolean;
@@ -13,6 +13,7 @@ interface AddCourseModalProps {
 
 export default function AddCourseModal({ visible, onClose, course }: AddCourseModalProps) {
     const [form] = Form.useForm();
+    const [fileList, setFileList] = useState<any[]>([]);
     const queryClient = useQueryClient();
     const { mutate: createCourse, isPending: isCreating } = useCreateCourse();
     const { mutate: updateCourse, isPending: isUpdating } = useUpdateCourse();
@@ -27,28 +28,53 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
                 description: course.description,
                 rankId: course.rankId,
             });
+            if (course.image) {
+                setFileList([{
+                    uid: '-1',
+                    name: course.image,
+                    status: 'done',
+                    url: `https://agro-plus.net/uploads/${course.image}`,
+                }]);
+            } else {
+                setFileList([]);
+            }
         } else if (visible && !course) {
             form.resetFields();
+            setFileList([]);
         }
     }, [visible, course, form]);
 
     const handleSubmit = (values: any) => {
+        const formData = new FormData();
+        formData.append('title', values.title);
+        formData.append('description', values.description);
+        formData.append('rankId', values.rankId);
+
+        if (fileList.length > 0 && fileList[0].originFileObj) {
+            formData.append('image', fileList[0].originFileObj);
+        }
+
         if (isEditMode) {
-            updateCourse({ id: course.id, data: values }, {
+            updateCourse({ id: course.id, data: formData as any }, {
                 onSuccess: () => {
                     queryClient.invalidateQueries({ queryKey: ['courses'] });
                     onClose();
                 }
             });
         } else {
-            createCourse(values, {
+            createCourse(formData, {
                 onSuccess: () => {
                     queryClient.invalidateQueries({ queryKey: ['courses'] });
                     onClose();
                     form.resetFields();
+                    setFileList([]);
                 }
             });
         }
+    };
+
+    const handleUploadChange = ({ fileList: newFileList }: any) => {
+        setFileList(newFileList);
     };
 
     return (
@@ -72,7 +98,6 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
             centered
             width={520}
             className="premium-modal"
-            closeIcon={<div className="bg-gray-50 p-2 rounded-lg hover:bg-gray-100 transition-colors"><MoreVertical size={16} /></div>}
         >
             <Form
                 form={form}
@@ -118,6 +143,29 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
                     />
                 </Form.Item>
 
+                <Form.Item
+                    label={<span className="text-gray-700 font-bold flex items-center gap-2"><Image size={14} className="text-indigo-500" /> Course Image</span>}
+                >
+                    <Upload.Dragger
+                        listType="picture"
+                        fileList={fileList}
+                        onChange={handleUploadChange}
+                        beforeUpload={() => false}
+                        maxCount={1}
+                        className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl hover:border-indigo-400 transition-all overflow-hidden"
+                    >
+                        {fileList.length < 1 ? (
+                            <div className="py-6">
+                                <div className="w-12 h-12 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center mx-auto mb-3">
+                                    <UploadIcon size={24} className="text-indigo-500" />
+                                </div>
+                                <p className="text-sm font-bold text-gray-700 mb-1">Click or drag image to upload</p>
+                                <p className="text-[10px] text-gray-400 font-medium">PNG, JPG or JPEG up to 5MB</p>
+                            </div>
+                        ) : null}
+                    </Upload.Dragger>
+                </Form.Item>
+
                 <div className="flex items-center justify-end gap-3 mt-10 pt-6 border-t border-gray-50">
                     <Button 
                         onClick={onClose} 
@@ -138,9 +186,3 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
         </Modal>
     );
 }
-
-const MoreVertical = ({ size }: { size: number }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-    </svg>
-);

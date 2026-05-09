@@ -33,5 +33,4 @@ export const useAddTeacherReport = () => {
             queryClient.invalidateQueries({ queryKey: ["teacher-reports"] });
         }
     });
-
 }

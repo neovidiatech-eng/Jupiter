@@ -1,5 +1,5 @@
 import { X, LogOut } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { teacherDashboardRoutes } from '../../pages/TeacherDashboard/teacherDashboardRoutes';
 
 interface SidebarProps {
@@ -11,18 +11,17 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose, isCollapsed }: SidebarProps) {
   
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   
   const resolvePath = (path: string) => {
-    if (path === '') return '/dashboard';
-    return `/dashboard/${path}`;
+    if (path === '') return '/teacher-dashboard';
+    return `/teacher-dashboard/${path}`;
   };
 
   const handleLogout = () => {
     localStorage.clear(); 
     sessionStorage.clear();
     window.location.href = '/login';
-  
   };
 
   return (
@@ -65,7 +64,9 @@ export default function Sidebar({ isOpen, onClose, isCollapsed }: SidebarProps) 
 
         {/* Menu Items from teacherDashboardRoutes */}
         <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto no-scrollbar">
-          {teacherDashboardRoutes.map((item) => {
+          {teacherDashboardRoutes
+            .filter((item) => !item.hidden) // Filter out hidden items
+            .map((item) => {
             const Icon = item.icon;
             return (
               <NavLink

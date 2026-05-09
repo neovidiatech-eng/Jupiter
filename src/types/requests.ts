@@ -1,64 +1,91 @@
-import { Role } from "./roles";
 import { Schedule } from "./scheduales";
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'canceled';
-export type RequestType = 'new_session' | 'reschedule' | 'cancel';
-export type RequesterRole = 'student' | 'teacher';
+export type RequestPriority = 'high' | 'medium' | 'low';
 
-export interface NewSessionRequestedData {
-    subject: string;
-    preferred_time: string;
-}
+export type UnifiedRequestType = 
+  | 'vacation' 
+  | 'sick_leave' 
+  | 'excuse' 
+  | 'emergency' 
+  | 'resign' 
+  | 'technical_issue' 
+  | 'reschedule' 
+  | 'others';
 
-export interface RescheduleRequestedData {
-    new_start_time: string;
-}
-
-export type RequestedData = NewSessionRequestedData | RescheduleRequestedData | null;
-
-export interface RequesterInfo {
-    name: string;
-    email: string;
-    role: Role;
-}
-
-export interface UserRequest {
+export interface UnifiedRequest {
     id: string;
-    sessionId: string | null;
-    requesterId: string;
-    requesterRole: RequesterRole;
-    type: RequestType;
+    title: string;
+    type: UnifiedRequestType;
     status: RequestStatus;
+    priority: RequestPriority;
     reason: string;
-    requestedData: RequestedData;
-    adminId: string | null;
+    attachments: string[] | null;
     adminNotes: string | null;
-    attachments: any | null;
     createdAt: string;
     updatedAt: string;
-    requester: RequesterInfo;
-    schedule: Schedule | null;
+    sessionId?: string | null;
+    schedule?: Schedule | null;
+    // Admin specific fields
+    requester?: {
+        id: string;
+        name: string;
+        email: string;
+        avatar?: string;
+    };
+    requesterRole?: 'student' | 'teacher' | 'staff';
+}
+
+export interface RequestDashboardSummary {
+    types: {
+        vacation: number;
+        sick_leave: number;
+        excuse: number;
+        emergency: number;
+        resign: number;
+        [key: string]: number;
+    };
+    statuses: {
+        pending: number;
+        approved: number;
+        rejected: number;
+        total: number;
+    };
+}
+
+export interface RequestDashboardResponse {
+    message: string;
+    status: number;
+    data: {
+        summary: RequestDashboardSummary;
+        pending: UnifiedRequest[];
+        history: UnifiedRequest[];
+    };
+}
+
+export interface CreateUnifiedRequestInput {
+    type: UnifiedRequestType | string;
+    priority: RequestPriority;
+    title: string;
+    reason: string;
+    attachments?: File[];
+    sessionId?: string;
+}
+
+// Legacy support
+export type RequestType = 'new_session' | 'reschedule' | 'cancel' | string;
+export interface CreateRequestType {
+    sessionId?: string;
+    type: string;
+    reason: string;
+    requestedData?: any;
 }
 
 export interface GetRequestsResponse {
     message: string;
     status: number;
-    lang: string;
-    data: {
-        student_requests: UserRequest[];
-        teachers_requests: UserRequest[];
-    };
-}
-
-export interface CreateRequestType {
-    sessionId?: string;
-    type: RequestType;
-    reason: string;
-    requestedData: {
-        new_start_time?: string;
-        new_end_time?: string;
-        suggested_notes?: string;
-        subject?: string;
-        preferred_time?: string;
+    data: UnifiedRequest[] | {
+        student_requests: UnifiedRequest[];
+        teachers_requests: UnifiedRequest[];
     };
 }

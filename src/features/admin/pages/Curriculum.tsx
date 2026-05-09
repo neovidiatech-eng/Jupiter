@@ -285,6 +285,30 @@ export default function Curriculum() {
                         {activeLecture.content || 'No content provided for this lecture.'}
                       </div>
                     </div>
+
+                    {activeLecture.pdfUrl && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <FileText size={16} className="text-red-500" />
+                          <span className="text-sm font-bold">Lecture Resources (PDF)</span>
+                        </div>
+                        <a 
+                          href={activeLecture.pdfUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-4 p-4 rounded-2xl bg-red-50 border border-red-100 group hover:bg-red-100 transition-all cursor-pointer"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-red-500 shadow-sm">
+                            <FileText size={24} />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-gray-900 group-hover:text-red-600 transition-colors">Download Lecture Notes</p>
+                            <p className="text-[11px] text-gray-500">PDF Document • Click to view or download</p>
+                          </div>
+                          <Button type="text" icon={<ChevronRight size={18} />} className="text-red-400 group-hover:text-red-600" />
+                        </a>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center">
@@ -388,8 +412,15 @@ export default function Curriculum() {
             >
               {viewMode === 'grid' ? (
                 <div className="flex flex-col h-full">
-                  <div className={`h-40 bg-gradient-to-br from-indigo-500 to-purple-600 p-6 flex flex-col justify-between relative overflow-hidden`}>
-                    <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <div 
+                    className="h-40 p-6 flex flex-col justify-between relative overflow-hidden bg-cover bg-center"
+                    style={{ 
+                      backgroundImage: (course.image && course.image !== 'default_course.jpg')
+                        ? `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url(https://agro-plus.net/uploads/${course.image})` 
+                        : `linear-gradient(to bottom right, #6366f1, #a855f7)` 
+                    }}
+                  >
+                    <div className="absolute top-0 right-0 p-8 opacity-10" >
                       <BookOpen size={100} className="text-white" />
                     </div>
                     <div className="flex justify-between items-start relative z-10">

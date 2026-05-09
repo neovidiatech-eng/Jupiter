@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../../contexts/SettingsContext';
 import { 
-  User, Mail, Phone, Calendar, MapPin, 
-  Clock, Wallet, ArrowUpRight, X,
-  BookOpen, Users, Star, ShieldCheck, FileText, Send
+   Mail, Phone, MapPin, 
+  Clock, Wallet, X,
+  BookOpen, Users, Star , Send,
+  TrendingUp, CreditCard, ChevronRight
 } from 'lucide-react';
 import ErrorService from '../../../utils/ErrorService';
+import { useTeacherProfile } from '../hooks/useTeacherProfile';
 
 // Internal Withdrawal Modal Component
-function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl, settings }: any) {
+function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl }: any) {
   const [amount, setAmount] = useState('');
   
   if (!isOpen) return null;
@@ -30,43 +32,48 @@ function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl, settings
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-scale-in">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">{isRtl ? 'طلب سحب رصيد' : 'Withdrawal Request'}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl max-w-md w-full p-6 sm:p-8 animate-in slide-in-from-bottom sm:zoom-in-95 duration-300 border border-gray-100">
+        <div className="flex justify-between items-center mb-6 sm:mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+              <Wallet className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">{isRtl ? 'طلب سحب رصيد' : 'Withdrawal Request'}</h2>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-600 mb-2 sm:mb-3 ml-1">
               {isRtl ? 'المبلغ المطلوب سحبه' : 'Amount to withdraw'}
             </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">$</span>
+            <div className="relative group">
+              <span className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 font-bold text-gray-400">$</span>
               <input 
                 type="number" 
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-bold text-lg"
+                className="w-full pl-10 sm:pl-12 pr-4 sm:pr-6 py-3 sm:py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-500/20 outline-none transition-all font-bold text-xl sm:text-2xl text-gray-900"
                 autoFocus
               />
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              {isRtl ? 'الرصيد المتاح:' : 'Available Balance:'} <span className="font-bold text-gray-900">${balance.toLocaleString()}</span>
-            </p>
+            <div className="mt-4 p-3 sm:p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/50 flex justify-between items-center">
+              <span className="text-xs sm:text-sm text-indigo-600/70 font-medium">{isRtl ? 'الرصيد المتاح' : 'Available Balance'}</span>
+              <span className="text-sm sm:text-base font-bold text-indigo-700">${balance.toLocaleString()}</span>
+            </div>
           </div>
 
           <button 
             type="submit"
-            className="w-full py-3 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
-            style={{ backgroundColor: settings.primaryColor }}
+            className="w-full py-3.5 sm:py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-[0.98] shadow-lg shadow-indigo-200"
           >
-            <Send className="w-5 h-5" />
-            {isRtl ? 'إرسال الطلب' : 'Submit Request'}
+            <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            {isRtl ? 'تأكيد عملية السحب' : 'Confirm Withdrawal'}
           </button>
         </form>
       </div>
@@ -79,35 +86,46 @@ export default function TeacherProfile() {
   const { settings } = useSettings();
   const isRtl = i18n.language.split('-')[0] === 'ar';
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  
-  // Teacher Personal Info
+
+  const { data: profileResponse, isLoading } = useTeacherProfile();
+  const data = profileResponse?.data;
+  const teacher = data?.teacher;
+  const stats = data?.stats;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[500px]">
+        <div className="relative">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-4 border-indigo-50 border-t-indigo-600 animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
   const teacherInfo = {
-    name: isRtl ? 'أ. محمد الأحمدي' : 'Mr. Mohamed El-Ahmady',
-    email: 'teacher@lms.com',
-    phone: '+20 100 123 4567',
-    joinDate: '2022-09-15',
-    title: isRtl ? 'معلم أول لغة عربية' : 'Senior Arabic Teacher',
-    id: 'TCH-2023-01',
-    country: isRtl ? 'مصر' : 'Egypt',
-    rating: 4.9,
-    experience: isRtl ? '10 سنوات خبرة' : '10 Years Experience',
+    name: teacher?.name || '---',
+    email: teacher?.email || '---',
+    phone: teacher?.phone || '---',
+    title: isRtl ? 'معلم جوبيتر المعتمد' : 'Jupiter Certified Teacher',
+    id: teacher?.id || '---',
+    country: isRtl ? 'جمهورية مصر العربية' : 'Egypt',
+    rating: 5.0,
+    experience: isRtl ? 'خبير تعليمي' : 'Educational Expert',
   };
 
-  // Financial Stats
+  const wallet = teacher?.wallet?.[0];
   const financialInfo = {
-    pendingBalance: 1250,
-    totalWithdrawn: 5400,
-    transactions: [
-      { id: 1, type: isRtl ? 'تحويل بنكي' : 'Bank Transfer', amount: 2100, date: '2023-10-01', status: 'completed' },
-      { id: 2, type: isRtl ? 'تسوية أرباح حصص' : 'Session Earnings', amount: 800, date: '2023-09-25', status: 'completed' },
-    ]
+    pendingBalance: wallet?.balance || 0,
+    totalWithdrawn: 0,
+    transactions: wallet?.transactions || [],
+    currency: wallet?.currency?.symbol || '$'
   };
 
-  // Quick Stats
-  const stats = [
-    { label: isRtl ? 'الكورسات' : 'Courses', value: '4', icon: BookOpen },
-    { label: isRtl ? 'الطلاب' : 'Students', value: '145', icon: Users },
-    { label: isRtl ? 'ساعات التدريس' : 'Teaching Hours', value: '120+', icon: Clock },
+  const profileStats = [
+    { label: isRtl ? 'الطلاب' : 'Students', value: stats?.totalStudents || 0, icon: Users, gradient: 'from-blue-500 to-indigo-600' },
+    { label: isRtl ? 'الجلسات' : 'Sessions', value: stats?.totalSessions || 0, icon: BookOpen, gradient: 'from-purple-500 to-fuchsia-600' },
+    { label: isRtl ? 'التقييم' : 'Rating', value: '5.0', icon: Star, gradient: 'from-amber-400 to-orange-500' },
+    { label: isRtl ? 'الساعة' : 'Rate', value: `${teacher?.hourPrice || 0}$`, icon: Clock, gradient: 'from-emerald-400 to-teal-600' },
   ];
 
   const handleWithdraw = (amount: number) => {
@@ -116,145 +134,146 @@ export default function TeacherProfile() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10" dir={isRtl ? 'rtl' : 'ltr'}>
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">{isRtl ? 'الملف الشخصي' : 'Profile'}</h1>
+    <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-7 sm:space-y-8 animate-fade-in pt-7 sm:pt-8 pb-10 sm:pb-16" dir={isRtl ? 'rtl' : 'ltr'}>
+      
+      {/* Header Banner */}
+      <div className="relative h-44 sm:h-52 md:h-72 rounded-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl">
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
+          style={{ backgroundImage: `linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 100%), linear-gradient(135deg, ${settings.primaryColor}aa, ${settings.accentColor}aa), url('https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&q=80')` }}
+        />
+        
+        <div className="absolute inset-x-0 bottom-4 p-6 sm:p-10 flex flex-col sm:flex-row items-center sm:items-end gap-5 sm:gap-8 translate-y-10 sm:translate-y-12">
+          <div className="relative group">
+            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-[2rem] sm:rounded-[2.5rem] bg-white p-2 shadow-2xl transition-all duration-300 group-hover:-translate-y-2 group-hover:rotate-3">
+              <div 
+                className="w-full h-full rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center text-white text-4xl sm:text-6xl font-black shadow-inner"
+                style={{ backgroundColor: settings.primaryColor }}
+              >
+                {teacherInfo.name.charAt(0)}
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center sm:text-left flex-1 pb-4">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white drop-shadow-lg tracking-tight">
+              {teacherInfo.name}
+            </h1>
+            <p className="text-sm sm:text-lg text-white/90 font-bold mt-2 flex items-center gap-2 justify-center sm:justify-start drop-shadow-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
+              {teacherInfo.title}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mt-20 sm:mt-24">
         
-        {/* Teacher Personal Info Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden lg:col-span-1">
-          <div 
-            className="h-24 bg-gradient-to-r" 
-            style={{ backgroundImage: `linear-gradient(to right, ${settings.primaryColor}, ${settings.accentColor})` }}
-          />
-          <div className="px-6 pb-6 relative">
-            <div className="flex justify-center -mt-12 mb-4">
-              <div className="w-24 h-24 bg-white rounded-full p-2 shadow-md">
-                <div 
-                  className="w-full h-full rounded-full flex items-center justify-center text-white text-3xl font-bold"
-                  style={{ backgroundColor: settings.primaryColor }}
-                >
-                  {teacherInfo.name.includes('أ. ') ? teacherInfo.name.split('أ. ')[1].charAt(0) : teacherInfo.name.charAt(0)}
+        {/* Profile Stats - Mobile Optimized Grid */}
+        <div className="lg:col-span-2 order-2 lg:order-1 space-y-6 sm:space-y-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
+            {profileStats.map((stat, idx) => (
+              <div key={idx} className="bg-white p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-gray-100 text-center">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white mx-auto mb-2 sm:mb-4 shadow-md`}>
+                  <stat.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
+                <p className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-wider mb-0.5 sm:mb-1">{stat.label}</p>
+                <h4 className="text-lg sm:text-2xl font-black text-gray-900 tracking-tight">{stat.value}</h4>
               </div>
-            </div>
-            
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">{teacherInfo.name}</h2>
-              <p className="text-sm text-gray-500 mt-1">{teacherInfo.title}</p>
-              
-              <div className="flex items-center justify-center gap-4 mt-3">
-                <div className="flex items-center gap-1 text-xs">
-                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  <span className="font-bold text-gray-800">{teacherInfo.rating}</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-green-600">
-                  <ShieldCheck className="w-3 h-3" />
-                  <span>{teacherInfo.experience}</span>
-                </div>
-              </div>
-            </div>
+            ))}
+          </div>
 
-            <div className="space-y-4 pt-4 border-t border-gray-50">
-              <div className="flex items-center gap-3 text-gray-700">
-                <User className="w-5 h-5 text-gray-400" />
-                <span className="text-sm font-medium">{teacherInfo.id}</span>
+          {/* Smart Wallet Card */}
+          <div className="bg-white rounded-[2rem] sm:rounded-[3rem] shadow-xl border border-gray-100 p-6 sm:p-8 overflow-hidden relative">
+            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-indigo-600/5 rounded-full blur-3xl" />
+            
+            <div className="relative z-10">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-12">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg">
+                    <TrendingUp className="w-5 h-5 sm:w-7 sm:h-7" />
+                  </div>
+                  <div className="text-center sm:text-left">
+                    <h2 className="text-lg sm:text-2xl font-black text-gray-900">{isRtl ? 'المحفظة الذكية' : 'Smart Wallet'}</h2>
+                    <p className="text-[10px] sm:text-sm font-bold text-gray-400">{isRtl ? 'إدارة أرباحك' : 'Manage your earnings'}</p>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => setIsWithdrawModalOpen(true)}
+                  className="w-full sm:w-auto px-6 py-3 sm:py-4 bg-gray-900 hover:bg-black text-white rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-xl shadow-black/10"
+                >
+                  <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
+                  {isRtl ? 'سحب الرصيد' : 'Withdraw Now'}
+                </button>
               </div>
-              <div className="flex items-center gap-3 text-gray-700">
-                <Mail className="w-5 h-5 text-gray-400" />
-                <span className="text-sm truncate">{teacherInfo.email}</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-700">
-                <Phone className="w-5 h-5 text-gray-400" />
-                <span className="text-sm">{teacherInfo.phone}</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-700">
-                <Calendar className="w-5 h-5 text-gray-400" />
-                <span className="text-sm" dir="ltr">{teacherInfo.joinDate}</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-700">
-                <MapPin className="w-5 h-5 text-gray-400" />
-                <span className="text-sm">{teacherInfo.country}</span>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                <div className="p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] bg-gray-900 text-center sm:text-left">
+                  <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-2 sm:mb-4">{isRtl ? 'الرصيد المتاح' : 'Available'}</p>
+                  <div className="flex items-baseline justify-center sm:justify-start gap-2">
+                    <span className="text-4xl sm:text-6xl font-black text-white tracking-tighter">${financialInfo.pendingBalance.toLocaleString()}</span>
+                    <span className="text-indigo-400 font-bold text-sm">USD</span>
+                  </div>
+                </div>
+
+                <div className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-indigo-50/50 border border-indigo-100 flex flex-col">
+                  <div className="flex items-center justify-between mb-4 sm:mb-6">
+                    <h3 className="text-sm font-black text-gray-900">{isRtl ? 'أحدث العمليات' : 'Recent'}</h3>
+                    <ChevronRight className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {financialInfo.transactions.length > 0 ? (
+                      financialInfo.transactions.map((tx: any) => (
+                        <div key={tx.id} className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-gray-100/50">
+                          <span className="text-[10px] font-bold text-gray-600">{tx.type}</span>
+                          <span className="text-xs font-black text-gray-900">${tx.amount}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 opacity-40">
+                        <p className="text-[10px] font-bold">{isRtl ? 'لا توجد عمليات' : 'No transactions'}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Financial Balance Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Wallet className="w-6 h-6" style={{ color: settings.primaryColor }} />
-                {isRtl ? 'الرصيد والحساب' : 'Financial Balance'}
-              </h2>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setIsWithdrawModalOpen(true)}
-                  className="px-4 py-2 text-white rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95 shadow-lg shadow-primary/20"
-                  style={{ backgroundColor: settings.primaryColor }}
-                >
-                  {isRtl ? 'طلب سحب رصيد' : 'Withdrawal Request'}
-                </button>
-                <button className="px-4 py-2 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-xl text-sm font-bold border border-gray-200 transition-colors">
-                  {isRtl ? 'التاريخ' : 'History'}
-                </button>
+        {/* Details Column - Full width on mobile, right on desktop */}
+        <div className="order-1 lg:order-2">
+          <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-sm border border-gray-100 p-6 sm:p-8">
+            <h3 className="text-base sm:text-lg font-black text-gray-900 mb-6 sm:mb-8 flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border border-gray-100 mb-8 text-center relative overflow-hidden">
-               <div className="relative z-10">
-                 <p className="text-sm text-gray-500 mb-2">{isRtl ? 'الرصيد المستحق (هذا الشهر)' : 'Pending Balance (This Month)'}</p>
-                 <h2 className="text-5xl font-black mb-0" style={{ color: settings.primaryColor }}>
-                   ${financialInfo.pendingBalance.toLocaleString()}
-                 </h2>
-               </div>
-               {/* Decorative elements */}
-               <div className="absolute top-0 right-0 w-32 h-32 bg-gray-100 rounded-full -mr-16 -mt-16 opacity-20"></div>
-               <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full -ml-12 -mb-12 opacity-30" style={{ backgroundColor: settings.primaryColor + '20' }}></div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-gray-900 mb-4">{isRtl ? 'أحدث المعاملات' : 'Recent Transactions'}</h3>
-              {financialInfo.transactions.map((tx) => (
-                <div key={tx.id} className="flex justify-between items-center p-4 bg-gray-50/50 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.amount > 1000 ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
-                      {tx.amount > 1000 ? <ArrowUpRight className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm text-gray-900">{tx.type}</p>
-                      <p className="text-xs text-gray-500" dir="ltr">{tx.date}</p>
-                    </div>
+              {isRtl ? 'المعلومات' : 'Details'}
+            </h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
+              {[
+                { icon: Mail, label: isRtl ? 'البريد' : 'Email', value: teacherInfo.email },
+                { icon: Phone, label: isRtl ? 'الهاتف' : 'Phone', value: teacherInfo.phone },
+                { icon: MapPin, label: isRtl ? 'الموقع' : 'Location', value: teacherInfo.country },
+                { icon: Star, label: isRtl ? 'الخبرة' : 'Expertise', value: teacherInfo.experience },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-0 rounded-xl hover:bg-gray-50 lg:hover:bg-transparent">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 transition-all">
+                    <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <span className={`font-bold ${tx.amount > 1000 ? 'text-green-600' : 'text-gray-900'}`}>
-                    +${tx.amount.toLocaleString()}
-                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.label}</p>
+                    <p className="text-xs sm:text-sm font-bold text-gray-700 truncate">{item.value}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {stats.map((stat, idx) => {
-              const Icon = stat.icon;
-              return (
-                <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: settings.primaryColor + '10', color: settings.primaryColor }}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <p className="text-sm text-gray-500 mb-1">{stat.label}</p>
-                  <h4 className="text-2xl font-bold text-gray-900">{stat.value}</h4>
-                </div>
-              );
-            })}
-          </div>
-
         </div>
+
       </div>
 
       <WithdrawalModal 

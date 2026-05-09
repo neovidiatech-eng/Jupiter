@@ -144,6 +144,14 @@ export interface TeacherStudent {
   sessions: string;
 }
 
+export interface TeacherStudentsResponse {
+  message: string;
+  status: number;
+  lang: string;
+  data: TeacherStudent[];
+}
+
+
 export interface TeacherProfileData {
   teacher: TeacherProfileInfo;
   stats: TeacherStats;

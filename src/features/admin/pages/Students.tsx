@@ -417,6 +417,11 @@ export default function Students() {
               payload.planId = studentData.plan;
             }
 
+            // Include rankId if it exists
+            if (studentData.rankId && studentData.rankId.trim() !== "") {
+              payload.rankId = studentData.rankId;
+            }
+
             if (studentData.password) {
               payload.password = studentData.password;
             }

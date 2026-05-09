@@ -17,6 +17,7 @@ export interface Course {
   title: string;
   description: string;
   rankId: string;
+  image:string;
   createdAt: string;
   updatedAt: string;
   rank: Rank;

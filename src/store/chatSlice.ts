@@ -129,27 +129,15 @@ const chatSlice = createSlice({
     setOnlineStatus: (
       state,
       action:
-      PayloadAction<OnlineStatus>
+      PayloadAction<OnlineStatus & { user_id?: string }>
     ) => {
 
-      const {
-        userId,
-        status,
-      } = action.payload;
+      const userId = action.payload.userId || action.payload.user_id;
+      const status = action.payload.status;
 
-      state.onlineUsers[
-        userId
-      ] = status;
-    },
-
-    setOnlineUsers: (
-      state,
-      action: PayloadAction<Record<string, "online" | "offline">>
-    ) => {
-      state.onlineUsers = {
-        ...state.onlineUsers,
-        ...action.payload
-      };
+      if (userId) {
+        state.onlineUsers[userId] = status;
+      }
     },
 
     clearMessages: (
@@ -162,6 +150,8 @@ const chatSlice = createSlice({
         action.payload
       ];
     },
+
+    resetChatState: () => initialState,
   },
 });
 
@@ -175,9 +165,9 @@ export const {
 
   setOnlineStatus,
 
-  setOnlineUsers,
-
   clearMessages,
+
+  resetChatState,
 
 } = chatSlice.actions;
 

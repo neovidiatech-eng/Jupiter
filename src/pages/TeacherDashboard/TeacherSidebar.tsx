@@ -1,7 +1,7 @@
 import { X, LogOut } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { teacherDashboardRoutes } from "./teacherDashboardRoutes.tsx";
-import { getSocket } from "../../lib/socket";
+import { disconnectSocket } from "../../lib/socket";
 
 interface TeacherSidebarProps {
   isOpen: boolean;
@@ -21,10 +21,7 @@ export default function TeacherSidebar({
   };
 
   const handleLogout = () => {
-    const socket = getSocket();
-    if (socket) {
-      socket.disconnect();
-    }
+    disconnectSocket();
     localStorage.clear();
     sessionStorage.clear();
     window.location.href = "/login";
@@ -85,7 +82,7 @@ export default function TeacherSidebar({
 
         {/* Menu Items from teacherDashboardRoutes */}
         <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto no-scrollbar">
-          {teacherDashboardRoutes.map((item) => {
+          {teacherDashboardRoutes.filter(item => !item.hidden).map((item) => {
             const Icon = item.icon;
             return (
               <NavLink

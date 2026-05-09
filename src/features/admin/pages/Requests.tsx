@@ -2,19 +2,20 @@ import { useState } from 'react';
 import { ChevronRight, X } from 'lucide-react';
 import { Table } from 'antd';
 import { useGetRequests, useUpdateRequestStatus } from '../hooks/useRequests';
-import { UserRequest } from '../../../types/requests';
+import { UnifiedRequest } from '../../../types/requests';
 
 export default function Requests() {
   const [activeTab, setActiveTab] = useState<'student' | 'teacher'>('student');
-  const [selectedRequest, setSelectedRequest] = useState<UserRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<UnifiedRequest | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
 
   const { data, isLoading } = useGetRequests();
   const updateStatus = useUpdateRequestStatus();
 
-  const studentRequests = data?.data.student_requests || [];
-  const teacherRequests = data?.data.teachers_requests || [];
+  const requestsData = data?.data;
+  const studentRequests = !Array.isArray(requestsData) ? (requestsData?.student_requests || []) : [];
+  const teacherRequests = !Array.isArray(requestsData) ? (requestsData?.teachers_requests || []) : [];
   const currentData = activeTab === 'student' ? studentRequests : teacherRequests;
 
   // Helper styles
@@ -34,14 +35,14 @@ export default function Requests() {
     {
       title: 'USER',
       key: 'user',
-      render: (_: any, req: UserRequest) => (
+      render: (_: any, req: UnifiedRequest) => (
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
             {req.requester?.name?.substring(0, 2).toUpperCase()}
           </div>
           <div>
             <div className="text-sm font-bold text-gray-900">{req.requester?.name}</div>
-            <div className="text-[10px] font-bold text-gray-400">{req.requesterRole.toUpperCase()}</div>
+            <div className="text-[10px] font-bold text-gray-400">{req.requesterRole?.toUpperCase() || 'USER'}</div>
           </div>
         </div>
       ),
@@ -86,7 +87,7 @@ export default function Requests() {
       title: 'ACTION',
       key: 'action',
       align: 'center' as const,
-      render: (_: any, req: UserRequest) => (
+      render: (_: any, req: UnifiedRequest) => (
         selectedRequest?.id === req.id && isSidebarOpen ? (
           <span className="text-[10px] font-bold text-[#6366f1] tracking-widest uppercase">SELECTED</span>
         ) : (

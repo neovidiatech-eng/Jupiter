@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, GraduationCap, Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
@@ -7,6 +7,7 @@ import { StudentFormData, getStudentSchema } from '../../lib/schemas/StudentSche
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { usePlans } from '../../features/admin/hooks/usePlans';
+import { useGetRanks } from '../../features/admin/hooks/useRank';
 
 interface AddStudentModalProps {
   isOpen: boolean;
@@ -18,7 +19,8 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
   const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const { data: plansData } = usePlans();
-  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<StudentFormData>({
+  const { data: ranksResponse } = useGetRanks();
+  const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(getStudentSchema(t)),
     defaultValues: {
       phone_code: '+20',
@@ -33,6 +35,15 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
     onClose();
   };
 
+  const ranks = ranksResponse?.data.items || [];
+
+  // Set first rank as default once loaded
+  useEffect(() => {
+    if (ranks.length > 0) {
+      setValue('rankId', ranks[0].id);
+    }
+  }, [ranks.length, setValue]);
+
   if (!isOpen) return null;
 
   const countryCodes = [
@@ -43,7 +54,6 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
   ];
 
   const plans = plansData || [];
-
   const planOptions = [
     { value: '', label: t('Free Plan') },
     ...plans.map((p: any) => ({
@@ -51,6 +61,11 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
       label: p.name,
     }))
   ];
+
+  const rankOptions = ranks.map((r: any) => ({
+    value: r.id,
+    label: r.name,
+  }));
 
   const genderOptions = [
     { value: 'male', label: t('male') },
@@ -231,6 +246,25 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                 )}
               />
             </div>
+
+            <Controller
+              name="rankId"
+              control={control}
+              render={({ field }) => (
+                <div className="text-start">
+                  <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                    Rank
+                  </label>
+                  <CustomSelect
+                    value={field.value}
+                    options={rankOptions}
+                    placeholder="Select student rank"
+                    onChange={field.onChange}
+                    className="rounded-2xl border-none bg-gray-50"
+                  />
+                </div>
+              )}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="text-start relative">

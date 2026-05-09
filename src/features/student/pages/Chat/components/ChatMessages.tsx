@@ -7,6 +7,7 @@ interface Props {
   teacherUserId?: string;
   messages: Message[];
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  isTyping?: boolean;
 }
 
 export default function ChatMessages({
@@ -14,6 +15,7 @@ export default function ChatMessages({
   teacherUserId,
   messages,
   messagesEndRef,
+  isTyping,
 }: Props) {
 
   if (!conversationId) {
@@ -88,6 +90,19 @@ export default function ChatMessages({
           </div>
         );
       })}
+
+      {isTyping && (
+        <div className="flex flex-col items-start max-w-[70%] mr-auto">
+          <div className="bg-[#F3F4F6] text-slate-800 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
+            <span className="text-[14px] font-medium text-slate-500">typing</span>
+            <div className="flex gap-1">
+              <span className="w-1 h-1 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-1 h-1 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1 h-1 rounded-full bg-slate-400 animate-bounce" />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div
         ref={messagesEndRef}

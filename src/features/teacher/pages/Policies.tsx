@@ -1,47 +1,30 @@
-import React from 'react';
-import { Shield, Clock, FileText, AlertCircle } from 'lucide-react';
+import { Shield, Clock, FileText, AlertCircle, Lock, Book, Info } from 'lucide-react';
+import { usePolicies, useNotice } from '../../../hooks/usePolicies';
+
+const iconMap: any = {
+  shield: Shield,
+  clock: Clock,
+  file: FileText,
+  alert: AlertCircle,
+  lock: Lock,
+  book: Book,
+  info: Info,
+};
 
 export default function PoliciesPage() {
-  const policies = [
-    {
-      title: 'Teaching Standards',
-      desc: 'Guidelines for maintaining high-quality teaching standards and professional conduct.',
-      update: 'Last updated: Feb 1, 2026',
-      icon: Shield,
-      color: 'blue',
-    },
-    {
-      title: 'Attendance Policy',
-      desc: 'Requirements for session attendance, punctuality, and procedures for absences.',
-      update: 'Last updated: Jan 15, 2026',
-      icon: Clock,
-      color: 'green',
-    },
-    {
-      title: 'Content Guidelines',
-      desc: 'Standards for creating and sharing educational content and materials.',
-      update: 'Last updated: Jan 20, 2026',
-      icon: FileText,
-      color: 'purple',
-    },
-    {
-      title: 'Code of Conduct',
-      desc: 'Professional behavior expectations and ethical guidelines for instructors.',
-      update: 'Last updated: Dec 10, 2025',
-      icon: AlertCircle,
-      color: 'orange',
-    },
-  ];
+  const { data: policiesData, isLoading: policiesLoading } = usePolicies();
+  const { data: noticeData, isLoading: noticeLoading } = useNotice();
 
-  const getColorClasses = (color: string) => {
-    const map: any = {
-      blue: 'bg-blue-50 text-blue-500',
-      green: 'bg-green-50 text-green-500',
-      purple: 'bg-purple-50 text-purple-500',
-      orange: 'bg-orange-50 text-orange-500',
-    };
-    return map[color] || map.blue;
-  };
+  const policies = policiesData?.data || [];
+  const notice = noticeData?.data;
+
+  if (policiesLoading || noticeLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in max-w-[1600px] mx-auto pb-12 p-7">
@@ -52,20 +35,24 @@ export default function PoliciesPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
         {policies.map((policy, i) => {
-          const Icon = policy.icon;
+          const iconKey = policy.icon as string;
+          const Icon = (iconKey && iconMap[iconKey]) ? iconMap[iconKey] : Info;
           return (
-            <div key={i} className="bg-white p-8 rounded-3xl border border-gray-100/50 shadow-sm hover:shadow-md transition-all group">
+            <div key={policy.id || i} className="bg-white p-8 rounded-3xl border border-gray-100/50 shadow-sm hover:shadow-md transition-all group">
               <div className="flex gap-6">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${getColorClasses(policy.color)}`}>
+                <div 
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: `${policy.color}15`, color: policy.color }}
+                >
                   <Icon size={28} />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-slate-800 mb-2">{policy.title}</h3>
                   <p className="text-slate-500 text-sm font-medium mb-4 leading-relaxed">
-                    {policy.desc}
+                    {policy.description}
                   </p>
                   <p className="text-slate-300 text-[11px] font-bold uppercase tracking-wider">
-                    {policy.update}
+                    Last updated: {policy.lastUpdated ? new Date(policy.lastUpdated).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -75,12 +62,14 @@ export default function PoliciesPage() {
       </div>
 
       {/* Important Notice Banner */}
-      <div className="bg-[#E3EAF9] border border-[#E3EAF9] rounded-3xl p-8 sm:p-10">
-        <h4 className="text-blue-700 font-bold text-lg mb-2">Important Notice</h4>
-        <p className="text-blue-600/70 text-sm font-medium leading-relaxed">
-          All instructors are required to review and acknowledge these policies. Please ensure you're familiar with the latest updates. For questions or clarifications, contact the admin team.
-        </p>
-      </div>
+      {notice && (
+        <div className="bg-[#E3EAF9] border border-[#E3EAF9] rounded-3xl p-8 sm:p-10">
+          <h4 className="text-blue-700 font-bold text-lg mb-2">{ 'Important Notice'}</h4>
+          <p className="text-blue-600/70 text-sm font-medium leading-relaxed">
+            {notice.content}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

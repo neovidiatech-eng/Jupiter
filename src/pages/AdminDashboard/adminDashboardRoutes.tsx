@@ -60,6 +60,7 @@ const RequestsPage = lazy(() => import("../../features/admin/pages/Requests"));
 const CurriculumPage = lazy(() => import("../../features/admin/pages/Curriculum"));
 const LibraryPage = lazy(() => import("../../features/admin/pages/Library"));
 const RanksPage = lazy(() => import("../../features/admin/pages/Ranks"));
+const PoliciesPage = lazy(() => import("../../features/admin/pages/Policies"));
 
 
 export const adminDashboardRoutes: RouteConfig[] = [
@@ -284,5 +285,12 @@ export const adminDashboardRoutes: RouteConfig[] = [
     icon: Settings,
     path: "settings",
     element: <SettingsPage />,
+  },
+  {
+    id: "policies",
+    label: "sidebar_policies",
+    icon: ShieldCheck,
+    path: "policies",
+    element: <PoliciesPage />,
   },
 ];

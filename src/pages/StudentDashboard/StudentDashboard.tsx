@@ -134,6 +134,8 @@ export default function StudentDashboard() {
                       },
                       {
                         onSuccess: (data) => {
+                          console.log("📝 Chat Data:", data);
+                          console.log("👨‍🏫 Teacher Object:", nextSession?.teacher);
                           navigate("/student-dashboard/chat", {
                             state: {
                               conversationId: data.id,
@@ -242,7 +244,7 @@ export default function StudentDashboard() {
               },
               {
                 label: "Current Level",
-                value: `${metadata?.rank||`Silver`}`,
+                value: `${metadata?.rank.name||`Silver`}`,
                 icon: Award,
                 color: "bg-amber-50 text-amber-500",
               },

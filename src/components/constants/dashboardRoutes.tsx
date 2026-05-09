@@ -33,6 +33,7 @@ export interface RouteConfig {
   fullPath?: string; // Optional for Sidebar grouping cases
   element?: ReactNode;
   subItems?: RouteConfig[];
+  hidden?: boolean;
 }
 
 // --- Lazy Loading Page Components ---

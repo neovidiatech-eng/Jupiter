@@ -2,13 +2,16 @@ import { useMystudents } from "../hooks/useMystudents";
 import { TeacherStudent } from "../../../types/teacherStudents";
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addMessage, setMessages } from "../../../store/chatSlice";
-import { getSocket } from "../../../lib/socket";
+import { setMessages } from "../../../store/chatSlice";
+
 import { format } from "date-fns";
 import { useCreateConversation, useMessages } from "../../../hooks/useMessages";
-import { sendMessage } from "../../../services/chatServices";
+// import { sendMessage } from "../../../services/chatServices";
 import { useChatSocket } from "../../../hooks/useChat";
+import { useTyping } from "../../../hooks/useTyping";
+import { Socket } from "socket.io-client";
 import { useTeacherProfile } from "../hooks/useTeacherProfile";
+import { RootState } from "../../../store/store";
 import { Users, MessageSquare, Smile, Send, MoreVertical } from "lucide-react";
 
 export default function CommunityPage() {
@@ -19,17 +22,15 @@ export default function CommunityPage() {
   const [messageText, setMessageText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // Read from Redux
-  const { messages: allMessages, onlineUsers, typingUsers } = useSelector((rootState: any) => rootState.chat);
-  const {data: teacherData} = useTeacherProfile()
+  const { messages: allMessages, onlineUsers, typingUsers } = useSelector((rootState: RootState) => rootState.chat);
+  const { data: teacherData } = useTeacherProfile()
   const teacherId = teacherData?.data.teacher.id;
   const teacherUserId = teacherData?.data.teacher.user_id;
   const currentMessages = conversationId ? allMessages[conversationId] || [] : [];
   const studentUserId = selectedStudent?.user_id;
-  
-  const socket = getSocket();
 
-  // Initialize socket for the conversation
-  useChatSocket(conversationId || undefined, studentUserId);
+  // Initialize socket for the conversation (also returns the socket)
+  const socket = useChatSocket(conversationId || undefined);
 
   const { mutate: openChat } = useCreateConversation();
 
@@ -49,36 +50,43 @@ export default function CommunityPage() {
     e.preventDefault();
     if (!messageText.trim() || !conversationId) return;
 
-    const tempId = Date.now().toString();
+    // const tempId = Date.now().toString();
     const messageData = {
       conversationId,
       content: messageText,
-      type: "text",
     };
 
     setMessageText("");
 
     try {
-      socket.emit("message:send", messageData);
+      if (socket) {
+        socket.emit("message:send", messageData);
+      } else {
+        console.error("Socket not connected, cannot send message");
+      }
     } catch (error) {
       console.error("Failed to send message:", error);
     }
   };
 
+  const emitTyping = useTyping(socket, conversationId || undefined);
+
   const handleTyping = () => {
     if (socket && conversationId) {
-      socket.emit("typing:start", { conversationId });
-      
-      const timeout = setTimeout(() => {
-        socket.emit("typing:stop", { conversationId });
-      }, 3000);
-      
-      return () => clearTimeout(timeout);
+      emitTyping();
     }
   };
 
   const isStudentOnline = studentUserId ? onlineUsers[studentUserId] === "online" : false;
   const isStudentTyping = conversationId && studentUserId ? typingUsers[conversationId]?.includes(studentUserId) : false;
+
+  useEffect(() => {
+    if (conversationId) {
+      console.log(`🔍 [Community] Conversation: ${conversationId}`);
+      console.log(`👤 [Community] Student ID: ${studentUserId}`);
+      console.log(`⌨️ [Community] Typing Users for this convo:`, typingUsers[conversationId]);
+    }
+  }, [conversationId, studentUserId, typingUsers]);
 
 
 
@@ -144,15 +152,26 @@ export default function CommunityPage() {
                     <h3 className="text-lg font-bold text-slate-800">{selectedStudent.name}</h3>
                     <p className="text-xs font-medium text-slate-400">
                       {isStudentTyping ? (
-                        <span className="text-blue-500 animate-pulse">Typing...</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-blue-500 font-bold animate-pulse">Typing...</span>
+                          <div className="flex gap-0.5">
+                            <span className="w-0.5 h-0.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.3s]" />
+                            <span className="w-0.5 h-0.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.15s]" />
+                            <span className="w-0.5 h-0.5 rounded-full bg-blue-500 animate-bounce" />
+                          </div>
+                        </div>
                       ) : (
-                        isStudentOnline ? 'Online' : 'Offline'
+                        isStudentOnline ? (
+                          <span className="text-emerald-500 font-bold">Online</span>
+                        ) : (
+                          <span className="text-slate-300 font-bold uppercase tracking-wider">Offline</span>
+                        )
                       )}
                     </p>
                   </div>
                 </div>
                 <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                  <MoreVertical  size={20} />
+                  <MoreVertical size={20} />
                 </button>
               </div>
 
@@ -169,11 +188,10 @@ export default function CommunityPage() {
                     return (
                       <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] space-y-1`}>
-                          <div className={`p-4 rounded-2xl shadow-sm text-sm font-medium leading-relaxed ${
-                            isMe 
-                              ? 'bg-blue-600 text-white rounded-tr-none' 
+                          <div className={`p-4 rounded-2xl shadow-sm text-sm font-medium leading-relaxed ${isMe
+                              ? 'bg-blue-600 text-white rounded-tr-none'
                               : 'bg-white text-slate-600 rounded-tl-none border border-slate-100'
-                          }`}>
+                            }`}>
                             {msg.content}
                           </div>
                           <p className={`text-[10px] font-bold text-slate-300 uppercase ${isMe ? 'text-right' : 'text-left'}`}>
@@ -183,6 +201,21 @@ export default function CommunityPage() {
                       </div>
                     );
                   })
+                )}
+
+                {isStudentTyping && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[80%] space-y-1">
+                      <div className="bg-white text-slate-600 rounded-2xl rounded-tl-none border border-slate-100 p-4 shadow-sm flex items-center gap-1.5">
+                        <span className="text-sm font-medium text-slate-400 italic">typing</span>
+                        <div className="flex gap-1">
+                          <span className="w-1 h-1 rounded-full bg-slate-300 animate-bounce [animation-delay:-0.3s]" />
+                          <span className="w-1 h-1 rounded-full bg-slate-300 animate-bounce [animation-delay:-0.15s]" />
+                          <span className="w-1 h-1 rounded-full bg-slate-300 animate-bounce" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
@@ -205,7 +238,7 @@ export default function CommunityPage() {
                       <Smile size={20} />
                     </button>
                   </div>
-                  <button 
+                  <button
                     type="submit"
                     disabled={!messageText.trim()}
                     className="p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:shadow-none"
@@ -247,17 +280,15 @@ export default function CommunityPage() {
                     });
                   }
                 }}
-                className={`flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer group border ${
-                  selectedStudent?.id === student.id 
-                    ? "bg-blue-50/50 border-blue-100 shadow-sm" 
+                className={`flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer group border ${selectedStudent?.id === student.id
+                    ? "bg-blue-50/50 border-blue-100 shadow-sm"
                     : "hover:bg-slate-50 border-transparent"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                      selectedStudent?.id === student.id ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${selectedStudent?.id === student.id ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"
+                      }`}>
                       {student.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     {student.user_id && onlineUsers[student.user_id] === "online" && (
@@ -265,9 +296,8 @@ export default function CommunityPage() {
                     )}
                   </div>
                   <div>
-                    <h4 className={`text-sm font-bold transition-colors ${
-                      selectedStudent?.id === student.id ? "text-blue-600" : "text-slate-800"
-                    }`}>
+                    <h4 className={`text-sm font-bold transition-colors ${selectedStudent?.id === student.id ? "text-blue-600" : "text-slate-800"
+                      }`}>
                       {student.name}
                     </h4>
                     <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">

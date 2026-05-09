@@ -1,6 +1,6 @@
 import { X, Calendar, Users, Clock, FileText, TrendingUp, AlertCircle } from 'lucide-react';
-import { useTeacherReportById } from '../hooks/useTeacherReports';
 import { format } from 'date-fns';
+import { useTeacherReportById } from '../hooks/useTeacherReports';
 
 interface ReportDetailsModalProps {
   reportId: string | null;

@@ -1,16 +1,32 @@
 import React from "react";
-import { Search, FileText, Monitor, Pencil } from "lucide-react";
+import { Search, Monitor , MessageSquare } from "lucide-react";
 import { Table, Tag, Space, Button } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useUserSessions } from "../../../hooks/useSessions";
 import { Schedule, Student, ScheduleSubject } from "../../../types/scheduales";
+import AddRequestModal from "../components/AddRequestModal";
 
 const ClassesPage: React.FC = () => {
   const [search, setSearch] = React.useState("");
+  const [requestModal, setRequestModal] = React.useState<{ visible: boolean; id: string; title: string }>({
+    visible: false,
+    id: "",
+    title: "",
+  });
+
   const { data: userSessions, isLoading } = useUserSessions(search);
   const sessions = userSessions?.data || [];
 
+  const handleOpenRequest = (record: Schedule) => {
+    setRequestModal({
+      visible: true,
+      id: record.id,
+      title: record.title,
+    });
+  };
+
   const columns: ColumnsType<Schedule> = [
+    // ... existing columns ...
     {
       title: "STUDENT",
       dataIndex: "student",
@@ -104,24 +120,35 @@ const ClassesPage: React.FC = () => {
               <Monitor size={12} /> Join Class
             </a>
           )}
-          <button className="flex items-center gap-2 px-3 py-1.5 border border-slate-100 bg-slate-50 rounded-full text-[10px] font-bold text-slate-600 hover:bg-slate-100 transition-all">
-            <FileText size={12} /> Manual
-          </button>
+         
         </Space>
       ),
     },
     {
-      title: "FEEDBACK",
-      key: "feedback",
-      render: () => (
-        <Button
-          type="primary"
-          icon={<Pencil size={14} />}
-          className="bg-[#2563eb] h-9 w-9 flex items-center justify-center rounded-lg shadow-blue-500/20"
-        />
-      ),
+       title: "REQUESTS",
+      key: "requests",
+      render: (record: Schedule) => (
+        <Button 
+            onClick={() => handleOpenRequest(record)}
+            className="flex items-center gap-2 px-3 py-1.5 border border-orange-100 bg-orange-50 rounded-full text-[10px] font-bold text-orange-600 hover:bg-orange-100 transition-all"
+          >
+            <MessageSquare size={12} /> Add Request
+          </Button>
+      )
     },
+    // {
+    //   title: "FEEDBACK",
+    //   key: "feedback",
+    //   render: () => (
+    //     <Button
+    //       type="primary"
+    //       icon={<Pencil size={14} />}
+    //       className="bg-[#2563eb] h-9 w-9 flex items-center justify-center rounded-lg shadow-blue-500/20"
+    //     />
+    //   ),
+    // },
   ];
+
 
   return (
     <div className="p-4 sm:p-6 md:p-8 lg:p-12 max-w-[1600px] mx-auto animate-fade-in w-full overflow-x-hidden">
@@ -188,6 +215,13 @@ const ClassesPage: React.FC = () => {
           scroll={{ x: 1000 }}
         />
       </div>
+
+      <AddRequestModal 
+        visible={requestModal.visible}
+        onClose={() => setRequestModal({ ...requestModal, visible: false })}
+        sessionId={requestModal.id}
+        sessionTitle={requestModal.title}
+      />
 
       <style>{`
         .dashboard-table .ant-table-thead > tr > th {

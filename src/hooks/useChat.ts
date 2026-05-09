@@ -1,26 +1,28 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { getSocket, connectSocket } from "../lib/socket";
-import { setMessages, addMessage, setTyping, setOnlineUsers } from "../store/chatSlice";
+import { setMessages, addMessage, setTyping, setOnlineStatus } from "../store/chatSlice";
 
-export const useChatSocket = (conversationId?: string, teacherUserId?: string) => {
+export const useChatSocket = (conversationId?: string ) => {
   const dispatch = useDispatch();
-  let socket = getSocket();
 
-  if (!socket) {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (token) {
-      socket = connectSocket(token);
+  const socket = useMemo(() => {
+    let s = getSocket();
+    if (!s) {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (token) {
+        s = connectSocket(token);
+      }
     }
-  }
+    return s;
+  }, []);
+
+  // NOTE: user:status is handled globally in socket.ts — no duplicate listener here
 
   useEffect(() => {
     if (!socket || !conversationId) return;
 
     socket.emit("conversation:open", { conversationId });
-    if (teacherUserId) {
-      socket.emit("user:status:check", { userIds: [teacherUserId] });
-    }
 
     const onHistory = (data: any) => {
       dispatch(
@@ -39,26 +41,28 @@ export const useChatSocket = (conversationId?: string, teacherUserId?: string) =
       dispatch(setTyping(data));
     };
 
-    const onStatusList = ({ statuses }: any) => {
-      const mapped: Record<string, "online" | "offline"> = {};
-
-      statuses.forEach((u: any) => {
-        mapped[u.userId] = u.status;
-      });
-
-      dispatch(setOnlineUsers(mapped));
+    const onMessagesRead = (data: any) => {
+      // If we receive a read receipt, the user is definitely online
+      console.log("📨 [Handshake] User is online via read receipt:", data.userId);
+      dispatch(setOnlineStatus({ userId: data.userId, status: "online" }));
     };
 
     socket.on("messages:history", onHistory);
     socket.on("message:new", onNewMessage);
     socket.on("typing:update", onTyping);
-    socket.on("user:status:list", onStatusList);
+    socket.on("messages:read", onMessagesRead);
+
+    // Handshake: emit message:read to let the other person know we are online
+    socket.emit("message:read", { conversationId });
 
     return () => {
       socket.off("messages:history", onHistory);
       socket.off("message:new", onNewMessage);
       socket.off("typing:update", onTyping);
-      socket.off("user:status:list", onStatusList);
+      socket.off("messages:read", onMessagesRead);
     };
-  }, [socket, conversationId]);
+  }, [socket, conversationId, dispatch]);
+
+  return socket;
 };
+

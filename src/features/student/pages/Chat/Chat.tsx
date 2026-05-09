@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../../../store/store";
 
 import { useMessages } from "../../../../hooks/useMessages";
 import { setMessages } from "../../../../store/chatSlice";
@@ -10,7 +11,6 @@ import ChatSidebar from "./components/ChatSidebar";
 import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
 import { useChatSocket } from "../../../../hooks/useChat";
-import { getSocket } from "../../../../lib/socket";
 import { useTyping } from "../../../../hooks/useTyping";
 import { Socket } from "socket.io-client";
 
@@ -44,32 +44,11 @@ export default function StudentChat() {
   const teacherSubject = chatState?.teacherSubject || "Specialist";
   const sessionTitle = chatState?.sessionTitle || "General Curriculum";
 
-  // Initialize socket listeners for this conversation
-  useChatSocket(conversationId, teacherUserId);
-  const socket = getSocket();
+  // Initialize socket listeners for this conversation (also returns the socket)
+  const socket = useChatSocket(conversationId);
+  const isSocketReady = !!socket?.connected;
 
-  // Socket event logger
-  useEffect(() => {
-    if (!socket) return;
-
-    const logEvent = (eventName: string, ...args: any[]) => {
-      console.log(`📡 [Socket Event] ${eventName}:`, args);
-    };
-
-    socket.onAny(logEvent);
-
-    return () => {
-      socket.offAny(logEvent);
-    };
-  }, [socket]);
-
-  const [message, setMessage] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Read state from Redux store
-  const { messages, onlineUsers } = useSelector((rootState: any) => rootState.chat);
-  console.log("onlineUsers", onlineUsers);
-
+  // Fetch messages via HTTP (single source — socket history is a backup)
   const { data: messagesData } = useMessages(conversationId);
 
   useEffect(() => {
@@ -78,8 +57,14 @@ export default function StudentChat() {
     }
   }, [messagesData, dispatch, conversationId]);
 
-  const isTeacherOnline = teacherUserId ? onlineUsers[teacherUserId] === "online" : false;
+  const [message, setMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Read state from Redux store
+  const { messages, onlineUsers, typingUsers } = useSelector((rootState: RootState) => rootState.chat);
+
+  const isTeacherOnline = teacherUserId ? onlineUsers[teacherUserId] === "online" : false;
+  const isTeacherTyping = conversationId && teacherUserId ? typingUsers[conversationId]?.includes(teacherUserId) : false;
   const currentMessages = conversationId ? messages[conversationId] || [] : [];
 
   // Auto-scroll to bottom
@@ -91,7 +76,7 @@ export default function StudentChat() {
     e.preventDefault();
     if (!message.trim() || !conversationId || !socket) return;
 
-    // Emit message to socket server
+    console.log("📤 [Chat] Sending message:", message);
     socket.emit("message:send", {
       conversationId,
       content: message,
@@ -104,10 +89,7 @@ export default function StudentChat() {
 
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
-
-    if (socket && conversationId) {
-      emitTyping();
-    }
+    emitTyping();
   };
 
   return (
@@ -139,21 +121,25 @@ export default function StudentChat() {
           <ChatHeader
             teacherName={teacherName}
             isTeacherOnline={isTeacherOnline}
+            isTyping={isTeacherTyping}
           />
           <ChatMessages
             conversationId={conversationId}
             teacherUserId={teacherUserId}
             messages={currentMessages}
             messagesEndRef={messagesEndRef}
+            isTyping={isTeacherTyping}
           />
           <ChatInput
             message={message}
             conversationId={conversationId}
             handleTyping={handleTyping}
             handleSendMessage={handleSendMessage}
+            isSocketReady={isSocketReady}
           />
         </div>
       </div>
+
 
       <style dangerouslySetInnerHTML={{
         __html: `

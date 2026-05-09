@@ -1,7 +1,7 @@
 import { Modal, Form, Input, InputNumber, Button } from 'antd';
 import { useCreateLecture, useUpdateLecture } from '../../../hooks/useLectures';
 import { useQueryClient } from '@tanstack/react-query';
-import { Video, AlignLeft, Type, Hash } from 'lucide-react';
+import { Video, AlignLeft, Type, Hash, FileText } from 'lucide-react';
 import { useEffect } from 'react';
 import { Lecture } from '../../../types/lectures';
 
@@ -26,6 +26,7 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                 title: lecture.title,
                 content: lecture.content,
                 videoUrl: lecture.videoUrl,
+                pdfUrl: lecture.pdfUrl,
                 order: lecture.order,
             });
         } else if (visible && !lecture) {
@@ -102,26 +103,29 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                     <Input.TextArea placeholder="Enter lecture details or transcript..." rows={4} className="rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
                 </Form.Item>
 
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-2">
-                        <Form.Item
-                            label={<span className="text-gray-700 font-bold flex items-center gap-2"><Video size={14} className="text-indigo-500" /> Video URL</span>}
-                            name="videoUrl"
-                            rules={[{ required: true, message: 'Please enter video URL' }]}
-                        >
-                            <Input placeholder="YouTube, Vimeo, or direct link" className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
-                        </Form.Item>
-                    </div>
-                    <div className="col-span-1">
-                        <Form.Item
-                            label={<span className="text-gray-700 font-bold flex items-center gap-2"><Hash size={14} className="text-indigo-500" /> Order</span>}
-                            name="order"
-                            rules={[{ required: true, message: 'Required' }]}
-                        >
-                            <InputNumber min={1} className="w-full h-12 rounded-xl border-gray-200 flex items-center" />
-                        </Form.Item>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <Form.Item
+                        label={<span className="text-gray-700 font-bold flex items-center gap-2"><Video size={14} className="text-indigo-500" /> Video URL</span>}
+                        name="videoUrl"
+                        rules={[{ required: true, message: 'Please enter video URL' }]}
+                    >
+                        <Input placeholder="YouTube, Vimeo, etc." className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
+                    </Form.Item>
+                    <Form.Item
+                        label={<span className="text-gray-700 font-bold flex items-center gap-2"><FileText size={14} className="text-indigo-500" /> PDF URL</span>}
+                        name="pdfUrl"
+                    >
+                        <Input placeholder="Link to lecture notes" className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
+                    </Form.Item>
                 </div>
+
+                <Form.Item
+                    label={<span className="text-gray-700 font-bold flex items-center gap-2"><Hash size={14} className="text-indigo-500" /> Order</span>}
+                    name="order"
+                    rules={[{ required: true, message: 'Required' }]}
+                >
+                    <InputNumber min={1} className="w-full h-12 rounded-xl border-gray-200 flex items-center" />
+                </Form.Item>
 
                 <div className="flex items-center justify-end gap-3 mt-10 pt-6 border-t border-gray-50">
                     <Button 

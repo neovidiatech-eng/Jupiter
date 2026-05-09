@@ -5,6 +5,7 @@ export interface Lecture {
   title: string;
   content: string;
   videoUrl: string;
+  pdfUrl?: string;
   order: number;
   courseId: string;
   createdAt: string;

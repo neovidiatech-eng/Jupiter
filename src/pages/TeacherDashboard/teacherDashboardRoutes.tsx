@@ -18,13 +18,14 @@ const PoliciesPage = lazy(() => import('../../features/teacher/pages/Policies'))
 const ReportsPage = lazy(() => import('../../features/teacher/pages/Reports'));
 const HelpPage = lazy(() => import('../../features/teacher/pages/Help'));
 const CommunityPage = lazy(() => import('../../features/teacher/pages/Community'));
+const TeacherLectures = lazy(() => import('../../features/teacher/pages/Lectures'));
 
 export const teacherDashboardRoutes: RouteConfig[] = [
   {
     id: 'classes',
     label: 'Classes',
     icon: LayoutDashboard,
-    path: '', 
+    path: '',
     element: <ClassesPage />,
   },
   {
@@ -33,6 +34,14 @@ export const teacherDashboardRoutes: RouteConfig[] = [
     icon: BookOpen,
     path: 'courses',
     element: <LMSContent />,
+  },
+  {
+    id: 'lms-lectures',
+    label: 'Lectures',
+    icon: BookOpen,
+    path: 'courses/:courseId/lectures',
+    element: <TeacherLectures />,
+    hidden: true,
   },
   {
     id: 'requests',

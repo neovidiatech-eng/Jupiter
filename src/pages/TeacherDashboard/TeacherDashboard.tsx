@@ -5,6 +5,7 @@ import ErrorBoundary from '../../components/layout/ErrorBoundary';
 import { teacherDashboardRoutes } from './teacherDashboardRoutes.tsx';
 
 const TeacherDashboardHome = lazy(() => import('../../features/teacher/pages/Classes'));
+const ProfilePage = lazy(() => import('../../features/teacher/pages/Profile'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-[400px]">
@@ -19,6 +20,7 @@ export default function TeacherDashboard() {
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route index element={<TeacherDashboardHome />} />
+            <Route path="profile" element={<ProfilePage />} />
             {teacherDashboardRoutes.flatMap(route => {
               if (route.subItems) {
                 return route.subItems.map(subItem => (
