@@ -9,7 +9,6 @@ import { useCreateConversation, useMessages } from "../../../hooks/useMessages";
 // import { sendMessage } from "../../../services/chatServices";
 import { useChatSocket } from "../../../hooks/useChat";
 import { useTyping } from "../../../hooks/useTyping";
-import { Socket } from "socket.io-client";
 import { useTeacherProfile } from "../hooks/useTeacherProfile";
 import { RootState } from "../../../store/store";
 import { Users, MessageSquare, Smile, Send, MoreVertical } from "lucide-react";
@@ -101,36 +100,6 @@ export default function CommunityPage() {
           Connect, share, and learn with fellow instructors
         </p>
       </header>
-
-      {/* Stats Cards Section */}
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {stats.map((stat, i) => (
-          <div
-            key={i}
-            className="bg-white p-8 rounded-3xl border border-gray-100/50 shadow-sm transition-all hover:shadow-md"
-          >
-            <div className="flex items-start gap-4 mb-4">
-              <div
-                className={`p-3 rounded-2xl ${
-                  stat.color === "blue"
-                    ? "bg-blue-50 text-blue-500"
-                    : stat.color === "purple"
-                      ? "bg-purple-50 text-purple-500"
-                      : stat.color === "pink"
-                        ? "bg-pink-50 text-pink-500"
-                        : "bg-green-50 text-green-500"
-                }`}
-              >
-                <stat.icon size={22} />
-              </div>
-            </div>
-            <p className="text-sm font-bold text-slate-400 mb-1">
-              {stat.label}
-            </p>
-            <h3 className="text-2xl font-black text-slate-800">{stat.value}</h3>
-          </div>
-        ))}
-      </div>  */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Chat Area */}

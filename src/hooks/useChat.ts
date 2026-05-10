@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { getSocket, connectSocket } from "../lib/socket";
 import { setMessages, addMessage, setTyping, setOnlineStatus } from "../store/chatSlice";
+import { Message, TypingPayload } from "../types/chat";
 
 export const useChatSocket = (conversationId?: string ) => {
   const dispatch = useDispatch();
@@ -33,11 +34,11 @@ export const useChatSocket = (conversationId?: string ) => {
       );
     };
 
-    const onNewMessage = (message: any) => {
+    const onNewMessage = (message: Message) => {
       dispatch(addMessage(message));
     };
 
-    const onTyping = (data: any) => {
+    const onTyping = (data: TypingPayload) => {
       dispatch(setTyping(data));
     };
 
@@ -65,4 +66,4 @@ export const useChatSocket = (conversationId?: string ) => {
 
   return socket;
 };
-
+

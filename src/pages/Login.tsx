@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { Eye, EyeOff, ArrowLeft, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, ArrowRight, User, Lock } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginInput, getLoginSchema } from "../lib/schemas/LoginSchema";
-import { login, googleLogin } from "../services/AuthServices";
+import { login } from "../services/AuthServices";
 import { Link, useNavigate } from "react-router-dom";
 import { CustomCheckbox } from "../components/ui/CustomCheckbox";
-import { GoogleLogin } from "@react-oauth/google";
 import ErrorService from "../utils/ErrorService";
 import { connectSocket } from "../lib/socket";
 
@@ -23,7 +22,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     control,
   } = useForm<LoginInput>({
     resolver: zodResolver(getLoginSchema(t)),
@@ -79,53 +78,64 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const ArrowIcon = language === "ar" ? ArrowLeft : ArrowRight;
 
   return (
-    <div>
-      <div className="text-center mb-8">
-        <h1 className="text-xl font-bold text-gray-900 mb-2">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="text-center mb-10">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
           {t("login")}
-        </h1>
-        <p className="text-gray-600">{t("joinAcademy")}</p>
+        </h2>
+        <p className="text-gray-500 font-medium">{t("joinAcademy")}</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="block text-right text-gray-700 font-medium mb-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Username */}
+        <div className="space-y-2">
+          <label className="block text-sm font-bold text-gray-700 mx-1">
             {t("username") || "Username"}
           </label>
-          <input
-            type="text"
-            {...register("username")}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-right"
-            placeholder="Super Admin_jupiter"
-            dir="ltr"
-          />
+          <div className="relative group">
+            <div className={`absolute ${language === "ar" ? "right" : "left"}-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors`}>
+              <User className="w-5 h-5" />
+            </div>
+            <input
+              type="text"
+              {...register("username")}
+              className={`w-full ${language === "ar" ? "pr-14 pl-5" : "pl-14 pr-5"} py-4 bg-gray-50/50 border ${errors.username ? "border-red-400" : "border-gray-200"
+                } rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-300 text-gray-900 font-medium placeholder:text-gray-400`}
+              placeholder="Super Admin_jupiter"
+              dir="ltr"
+            />
+          </div>
           {errors.username && (
-            <p className="text-red-500 text-xs mt-1 text-right">
+            <p className="text-red-500 text-xs mt-1 font-medium mx-1 flex items-center gap-1">
+              <span className="w-1 h-1 bg-red-500 rounded-full" />
               {errors.username.message}
             </p>
           )}
         </div>
 
         {/* Password */}
-        <div>
-          <label className="block text-right text-gray-700 font-medium mb-2">
+        <div className="space-y-2">
+          <label className="block text-sm font-bold text-gray-700 mx-1">
             {t("password")}
           </label>
 
-          <div className="relative">
+          <div className="relative group">
+            <div className={`absolute ${language === "ar" ? "right-5" : "left-5"} top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors pointer-events-none`}>
+              <Lock className="w-5 h-5" />
+            </div>
             <input
               type={showPassword ? "text" : "password"}
               {...register("password")}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl pr-12"
+              className={`w-full ${language === "ar" ? "pr-14 pl-12" : "pl-14 pr-12"} py-4 bg-gray-50/50 border ${errors.password ? "border-red-400" : "border-gray-200"
+                } rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-300 text-gray-900 font-medium placeholder:text-gray-400`}
               dir={language === "ar" ? "rtl" : "ltr"}
-              placeholder="********"
+              placeholder="••••••••"
             />
 
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={`absolute ${language === "ar" ? "left" : "right"
-                }-4 top-1/2 -translate-y-1/2 text-gray-400`}
+              className={`absolute ${language === "ar" ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-all p-2 rounded-xl hover:bg-gray-100/50 flex items-center justify-center`}
             >
               {showPassword ? (
                 <EyeOff className="w-5 h-5" />
@@ -136,21 +146,15 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           </div>
 
           {errors.password && (
-            <p className="text-red-500 text-xs mt-1 text-right">
+            <p className="text-red-500 text-xs mt-1 font-medium mx-1 flex items-center gap-1">
+              <span className="w-1 h-1 bg-red-500 rounded-full" />
               {errors.password.message}
             </p>
           )}
         </div>
 
         {/* Remember + Forgot */}
-        <div className="flex items-center justify-between">
-          <Link
-            to="/forgot-password"
-            className="text-sm text-primary font-medium"
-          >
-            {t("forgotPassword")}
-          </Link>
-
+        <div className="flex items-center justify-between px-1">
           <Controller
             name="rememberMe"
             control={control}
@@ -162,49 +166,77 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               />
             )}
           />
+
+          <Link
+            to="/forgot-password"
+            className="text-sm text-primary font-bold hover:underline underline-offset-4 decoration-2"
+          >
+            {t("forgotPassword")}
+          </Link>
         </div>
 
         {/* Login Button */}
         <button
           type="submit"
-          className="w-full bg-primary text-white rounded-xl py-4 flex items-center justify-center gap-2"
+          disabled={isSubmitting}
+          className="w-full bg-primary hover:bg-primary-dark text-white rounded-2xl py-4 px-6 font-bold text-lg shadow-xl shadow-primary/20 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
         >
-          <span>{t("login")}</span>
-          <ArrowIcon className="w-5 h-5" />
+          {isSubmitting ? (
+            <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <span>{t("login")}</span>
+              <ArrowIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </>
+          )}
         </button>
 
-        <p className="text-center text-gray-500">{t("or")}</p>
+        {/* <div className="relative py-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-100"></div>
+          </div>
+          <div className="relative flex justify-center text-sm font-bold uppercase tracking-wider">
+            <span className="bg-white px-4 text-gray-400">{t("or")}</span>
+          </div>
+        </div> */}
 
         {/* Google Login */}
-        <div className="flex justify-center">
-          <GoogleLogin
-            onSuccess={async (res) => {
-              const idToken = res.credential;
+        {/* <div className="flex justify-center pb-2">
+          <div className="w-full max-w-md rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <GoogleLogin
+              onSuccess={async (res) => {
+                const idToken = res.credential;
 
-              if (idToken) {
-                try {
-                  const result = await googleLogin({
-                    idToken,
-                    provider: "google",
-                  });
+                if (idToken) {
+                  try {
+                    const result = await googleLogin({
+                      idToken,
+                      provider: "google",
+                    });
 
-                  const token =
-                    result.data?.accessToken || result.accessToken;
+                    const token =
+                      result.data?.accessToken || result.accessToken;
 
-                  if (token) {
-                    localStorage.setItem("token", token);
-                    onLoginSuccess();
-                    ErrorService.success(t("loginSuccess"));
-                    navigate("/student-dashboard");
+                    if (token) {
+                      localStorage.setItem("token", token);
+                      onLoginSuccess();
+                      ErrorService.success(t("loginSuccess"));
+                      navigate("/student-dashboard");
+                    }
+                  } catch (error) {
+                    console.error("Google Login failed:", error);
                   }
-                } catch (error) {
-                  console.error("Google Login failed:", error);
                 }
-              }
-            }}
-            onError={() => console.log("Login Failed")}
-          />
-        </div>
+              }}
+              onError={() => console.log("Login Failed")}
+              width="100%"
+              theme="outline"
+              size="large"
+              text="signin_with"
+              shape="pill"
+            />
+          </div>
+        </div> */}
       </form>
     </div>
   );

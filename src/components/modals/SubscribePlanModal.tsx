@@ -114,7 +114,7 @@ export default function SubscribePlanModal({ isOpen, onClose }: SubscribePlanMod
                   <div className="p-8 flex-1 flex flex-col">
                     <div className={`${isRtl ? 'text-right' : 'text-left'} mb-8`}>
                       <h3 className="text-2xl font-black text-slate-900 mb-2">
-                        {isRtl ? plan.name_ar : plan.name_en}
+                        {plan.name}
                       </h3>
                       <p className="text-slate-500 text-sm font-medium leading-relaxed">
                         {plan.description || (isRtl ? 'خطة تعليمية متكاملة مصممة خصيصاً لاحتياجاتك' : 'A comprehensive educational plan tailored to your needs')}

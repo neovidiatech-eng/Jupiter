@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { GraduationCap, ArrowLeft, ArrowRight } from "lucide-react";
+import { Rocket, ArrowLeft } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 const AuthLayout = () => {
@@ -13,28 +13,36 @@ const AuthLayout = () => {
 
   return (
     <div
-      className="min-h-screen  bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4 py-12"
+      className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4 py-12 relative overflow-hidden"
       dir={language === "ar" ? "rtl" : "ltr"}
     >
-      <div className="w-full max-w-3xl">
-        {/*  common  */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <GraduationCap className="w-12 h-12 text-primary" />
+      {/* Decorative Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="w-full max-w-[720px] relative z-10">
+        {/* common header */}
+        <div className="text-center mb-10">
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-white rounded-3xl p-5 shadow-2xl shadow-primary/10 border border-white relative group">
+              <div className="absolute inset-0 bg-primary/5 rounded-3xl scale-0 group-hover:scale-110 transition-transform duration-500" />
+              <Rocket className="w-14 h-14 text-primary relative z-10 animate-pulse" />
             </div>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">{t("academyName")}</h1>
-          <p className="text-lg text-gray-600 mb-2">{t("academySubtitle")}</p>
-          <p className="text-sm text-gray-500">{t("academyDescription")}</p>
+          <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">
+            {t("academyName")}
+          </h1>
+          <p className="text-gray-500 font-medium max-w-lg mx-auto leading-relaxed">
+            {t("academySubtitle")}
+          </p>
         </div>
 
         {!isAuthTab && (
-          <div className="flex justify-start mb-4 max-w-fit">
+          <div className="flex justify-start mb-6">
             <button
               type="button"
               onClick={() => navigate("/login")}
-              className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-colors font-medium group"
+              className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-all font-semibold group bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm"
             >
               <ArrowLeft
                 className={`w-4 h-4 transition-transform ${language === "ar" ? "rotate-180 group-hover:translate-x-1" : "group-hover:-translate-x-1"}`}
@@ -44,39 +52,41 @@ const AuthLayout = () => {
           </div>
         )}
 
-        <div className="bg-white/80 backdrop-blur rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-          {/* Tabs  */}
+        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden backdrop-blur-sm">
+          {/* Tabs */}
           {isAuthTab && (
-            <div className="flex border-b border-gray-200 p-2 gap-2 bg-white">
-              <button
-                onClick={() => navigate("/login")}
-                className={`flex-1 py-3 text-sm font-semibold rounded-2xl transition-all duration-200 ${isLogin
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                  }`}
-              >
-                {t("login")}
-              </button>
-              <button
-                onClick={() => navigate("/register")}
-                className={`flex-1 py-3 text-sm font-semibold rounded-2xl transition-all duration-200 ${isRegister
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                  }`}
-              >
-                {language === "ar" ? "تسجيل طالب جديد " : "Register New Student"}
-              </button>
+            <div className="flex p-2 bg-gray-50/50">
+              <div className="flex w-full bg-white/50 p-1 rounded-[2rem] border border-gray-100 shadow-sm">
+                <button
+                  onClick={() => navigate("/login")}
+                  className={`flex-1 py-3.5 text-sm font-bold rounded-[1.75rem] transition-all duration-300 ${isLogin
+                      ? "bg-primary text-white shadow-lg shadow-primary/25 scale-[1.02]"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-white"
+                    }`}
+                >
+                  {t("login")}
+                </button>
+                <button
+                  onClick={() => navigate("/register")}
+                  className={`flex-1 py-3.5 text-sm font-bold rounded-[1.75rem] transition-all duration-300 ${isRegister
+                      ? "bg-primary text-white shadow-lg shadow-primary/25 scale-[1.02]"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-white"
+                    }`}
+                >
+                  {language === "ar" ? "تسجيل جديد" : "New Register"}
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Login or Register */}
-          <div className="p-8">
+          {/* Content */}
+          <div className="p-8 md:p-10">
             <Outlet />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-sm text-gray-400">
+        <div className="text-center mt-10 text-sm font-medium text-gray-400">
           {t("footerText")}
         </div>
       </div>
