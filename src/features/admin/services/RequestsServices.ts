@@ -2,8 +2,9 @@ import api from "../../../lib/axios";
 import { GetRequestsResponse } from "../../../types/requests";
 
 export const getAllRequests = async (): Promise<GetRequestsResponse> => {
-    const response = await api.get<GetRequestsResponse>("/session-requests/all");
-    return response.data;
+    const response = await api.get<GetRequestsResponse>("/requests/all");
+    return response.data;   
+    console.log(response.data); 
 };
 
 export const updateRequestStatus = async (
@@ -11,7 +12,7 @@ export const updateRequestStatus = async (
     status: 'approve' | 'reject',
     adminNotes?: string
 ) => {
-    const response = await api.patch(`/session-requests/${requestId}/${status}`, {
+    const response = await api.patch(`/requests/${requestId}/${status}`, {
         adminNotes
     });
     return response.data;

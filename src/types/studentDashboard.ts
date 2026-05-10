@@ -19,6 +19,22 @@ export interface DashboardPlan {
     currency: DashboardPlanCurrency;
 }
 
+export interface DashboardRankCourse {
+    id: string;
+    title: string;
+    description: string;
+    rankId: string;
+    image: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DashboardRank {
+    id: string;
+    name: string;
+    courses: DashboardRankCourse[];
+}
+
 export interface DashboardMetadata {
     id: string;
     birth_date: string;
@@ -28,7 +44,7 @@ export interface DashboardMetadata {
     sessions_remaining: number;
     avgRating: number;
     totalReviews: number;
-    rank: any | null;
+    rank: DashboardRank | null;
     user: DashboardUser;
     plan: DashboardPlan;
     joindate: string;

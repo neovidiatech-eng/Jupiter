@@ -14,6 +14,14 @@ export interface TeacherReport {
   overallRating: number;
   createdAt: string;
   updatedAt: string;
+  teacher?: {
+    id: string;
+    user_id: string;
+    user: {
+      name: string;
+      email: string;
+    }
+  }
 }
 
 export interface CreateTeacherReport {
@@ -53,5 +61,15 @@ export interface TeacherReportsResponse {
   message: string;
   status: number;
   lang: string;
-  data: TeacherReport[];
+  data: TeacherReport[] | {
+    items: TeacherReport[];
+    pagination?: {
+      page: number;
+      limit: number;
+      totalItems: number;
+      totalPages: number;
+      hasNextPage: boolean;
+    }
+  };
 }
+

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   X,
   LogOut,
@@ -13,7 +14,14 @@ import {
   Trophy,
   Layers,
   ShieldCheck,
-  ClipboardList,
+  File,
+  DollarSign,
+  Coins,
+  CreditCard,
+  Repeat,
+  AlertCircle,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -29,7 +37,11 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollapsed }: AdminSidebarProps) {
   const { t, i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
-  // const [expandedItems, setExpandedItems] = useState<string[]>(['users']);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  const toggleExpanded = (item: string) => {
+    setExpandedItems(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -197,6 +209,83 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
                 <Layers className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
                 {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>subscription</span>}
               </NavLink>
+
+              {/* Finance Dropdown */}
+              <div>
+                <button
+                  onClick={() => {
+                    toggleExpanded('finance');
+                    if (isCollapsed) setIsCollapsed(false);
+                  }}
+                  className={`
+                    w-full flex items-center gap-4 ${isCollapsed ? 'justify-center px-2' : 'px-5'} py-3.5 rounded-xl font-bold transition-all
+                    ${expandedItems.includes('finance') ? 'bg-[#f0f4ff] text-[#2563eb]' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+                  `}
+                  title={isCollapsed ? "Finance" : ''}
+                >
+                  <DollarSign className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
+                  {!isCollapsed && (
+                    <>
+                      <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Finance</span>
+                      {expandedItems.includes('finance') ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        language === 'ar' ? <ChevronDown className="w-4 h-4 rotate-90" /> : <ChevronRight className="w-4 h-4" />
+                      )}
+                    </>
+                  )}
+                </button>
+                
+                {/* Sub Items */}
+                {!isCollapsed && expandedItems.includes('finance') && (
+                  <div className={`mt-1 space-y-1 ${language === 'ar' ? 'pr-11' : 'pl-11'}`}>
+                    <NavLink
+                      to="/dashboard/currencies"
+                      onClick={onClose}
+                      className={({ isActive }) => `
+                        w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
+                        ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+                      `}
+                    >
+                      <Coins className="w-4 h-4" />
+                      <span>Currencies</span>
+                    </NavLink>
+                    <NavLink
+                      to="/dashboard/expenses"
+                      onClick={onClose}
+                      className={({ isActive }) => `
+                        w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
+                        ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+                      `}
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      <span>Expenses</span>
+                    </NavLink>
+                    <NavLink
+                      to="/dashboard/transactions"
+                      onClick={onClose}
+                      className={({ isActive }) => `
+                        w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
+                        ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+                      `}
+                    >
+                      <Repeat className="w-4 h-4" />
+                      <span>Transactions</span>
+                    </NavLink>
+                    <NavLink
+                      to="/dashboard/transaction-requests"
+                      onClick={onClose}
+                      className={({ isActive }) => `
+                        w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
+                        ${isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+                      `}
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Transaction Requests</span>
+                    </NavLink>
+                  </div>
+                )}
+              </div>
             </div>
           </nav>
 
@@ -209,6 +298,21 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
               <PlusCircle className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && <span className="text-sm">Add new resource</span>}
             </button> */}
+
+            {/* Reports */}
+
+            <NavLink 
+            to="/dashboard/reports"
+            onClick={onClose}
+            className={({ isActive }) => `
+              w-full flex items-center gap-4 ${isCollapsed ? 'justify-center px-2' : 'px-5'} py-3.5 rounded-xl font-bold transition-all
+              ${isActive ? 'bg-[#f0f4ff] text-[#2563eb]' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+            `}
+            title={isCollapsed ? "Reports" : ''}
+            >
+              <File className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
+              {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Reports</span>}
+            </NavLink>
 
             {/* Policies */}
             <NavLink

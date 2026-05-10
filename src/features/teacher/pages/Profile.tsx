@@ -9,9 +9,10 @@ import {
 } from 'lucide-react';
 import ErrorService from '../../../utils/ErrorService';
 import { useTeacherProfile } from '../hooks/useTeacherProfile';
+import { useCreateTeacherWithdrawal, useTeacherWithdrawals } from '../hooks/useWithdraw';
 
 // Internal Withdrawal Modal Component
-function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl }: any) {
+function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl, isLoading }: any) {
   const [amount, setAmount] = useState('');
   
   if (!isOpen) return null;
@@ -70,9 +71,14 @@ function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl }: any) {
 
           <button 
             type="submit"
-            className="w-full py-3.5 sm:py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-[0.98] shadow-lg shadow-indigo-200"
+            disabled={isLoading}
+            className="w-full py-3.5 sm:py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-[0.98] shadow-lg shadow-indigo-200"
           >
-            <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            )}
             {isRtl ? 'تأكيد عملية السحب' : 'Confirm Withdrawal'}
           </button>
         </form>
@@ -88,6 +94,10 @@ export default function TeacherProfile() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   const { data: profileResponse, isLoading } = useTeacherProfile();
+  const { data: withdrawalsResponse } = useTeacherWithdrawals();
+  const { mutate: createWithdrawal, isPending: isWithdrawing } = useCreateTeacherWithdrawal();
+  
+  const withdrawals = withdrawalsResponse?.data?.withdrawals || [];
   const data = profileResponse?.data;
   const teacher = data?.teacher;
   const stats = data?.stats;
@@ -129,8 +139,15 @@ export default function TeacherProfile() {
   ];
 
   const handleWithdraw = (amount: number) => {
-    ErrorService.success(isRtl ? `تم إرسال طلب سحب مبلغ $${amount} بنجاح` : `Withdrawal request for $${amount} submitted successfully`);
-    setIsWithdrawModalOpen(false);
+    createWithdrawal(amount, {
+      onSuccess: () => {
+        ErrorService.success(isRtl ? `تم إرسال طلب سحب مبلغ $${amount} بنجاح` : `Withdrawal request for $${amount} submitted successfully`);
+        setIsWithdrawModalOpen(false);
+      },
+      onError: (error: any) => {
+        ErrorService.error(error.response?.data?.message || (isRtl ? 'فشل إرسال طلب السحب' : 'Failed to submit withdrawal request'));
+      }
+    });
   };
 
   return (
@@ -224,11 +241,23 @@ export default function TeacherProfile() {
                   </div>
                   
                   <div className="space-y-3">
-                    {financialInfo.transactions.length > 0 ? (
-                      financialInfo.transactions.map((tx: any) => (
+                    {withdrawals.length > 0 ? (
+                      withdrawals.slice(0, 4).map((tx: any) => (
                         <div key={tx.id} className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-gray-100/50">
-                          <span className="text-[10px] font-bold text-gray-600">{tx.type}</span>
-                          <span className="text-xs font-black text-gray-900">${tx.amount}</span>
+                          <div className="flex flex-col">
+                             <span className="text-[10px] font-bold text-gray-900">${tx.amount}</span>
+                             <span className="text-[8px] text-gray-400 font-medium">{new Date(tx.createdAt).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}</span>
+                          </div>
+                          <span className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase ${
+                            tx.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 
+                            tx.status === 'pending' ? 'bg-amber-50 text-amber-600' : 
+                            'bg-red-50 text-red-600'
+                          }`}>
+                            {isRtl ? (
+                              tx.status === 'approved' ? 'مكتمل' : 
+                              tx.status === 'pending' ? 'قيد الانتظار' : 'مرفوض'
+                            ) : tx.status}
+                          </span>
                         </div>
                       ))
                     ) : (
@@ -282,6 +311,7 @@ export default function TeacherProfile() {
         balance={financialInfo.pendingBalance}
         onWithdraw={handleWithdraw}
         isRtl={isRtl}
+        isLoading={isWithdrawing}
         settings={settings}
       />
     </div>

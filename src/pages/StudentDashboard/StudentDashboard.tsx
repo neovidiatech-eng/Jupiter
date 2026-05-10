@@ -5,7 +5,6 @@ import {
   BookOpen,
   User,
   MessageSquare,
-  Lock,
   ChevronRight,
 } from "lucide-react";
 // Student Dashboard Page
@@ -17,7 +16,10 @@ import { studentDashboardRoutes } from "./studentDashboardRoutes";
 import { useDashboardData } from "../../features/student/hooks/useDashboardData";
 import { useCreateConversation } from "../../hooks/useMessages";
 
+import { useLanguage } from "../../contexts/LanguageContext";
+
 export default function StudentDashboard() {
+  const { language } = useLanguage();
   const navigate = useNavigate();
   const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
@@ -43,6 +45,7 @@ export default function StudentDashboard() {
       const dist = targetDate.getTime() - now;
       setTimeLeft(Math.max(0, dist));
     };
+
 
     updateTimer();
     const timer = setInterval(updateTimer, 1000);
@@ -80,16 +83,33 @@ export default function StudentDashboard() {
           <div className="space-y-6 flex-1">
             <div className="space-y-2">
               <p className="text-blue-100 font-bold tracking-widest uppercase text-xs">
-                Next Session Starts In
+                {language === "ar" ? "تبدأ الحصة القادمة خلال" : "Next Session Starts In"}
               </p>
-              <h2 className="text-5xl md:text-6xl font-black tracking-tighter">
-                {countdown.hours}:{countdown.minutes}:{countdown.seconds}
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter flex items-baseline gap-2">
+                {countdown.days !== "00" && (
+                  <span className="flex items-baseline gap-1">
+                    {countdown.days}
+                    <span className="text-xl opacity-60 font-bold uppercase">{language === "ar" ? "يوم" : "d"}</span>
+                  </span>
+                )}
+                <span className="flex items-baseline gap-1">
+                  {countdown.hours}
+                  <span className="text-xl opacity-60 font-bold uppercase">{language === "ar" ? "س" : "h"}</span>
+                </span>
+                <span className="flex items-baseline gap-1">
+                  {countdown.minutes}
+                  <span className="text-xl opacity-60 font-bold uppercase">{language === "ar" ? "د" : "m"}</span>
+                </span>
+                <span className="flex items-baseline gap-1">
+                  {countdown.seconds}
+                  <span className="text-xl opacity-60 font-bold uppercase">{language === "ar" ? "ث" : "s"}</span>
+                </span>
               </h2>
             </div>
 
             <div className="space-y-4 pt-4">
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                {nextSession ? nextSession.title : "No upcoming sessions"}
+                {nextSession ? nextSession.title : (language === "ar" ? "لا توجد حصص قادمة" : "No upcoming sessions")}
               </h1>
               <div className="flex flex-wrap items-center gap-6 text-blue-100/80 font-medium">
                 {nextSession && (
@@ -225,7 +245,7 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-         
+
           </div>
         </div>
 
@@ -244,7 +264,7 @@ export default function StudentDashboard() {
               },
               {
                 label: "Current Level",
-                value: `${metadata?.rank.name||`Silver`}`,
+                value: metadata?.rank?.name || 'No Rank',
                 icon: Award,
                 color: "bg-amber-50 text-amber-500",
               },
@@ -284,18 +304,30 @@ export default function StudentDashboard() {
           <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
             Learning Path
           </h3>
-          <button
+          {/* <button
             onClick={() => navigate('/student-dashboard/recorded-videos')}
             className="flex items-center gap-2 bg-slate-50 text-slate-600 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-100 transition-all"
           >
             <Play size={16} className="fill-current" />
             View All Videos
-          </button>
+          </button> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {/* Active Level Card */}
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:translate-y-[-4px] transition-all cursor-pointer group relative overflow-hidden" onClick={() => navigate('/student-dashboard/Materials/Levels')}>
+          <div
+            className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:translate-y-[-4px] transition-all cursor-pointer group relative overflow-hidden"
+            onClick={() => {
+              const rank = metadata?.rank;
+              if (rank) {
+                navigate(`/student-dashboard/Materials/Levels`, {
+                  state: { rank }
+                });
+              } else {
+                navigate('/student-dashboard/Materials/Levels');
+              }
+            }}
+          >
             <div className="absolute top-0 right-0 p-4">
               <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
                 <ChevronRight size={18} strokeWidth={3} />
@@ -310,30 +342,18 @@ export default function StudentDashboard() {
               </div>
               <div className="space-y-1">
                 <h4 className="text-xl font-bold text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors">
-                  Silver Level
+                  {metadata?.rank?.name || 'No Rank'}
                 </h4>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  4 Curriculums
+                  {metadata?.rank?.courses.length + ' ' + 'Curriculums'}
                 </p>
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Progress
-                  </span>
-                  <span className="text-[11px] font-black text-blue-600">
-                    45%
-                  </span>
-                </div>
-                <div className="h-1.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
-                  <div className="h-full bg-blue-600 rounded-full w-[45%]" />
-                </div>
-              </div>
+
             </div>
           </div>
 
           {/* Locked Level Cards */}
-          {[1, 2, 3].map((i) => (
+          {/* {[1, 2, 3].map((i) => (
             <div
               key={i}
               className="bg-slate-50/50 rounded-[32px] p-8 border border-slate-100/50 flex flex-col items-center justify-center gap-6 group cursor-not-allowed grayscale"
@@ -347,7 +367,7 @@ export default function StudentDashboard() {
                 </h4>
               </div>
             </div>
-          ))}
+          ))} */}
         </div>
       </div>
     </div>

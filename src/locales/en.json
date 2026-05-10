@@ -403,5 +403,19 @@
   "sessionsRemaining": "Sessions Remaining",
   "scheduledDays": "Recurring Day",
   "grid": "Grid",
-  "list": "List"
+  "list": "List",
+  "teacherReports": "Teacher Weekly Reports",
+  "manageReportsDescription": "Review and analyze teacher weekly performance reports",
+  "totalReports": "Total Reports",
+  "avgRating": "Avg Rating",
+  "totalClasses": "Total Classes",
+  "totalStudentsTaught": "Students Taught",
+  "searchReports": "Search reports...",
+  "week": "Week",
+  "performance": "Performance",
+  "summary": "Summary",
+  "rating": "Rating",
+  "submitted": "Submitted",
+  "classes": "Classes",
+  "students": "Students"
 }

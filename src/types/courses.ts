@@ -10,6 +10,12 @@ export interface Rank {
   slug: string;
   color: string;
   ageRange: AgeRange;
+  courses : Courses[];
+}
+
+export interface Courses{
+  id: string,
+  name: string,
 }
 
 export interface Course {

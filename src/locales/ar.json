@@ -408,5 +408,18 @@
   "sessionsRemaining": "الحصص المتبقية",
   "scheduledDays": "أيام الحصة",
   "grid": "شبكة",
-  "list": "قائمة"
+  "list": "قائمة",
+  "teacherReports": "التقارير الأسبوعية للمعلمين",
+  "manageReportsDescription": "مراجعة وتحليل تقارير أداء المعلمين الأسبوعية",
+  "totalReports": "إجمالي التقارير",
+  "avgRating": "متوسط التقييم",
+  "totalClasses": "إجمالي الحصص",
+  "totalStudentsTaught": "طلاب تم تدريسهم",
+  "searchReports": "البحث في التقارير...",
+  "week": "الأسبوع",
+  "performance": "الأداء",
+  "summary": "الملخص",
+  "rating": "التقييم",
+  "submitted": "تم التسليم",
+  "classes": "حصص"
 }

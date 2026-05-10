@@ -24,6 +24,7 @@ import {
   Repeat,
   Trophy
 } from 'lucide-react';
+import TransactionRequests from "../../features/admin/pages/TransactionRequests";
 
 export interface RouteConfig {
   id: string;
@@ -61,6 +62,7 @@ const CurriculumPage = lazy(() => import("../../features/admin/pages/Curriculum"
 const LibraryPage = lazy(() => import("../../features/admin/pages/Library"));
 const RanksPage = lazy(() => import("../../features/admin/pages/Ranks"));
 const PoliciesPage = lazy(() => import("../../features/admin/pages/Policies"));
+const ReportsPage = lazy(() => import("../../features/admin/pages/Reports"));
 
 
 export const adminDashboardRoutes: RouteConfig[] = [
@@ -126,6 +128,13 @@ export const adminDashboardRoutes: RouteConfig[] = [
         icon: GraduationCap,
         path: "teachers",
         element: <TeachersPage />,
+      },
+      {
+        id: "teacher-reports",
+        label: "sidebar_reports",
+        icon: FileText,
+        path: "reports",
+        element: <ReportsPage />,
       },
       {
         id: "teacher-requests",
@@ -277,6 +286,13 @@ export const adminDashboardRoutes: RouteConfig[] = [
         path: "transactions",
         element: <TransactionsPage />,
       },
+      {
+        id: "transaction Requests",
+        label: "transaction Requests",
+        icon: AlertCircle,
+        path: "transaction-requests",
+        element: <TransactionRequests />,
+      }
     ],
   },
   {

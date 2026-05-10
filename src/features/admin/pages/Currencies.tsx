@@ -99,8 +99,8 @@ export default function Currencies() {
   }
 
   return (
-    <div className="p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="mb-8 flex items-center justify-between">
+    <div className="p-6 space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{text.title[language]}</h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -116,7 +116,7 @@ export default function Currencies() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-primary-light flex items-center justify-center flex-shrink-0">
             <DollarSign className="w-6 h-6 text-primary" />
@@ -171,14 +171,14 @@ export default function Currencies() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{text.code[language]}</th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{text.name[language]}</th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{text.symbol[language]}</th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{text.exchangeRate[language]}</th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{text.isDefault[language]}</th>
-                  <th className="px-6 py-3.5 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{text.actions[language]}</th>
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-600">{text.code[language]}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-600">{text.name[language]}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-600">{text.symbol[language]}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-600">{text.exchangeRate[language]}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-600">{text.isDefault[language]}</th>
+                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-600">{text.actions[language]}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">

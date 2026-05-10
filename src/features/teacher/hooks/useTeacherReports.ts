@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { addTeacherReport, getTeacherInsights, getTeacherReportById, getTeacherReports } from "../services/TeacherReports"
+import { addTeacherReport, getTeacherInsights, getTeacherReportById, getTeacherReports, updateTeacherReport } from "../services/TeacherReports"
 import { CreateTeacherReport } from "../../../types/reports"
 
 export const useTeacherReports = () => {
@@ -34,3 +34,16 @@ export const useAddTeacherReport = () => {
         }
     });
 }
+
+export const useUpdateTeacherReport = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string, data: Partial<CreateTeacherReport> }) => 
+            updateTeacherReport(id, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["teacher-reports"] });
+            queryClient.invalidateQueries({ queryKey: ["teacher-report-by-id", variables.id] });
+        }
+    });
+}
+

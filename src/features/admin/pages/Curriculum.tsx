@@ -412,14 +412,17 @@ export default function Curriculum() {
             >
               {viewMode === 'grid' ? (
                 <div className="flex flex-col h-full">
-                  <div 
-                    className="h-40 p-6 flex flex-col justify-between relative overflow-hidden bg-cover bg-center"
-                    style={{ 
-                      backgroundImage: (course.image && course.image !== 'default_course.jpg')
-                        ? `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url(https://agro-plus.net/uploads/${course.image})` 
-                        : `linear-gradient(to bottom right, #6366f1, #a855f7)` 
-                    }}
-                  >
+                 <div
+  className="h-40 p-6 flex flex-col justify-between relative overflow-hidden bg-cover bg-center"
+  style={{
+    backgroundImage:
+      course?.image 
+        ? `url("https://agro-plus.net/${course.image}")`
+        : "linear-gradient(to bottom right, #6366f1, #a855f7)"
+  }}
+>
+  {course?.image && <img src={`https://agro-plus.net/${course.image}`} alt={course.title} className="absolute top-0 left-0 w-full h-full object-cover" />}
+              
                     <div className="absolute top-0 right-0 p-8 opacity-10" >
                       <BookOpen size={100} className="text-white" />
                     </div>

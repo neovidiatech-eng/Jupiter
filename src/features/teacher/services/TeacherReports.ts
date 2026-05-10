@@ -20,3 +20,9 @@ export const addTeacherReport = async (data: CreateTeacherReport): Promise<Teach
   const response = await api.post("/teacher/weekly-reports", data);
   return response.data;
 };
+
+export const updateTeacherReport = async (id: string, data: Partial<CreateTeacherReport>): Promise<TeacherReportResponse> => {
+  const response = await api.patch(`/teacher/weekly-reports/${id}`, data);
+  return response.data;
+};
+

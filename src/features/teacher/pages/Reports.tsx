@@ -1,28 +1,39 @@
-import { Calendar, ChevronRight, Info, Send, Loader2, Star } from "lucide-react";
-import { useTeacherReports, useTeacherInsights, useAddTeacherReport } from "../hooks/useTeacherReports";
+import { Calendar, Info, Send, Loader2, Star, Edit, Eye, X } from "lucide-react";
+import { useTeacherReports, useTeacherInsights, useAddTeacherReport, useUpdateTeacherReport } from "../hooks/useTeacherReports";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { useState } from "react";
 import ReportDetailsModal from "../components/ReportDetailsModal";
 import { useForm } from "react-hook-form";
 import { CreateTeacherReport } from "../../../types/reports";
 import { reportSchema } from "../../../lib/schemas/ReportSchema";
-import { notification } from "antd";
+import { Modal } from "antd";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function ReportsPage() {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [editingReportId, setEditingReportId] = useState<string | null>(null);
   const { data: reports, isLoading: reportsLoading } = useTeacherReports();
-  const { mutateAsync: addReport, isPending: isSubmitting } = useAddTeacherReport();
+  const { mutateAsync: addReport, isPending: isAdding } = useAddTeacherReport();
+  const { mutateAsync: updateReport, isPending: isUpdating } = useUpdateTeacherReport();
+  const isSubmitting = isAdding || isUpdating;
+
+  const defaultFormValues = {
+    totalClasses: 0,
+    studentsTaught: 0,
+    avgSessionDuration: 0,
+    materialsUploaded: 0,
+    overallRating: 5,
+    teachingSummary: "",
+    studentProgress: "",
+    challenges: "",
+    weekStarting: "",
+    weekEnding: ""
+  };
+
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<CreateTeacherReport>({
     resolver: zodResolver(reportSchema),
-    defaultValues: {
-      totalClasses: 0,
-      studentsTaught: 0,
-      avgSessionDuration: 0,
-      materialsUploaded: 0,
-      overallRating: 5,
-    }
+    defaultValues: defaultFormValues
   });
   
   // Calculate current week range for insights
@@ -35,19 +46,37 @@ export default function ReportsPage() {
   });
 
   const onSubmit = async (data: CreateTeacherReport) => {
-    try {
-      await addReport(data);
-      notification.success({
-        message: "Success",
-        description: "Report submitted successfully",
-      });
-      reset();
-    } catch (error) {
-      notification.error({
-        message: "Error",
-        description: "Failed to submit report",
-      });
-    }
+      if (editingReportId) {
+        await updateReport({ id: editingReportId, data });
+      } else {
+        await addReport(data);
+      }
+      reset(defaultFormValues);
+      setEditingReportId(null);
+  };
+
+  const handleEdit = (report: any) => {
+    setEditingReportId(report.id);
+    reset({
+      weekStarting: format(new Date(report.weekStarting), "yyyy-MM-dd"),
+      weekEnding: format(new Date(report.weekEnding), "yyyy-MM-dd"),
+      totalClasses: report.totalClasses,
+      studentsTaught: report.studentsTaught,
+      avgSessionDuration: report.avgSessionDuration,
+      materialsUploaded: report.materialsUploaded,
+      overallRating: report.overallRating,
+      teachingSummary: report.teachingSummary,
+      studentProgress: report.studentProgress,
+      challenges: report.challenges,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+
+
+  const cancelEdit = () => {
+    setEditingReportId(null);
+    reset(defaultFormValues);
   };
 
   return (
@@ -57,7 +86,7 @@ export default function ReportsPage() {
           Weekly Reports
         </h1>
         <p className="text-slate-400 font-medium">
-          Submit your weekly teaching performance and feedback
+          {editingReportId ? 'Edit your previously submitted report' : 'Submit your weekly teaching performance and feedback'}
         </p>
       </header>
 
@@ -222,15 +251,25 @@ export default function ReportsPage() {
               <button 
                 type="submit"
                 disabled={isSubmitting}
-                className=" flex flex-row items-center justify-center bg-[#2563eb] text-white px-12 py-4 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all h-[45px] w-[70%] text-[12px] lg:text-[15px] disabled:opacity-50 "
+                className=" flex flex-row items-center justify-center bg-[#2563eb] text-white px-12 py-4 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all h-[45px] w-full max-w-[250px] text-[12px] lg:text-[15px] disabled:opacity-50 "
               >
                 {isSubmitting ? (
                   <Loader2 className="animate-spin mr-2" size={20} />
                 ) : (
                   <Send className="inline-block mr-1" size={20} />
                 )}
-                Submit Report
+                {editingReportId ? 'Update Report' : 'Submit Report'}
               </button>
+              {editingReportId && (
+                <button 
+                  type="button"
+                  onClick={cancelEdit}
+                  className=" flex flex-row items-center justify-center bg-white text-slate-600 border border-slate-200 px-12 py-4 rounded-xl font-bold hover:bg-slate-50 hover:text-slate-800 transition-all h-[45px] w-full max-w-[200px] text-[12px] lg:text-[15px] "
+                >
+                  <X className="inline-block mr-1" size={20} />
+                  Cancel
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -272,31 +311,49 @@ export default function ReportsPage() {
               {reportsLoading && <Loader2 className="animate-spin text-blue-500" size={16} />}
             </h3>
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-              {reports?.data?.length === 0 && !reportsLoading && (
-                <p className="text-sm text-slate-400 text-center py-4">No reports found</p>
-              )}
-              {reports?.data?.map((report, i) => (
+              {(() => {
+                const reportsList = Array.isArray(reports?.data) ? reports.data : (reports?.data?.items || []);
+                return (
+                  <>
+                    {reportsList.length === 0 && !reportsLoading && (
+                      <p className="text-sm text-slate-400 text-center py-4">No reports found</p>
+                    )}
+                    {reportsList.map((report: any, i: number) => (
                 <div
                   key={report.id || i}
-                  className="p-4 bg-slate-50/50 border border-slate-50 rounded-2xl flex justify-between items-center group"
+                  className="p-4 bg-slate-50/50 border border-slate-50 rounded-2xl flex flex-col gap-3 group"
                 >
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-700 mb-1">
-                      {format(new Date(report.weekStarting), "MMM dd")} - {format(new Date(report.weekEnding), "MMM dd")}
-                    </h4>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-green-500">
-                      Submitted
-                    </span>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-700 mb-1">
+                        {format(new Date(report.weekStarting), "MMM dd")} - {format(new Date(report.weekEnding), "MMM dd")}
+                      </h4>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-green-500">
+                        Submitted
+                      </span>
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => setSelectedReportId(report.id)}
-                    className="text-[11px] font-bold text-slate-500 group-hover:text-blue-600 flex items-center gap-1 transition-all"
-                  >
-                    View
-                    <ChevronRight size={14} />
-                  </button>
+                  <div className="flex items-center gap-2 mt-1">
+                    <button 
+                      type="button"
+                      onClick={() => setSelectedReportId(report.id)}
+                      className="flex-1 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] font-bold hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-1"
+                    >
+                      <Eye size={12} /> View
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => handleEdit(report)}
+                      className="flex-1 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] font-bold hover:text-amber-600 hover:border-amber-200 transition-all flex items-center justify-center gap-1"
+                    >
+                      <Edit size={12} /> Edit
+                    </button>
+                  </div>
                 </div>
               ))}
+                  </>
+                );
+              })()}
             </div>
           </div>
 
