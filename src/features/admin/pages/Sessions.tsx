@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Plus, Eye, Trash2, Edit, ExternalLink, MoreVertical, ChevronDown, ChevronLeft, ChevronRight, Bell } from 'lucide-react';
+import { Search, Plus, Eye, Trash2, Edit, ExternalLink, MoreVertical , ChevronLeft, ChevronRight, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSearchSchedules, useCreateSchedule, useCreateRecurringSchedule, useUpdateSchedule, useDeleteSchedule, useDeleteGroupedSchedule } from '../hooks/useSchedules';
 import { useTeacher } from '../hooks/useTeacher';
@@ -28,6 +28,7 @@ export default function Sessions() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Schedule | null>(null);
   const [groupedSessions, setGroupedSessions] = useState<Schedule[]>([]);
+  const [currentTab, setCurrentTab] = useState('Today');
   const [sessionToDelete, setSessionToDelete] = useState<Schedule | null>(null);
 
   const createSchedule = useCreateSchedule();
@@ -71,38 +72,42 @@ export default function Sessions() {
 
   const handleAddSession = async (data: SessionFormData | MultipleSessionsPayload) => {
     try {
-      if ('student' in data) {
+      if ('studentId' in data) {
         // Single Session
         await createSchedule.mutateAsync({
-          studentId: data.student,
-          teacherId: data.teacher,
-          subject_id: data.subject,
+          studentId: data.studentId,
+          teacherId: data.teacherId,
+          courseId: data.courseId,
           title: data.title,
           description: data.description || '',
-          link: data.meetingLink || '',
+          link: data.link || '',
           notes: data.notes || '',
           start_time: `${data.sessionDate}T${data.startTime}:00.000Z`,
           type: data.type,
           notification_Time: data.notification_Time,
-          platform: data.platform
+          platform: data.platform,
+          language: data.language,
+          videoUrl: data.videoUrl,
+          slidesUrl: data.slidesUrl,
         });
       } else {
         // Batch Session
         const { formData, sessions } = data;
         await createRecurringSchedule.mutateAsync({
-          studentId: formData.student,
-          teacherId: formData.teacher,
-          subject_id: formData.subject,
+          studentId: formData.studentId,
+          teacherId: formData.teacherId,
+          courseId: formData.courseId,
           title: formData.title,
           description: formData.description || '',
-          link: formData.meetingLink || '',
+          link: formData.link || '',
           notes: formData.notes || '',
           startTime: sessions[0]?.time || '00:00',
           days: data.selectedDays,
           startDate: formData.monthYear ? `${formData.monthYear}-01` : new Date().toISOString().split('T')[0],
           endDate: formData.monthYear ? `${formData.monthYear}-28` : new Date().toISOString().split('T')[0],
           notification_Time: formData.notification_Time || '10',
-          type: formData.type
+          type: formData.type,
+          language: formData.language,
         });
       }
       setShowAddModal(false);
@@ -122,7 +127,20 @@ export default function Sessions() {
   const { data: searchResults } = useSearchSchedules(debouncedSearch);
 
   const itemsPerPage = 5;
-  const rawScheduleData: Schedule[] = searchResults?.data?.schedule ?? [];
+  const rawScheduleData: Schedule[] = useMemo(() => {
+    if (!searchResults?.data?.schedule) return [];
+
+    switch (currentTab) {
+      case 'Upcoming':
+        return searchResults.data.schedule.upcomingSchedule || [];
+      case 'Today':
+        return searchResults.data.schedule.toDaySchedule || [];
+      case 'History':
+        return searchResults.data.schedule.previousSchedule || [];
+      default:
+        return [];
+    }
+  }, [searchResults, currentTab]);
 
   const scheduleData = useMemo(() => {
     if (!searchTerm) return rawScheduleData;
@@ -416,20 +434,22 @@ export default function Sessions() {
               className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border-none rounded-full text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:bg-white transition-colors placeholder:text-gray-400"
             />
           </div>
-          {/* <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative">
-              <select className="appearance-none pl-5 pr-10 py-2.5 bg-gray-50 border-none rounded-full text-sm font-bold text-gray-700 focus:outline-none cursor-pointer">
-                <option>All Statuses</option>
-              </select>
-              <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-            <div className="relative">
-              <select className="appearance-none pl-5 pr-10 py-2.5 bg-gray-50 border-none rounded-full text-sm font-bold text-gray-700 focus:outline-none cursor-pointer">
-                <option>This Week</option>
-              </select>
-              <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div> */}
+           <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
+          <div className="flex bg-slate-100/80 p-1.5 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
+            {["History", "Today", "Upcoming"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setCurrentTab(tab);
+                  setCurrentPage(1);
+                }}
+                className={`flex-1 md:min-w-[120px] px-4 sm:px-8 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${currentTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
         </div>
 
         {/* Table */}

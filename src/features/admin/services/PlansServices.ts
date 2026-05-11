@@ -31,7 +31,7 @@ export interface UpdatePlanPayload {
   name_en?: string;
   price?: number;
   duration?: number;
-  hours?: number;
+  sessionsCount?: number;
   active?: boolean;
   bestSeller?: boolean;
   features?: string[];

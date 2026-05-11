@@ -21,6 +21,7 @@ export interface Teacher {
     currencyId: string;
     hour_price: number;
     gender: 'Male' | 'Female';
+    age: number;
     active: boolean;
     createdAt: string;
     updatedAt: string;
@@ -64,7 +65,7 @@ export interface CreateTeacherInput {
     gender: 'male' | 'female';
     hour_price: number;
     active: boolean;
-    subject_ids: string[];
+    age: number;
 }
 
 export type TeachersData = TeachersFetchResponse['data'];

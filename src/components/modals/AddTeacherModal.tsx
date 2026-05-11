@@ -5,10 +5,8 @@ import CustomSelect from '../ui/CustomSelect';
 import { TeacherFormData, getTeacherSchema } from '../../lib/schemas/TeacherSchema';
 import { Controller, Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CustomCheckbox } from '../ui/CustomCheckbox';
 import { useCurrency } from '../../features/admin/hooks/useCurrency';
 import { useMemo } from 'react';
-import { useSubjects } from '../../features/admin/hooks/useSubjects';
 
 interface AddTeacherModalProps {
   isOpen: boolean;
@@ -20,9 +18,8 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
   const { language, t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const { data: currenciesData } = useCurrency();
-  const { data: subjectsData, isLoading: isLoadingSubjects, error, isError } = useSubjects();
 
-  const { register, handleSubmit, control, watch, reset, setValue, formState: { errors } } = useForm<TeacherFormData>({
+  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<TeacherFormData>({
     resolver: zodResolver(getTeacherSchema(t)) as Resolver<TeacherFormData>,
     defaultValues: {
       name: '',
@@ -33,7 +30,7 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
       currency: '',
       gender: 'male',
       status: 'active',
-      subjects: [],
+      age: 0,
     }
   });
 
@@ -52,232 +49,219 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
   };
 
   if (!isOpen) return null;
-  const subjectsValue = watch('subjects') || [];
-
-  if (isError) {
-    console.log(error.message);
-  }
-
-  const handleSubjectToggle = (id: string, checked: boolean) => {
-    if (checked) {
-      setValue('subjects', [...subjectsValue, id], { shouldValidate: true });
-    } else {
-      setValue('subjects', subjectsValue.filter(s => s !== id), { shouldValidate: true });
-    }
-  };
-
-  const genders = [
-    { id: 'male', label: 'ذكر', labelEn: 'Male' },
-    { id: 'female', label: 'أنثى', labelEn: 'Female' },
-  ];
-
-  const statuses = [
-    { id: 'active', label: 'نشط', labelEn: 'Active' },
-    { id: 'inactive', label: 'غير نشط', labelEn: 'Inactive' },
-  ];
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh]  overflow-y-auto no-scrollbar">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-100 animate-in zoom-in-95 duration-300">
         {/* Header */}
-        <div className="sticky top-0 bg-primary px-6 py-4 flex items-center justify-between rounded-t-2xl">
-
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Users className="w-6 h-6" />
-            <span>{t('addTeacher')}</span>
-          </h2>
-          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
-            <X className="w-5 h-5 text-white/80" />
+        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-white sticky top-0 z-10">
+          <div>
+            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <Users className="w-6 h-6 text-indigo-600" />
+              <span>{t('addTeacher')}</span>
+            </h2>
+            <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Instructor Profile</p>
+          </div>
+          <button onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl transition-all text-slate-400 hover:text-slate-600">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(handleOnSubmit)} className="p-6">
-          <div className="space-y-6" dir={language === "ar" ? "rtl" : "ltr"}>
-            {/* Row 1: Name and Email */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Email */}
-              <div className="text-start">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('email')} *
-                </label>
-                <input
-                  type="email"
-                  placeholder="example@email.com"
-                  {...register('email')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
-                  dir="ltr"
-                />
-                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-              </div>
+        {/* Form Body */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <form id="add-teacher-form" onSubmit={handleSubmit(handleOnSubmit)} className="p-8">
+            <div className="space-y-8" dir={language === "ar" ? "rtl" : "ltr"}>
+              
+              {/* Basic Info Section */}
+              <div className="space-y-5">
+                <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4">Basic Information</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      <Eye className="w-3.5 h-3.5" />
+                      {t('name')}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      {...register('name')}
+                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                    />
+                    {errors.name && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.name.message}</p>}
+                  </div>
 
-              {/* Name */}
-              <div className="text-start">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('name')} *
-                </label>
-                <input
-                  type="text"
-                  placeholder={t('name')}
-                  {...register('name')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
-                />
-                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-              </div>
-            </div>
-
-            {/* Row 2: Password and Phone */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Password */}
-              <div className="text-start relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('password')} *
-                </label>
-                <div className="relative">
-                  <Lock className="absolute start-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    {...register('password')}
-                    className="w-full px-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start bg-gray-50 transition-all"
-                    dir="ltr"
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute end-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      <Eye className="w-3.5 h-3.5" />
+                      {t('email')}
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="instructor@example.com"
+                      {...register('email')}
+                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                    />
+                    {errors.email && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.email.message}</p>}
+                  </div>
                 </div>
-                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
-              </div>
 
-              {/* Phone */}
-              <div className="text-start">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('phone')} *
-                </label>
-                <input
-                  type="tel"
-                  placeholder="+2012345678"
-                  {...register('phone')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
-                  dir="ltr"
-                />
-                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
-              </div>
-            </div>
-
-            {/* Row 3: Hourly Rate and Currency */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Currency */}
-              <Controller
-                name="currency"
-                control={control}
-                render={({ field }) => (
-                  <CustomSelect
-                    label={t('currency')}
-                    value={field.value}
-                    options={currencyOptions}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-
-              {/* Hourly Rate */}
-              <div className="text-start">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('hourlyRate')}
-                </label>
-                <input
-                  type="number"
-                  placeholder="150"
-                  {...register('hourlyRate', { valueAsNumber: true })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-start"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            {/* Row 4: Gender and Status */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Status */}
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <CustomSelect
-                    label={t('status')}
-                    value={field.value}
-                    options={statuses.map(s => ({ value: s.id, label: language === 'ar' ? s.label : s.labelEn }))}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-
-              {/* Gender */}
-              <Controller
-                name="gender"
-                control={control}
-                render={({ field }) => (
-                  <CustomSelect
-                    label={t('gender')}
-                    value={field.value}
-                    options={genders.map(g => ({ value: g.id, label: language === 'ar' ? g.label : g.labelEn }))}
-                    onChange={field.onChange}
-                  />
-                )}
-              />
-            </div>
-
-            {/* Subjects */}
-            <div className="text-start">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                {t('subject')}
-              </label>
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                {isLoadingSubjects ? (
-                  <div className="flex justify-center p-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-primary"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="text-start relative">
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      <Lock className="w-3.5 h-3.5" />
+                      {t('password')}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        {...register('password')}
+                        className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute end-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {errors.password && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.password.message}</p>}
                   </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {(subjectsData?.subjects || []).map((subject) => (
-                      <label
-                        key={subject.id}
-                        className="flex items-center gap-3 cursor-pointer hover:bg-white p-3 rounded-lg transition-colors"
-                      >
-                        <CustomCheckbox
-                          checked={subjectsValue.includes(subject.id)}
-                          onChange={(checked) => handleSubjectToggle(subject.id, checked)}
+
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      <Users className="w-3.5 h-3.5" />
+                      {t('phone')}
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="+20 123 456 7890"
+                      {...register('phone')}
+                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                    />
+                    {errors.phone && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.phone.message}</p>}
+                  </div>
+
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      <Users className="w-3.5 h-3.5" />
+                      Age
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Enter Age"
+                      {...register('age', { valueAsNumber: true })}
+                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                    />
+                    {errors.age && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.age.message}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Professional Details Section */}
+              <div className="space-y-5">
+                <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4">Professional Details</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                   <div className="text-start">
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      <Users className="w-3.5 h-3.5" />
+                      {t('currency')}
+                    </label>
+                    <Controller
+                      name="currency"
+                      control={control}
+                      render={({ field }) => (
+                        <CustomSelect
+                          value={field.value}
+                          options={currencyOptions}
+                          onChange={field.onChange}
+                          className="w-full"
                         />
-                        <span className="text-sm text-gray-700 flex-1 text-start">
-                          {language === 'ar' ? subject.name_ar : (subject.name_en || subject.name_ar)}
-                        </span>
-                      </label>
-                    ))}
+                      )}
+                    />
                   </div>
-                )}
-                {errors.subjects && <p className="text-red-500 text-xs mt-1">{errors.subjects.message}</p>}
+
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      <Eye className="w-3.5 h-3.5" />
+                      {t('hourlyRate')}
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      {...register('hourlyRate', { valueAsNumber: true })}
+                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                   <div className="text-start">
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      <Users className="w-3.5 h-3.5" />
+                      {t('status')}
+                    </label>
+                    <Controller
+                      name="status"
+                      control={control}
+                      render={({ field }) => (
+                        <CustomSelect
+                          value={field.value}
+                          options={[
+                            { value: 'active', label: t('active') },
+                            { value: 'inactive', label: t('inactive') }
+                          ]}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      <Users className="w-3.5 h-3.5" />
+                      {t('gender')}
+                    </label>
+                    <Controller
+                      name="gender"
+                      control={control}
+                      render={({ field }) => (
+                        <CustomSelect
+                          value={field.value}
+                          options={[
+                            { value: 'male', label: language === 'ar' ? 'ذكر' : 'Male' },
+                            { value: 'female', label: language === 'ar' ? 'أنثى' : 'Female' }
+                          ]}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </form>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3 mt-8 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
-            >
-              {t('cancel')}
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-6 py-3 btn-primary text-white rounded-xl transition-colors font-medium"
-            >
-              {t('addTeacher')}
-            </button>
-          </div>
-        </form>
+        {/* Footer */}
+        <div className="px-8 py-6 bg-white border-t border-slate-50 flex items-center gap-4 sticky bottom-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-8 py-4 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-2xl transition-all font-black text-xs uppercase tracking-widest"
+          >
+            {t('cancel')}
+          </button>
+          <button
+            form="add-teacher-form"
+            type="submit"
+            className="flex-[2] px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl transition-all font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-100"
+          >
+            {t('addTeacher')}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+ 

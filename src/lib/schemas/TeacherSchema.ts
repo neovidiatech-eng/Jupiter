@@ -16,9 +16,7 @@ export const getTeacherSchema = (t: TFunc) => z.object({
   currency: z.string().min(1, t("validation.required")),
   gender: z.enum(['male', 'female']),
   status: z.enum(['active', 'inactive']),
-
-  // Changed from a fixed object to a dynamic array of GUIDs
-  subjects: z.array(z.string()).min(1, t("validation.required")),
+  age: z.coerce.number().min(1, t("validation.required")),
 });
 
 export type TeacherFormData = z.infer<ReturnType<typeof getTeacherSchema>>;

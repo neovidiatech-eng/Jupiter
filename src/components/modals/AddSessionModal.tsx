@@ -1,14 +1,39 @@
 import { useState, useMemo, useEffect } from 'react';
-import { X, Search, Video, ChevronDown, AlertCircle, Calendar, MonitorPlay, AlertTriangle, Clock, Bell, BookOpen, Layers } from 'lucide-react';
+import {
+  X,
+  Search,
+  Video,
+  ChevronDown,
+  AlertCircle,
+  Calendar,
+  MonitorPlay,
+  AlertTriangle,
+  Clock,
+  BookOpen,
+  Layers,
+} from 'lucide-react';
+
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getSessionSchema, getMultipleSessionsSchema, SessionFormData, MultipleSessionsPayload, MultipleSessionsFormData } from '../../lib/schemas/SessionSchema';
+
+import {
+  getSessionSchema,
+  getMultipleSessionsSchema,
+  SessionFormData,
+  MultipleSessionsPayload,
+  MultipleSessionsFormData,
+} from '../../lib/schemas/SessionSchema';
+
 import CustomSelect from '../ui/CustomSelect';
+
 import { useStudents } from '../../features/admin/hooks/useStudents';
-import { Student } from '../../types/student';
 import { useTeacher } from '../../features/admin/hooks/useTeacher';
+import { useCourses } from '../../hooks/useCourses';
+
+import { Student } from '../../types/student';
 import { Teacher, DayOfWeek } from '../../types/scheduales';
-import { useSubjects } from '../../features/admin/hooks/useSubjects';
+import { Course } from '../../types/courses';
+
 import { useTranslation } from 'react-i18next';
 
 interface AddSessionModalProps {
@@ -17,19 +42,42 @@ interface AddSessionModalProps {
   onAdd: (data: SessionFormData | MultipleSessionsPayload) => void;
 }
 
-export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionModalProps) {
+const DAYS: DayOfWeek[] = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
+export default function AddSessionModal({
+  isOpen,
+  onClose,
+  onAdd,
+}: AddSessionModalProps) {
   const { t, i18n } = useTranslation();
+
   const language = i18n.language.split('-')[0];
-  const [schedulingMode, setSchedulingMode] = useState<'single' | 'batch'>('batch');
+
+  const [schedulingMode, setSchedulingMode] = useState<'single' | 'batch'>(
+    'batch'
+  );
 
   const { data: students } = useStudents();
   const { data: instructors } = useTeacher();
-  const { data: subjectsData } = useSubjects();
+  const { data: coursesdata } = useCourses();
 
   const singleSchema = getSessionSchema(t);
   const batchSchema = getMultipleSessionsSchema(t);
 
-  const subjects = subjectsData?.subjects || [];
+  const courses: Course[] = coursesdata?.items || [];
+
+  const courseOptions = courses.map((course: Course) => ({
+    value: String(course.id),
+    label: course.title,
+  }));
 
   const {
     register,
@@ -40,430 +88,725 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
     setValue,
     formState: { errors },
   } = useForm<any>({
-    resolver: zodResolver(schedulingMode === 'single' ? singleSchema : batchSchema),
+    resolver: zodResolver(
+      schedulingMode === 'single' ? singleSchema : batchSchema
+    ),
     defaultValues: {
       type: 'full',
       notification_Time: '10',
-      student: '',
-      teacher: '',
-      subject: '',
+      studentId: '',
+      teacherId: '',
+      courseId: '',
       title: '',
       description: '',
       notes: '',
       platform: 'zoom',
-      meetingLink: '',
+      link: '',
+      videoUrl: '',
+      slidesUrl: '',
       sessionDate: new Date().toISOString().split('T')[0],
       startTime: '14:00',
       endTime: '15:00',
       duration: '60',
       monthYear: new Date().toISOString().substring(0, 7),
       selectedDays: [],
+      language: language === 'ar' ? 'ar' : 'en',
     },
   });
 
   const watchTitle = watch('title');
-  const watchSubject = watch('subject');
-  const watchStudent = watch('student');
+  const watchCourse = watch('courseId');
+  const watchStudent = watch('studentId');
   const watchType = watch('type');
   const watchStartTime = watch('startTime');
   const watchPlatform = watch('platform');
-  const watchSelectedDays = (watch('selectedDays') as DayOfWeek[]) || [];
 
-  // Auto-calculate end time based on session type and start time
+  const watchSelectedDays =
+    (watch('selectedDays') as DayOfWeek[]) || [];
+
   useEffect(() => {
-    if (watchStartTime && watchType) {
-      const durationMinutes = watchType === 'full' ? 60 : 30;
-      setValue('duration', durationMinutes.toString());
+    if (!watchStartTime || !watchType) return;
 
-      const [hours, minutes] = watchStartTime.split(':').map(Number);
-      const date = new Date();
-      date.setHours(hours, minutes, 0, 0);
-      date.setMinutes(date.getMinutes() + durationMinutes);
+    const durationMinutes = watchType === 'full' ? 60 : 30;
 
-      const endHours = String(date.getHours()).padStart(2, '0');
-      const endMinutes = String(date.getMinutes()).padStart(2, '0');
-      setValue('endTime', `${endHours}:${endMinutes}`);
-    }
-  }, [watchType, watchStartTime, setValue]);
+    setValue('duration', String(durationMinutes));
 
-  // Find selected student data and compute plan info
+    const [hours, minutes] = watchStartTime
+      .split(':')
+      .map(Number);
+
+    const date = new Date();
+
+    date.setHours(hours, minutes, 0, 0);
+
+    date.setMinutes(date.getMinutes() + durationMinutes);
+
+    const endHours = String(date.getHours()).padStart(2, '0');
+
+    const endMinutes = String(date.getMinutes()).padStart(2, '0');
+
+    setValue('endTime', `${endHours}:${endMinutes}`);
+  }, [watchStartTime, watchType, setValue]);
+
   const selectedStudentData = useMemo(() => {
     if (!watchStudent || !students?.data?.studentsData) return null;
-    return students.data.studentsData.find((s: Student) => s.id === watchStudent) || null;
+
+    return (
+      students.data.studentsData.find(
+        (s: Student) => String(s.id) === String(watchStudent)
+      ) || null
+    );
   }, [watchStudent, students]);
 
   const studentPlanInfo = useMemo(() => {
     if (!selectedStudentData) return null;
+
     return {
       planName: selectedStudentData.plan?.name || null,
       totalSessions: selectedStudentData.sessions || 0,
-      sessionsAttended: selectedStudentData.sessions_attended || 0,
-      sessionsRemaining: selectedStudentData.sessions_remaining || 0,
+      sessionsAttended:
+        selectedStudentData.sessions_attended || 0,
+      sessionsRemaining:
+        selectedStudentData.sessions_remaining || 0,
     };
-  }, [selectedStudentData, language]);
+  }, [selectedStudentData]);
+
+  const selectedCourse = useMemo(() => {
+    return (
+      courses.find(
+        (course: Course) =>
+          String(course.id) === String(watchCourse)
+      ) || null
+    );
+  }, [courses, watchCourse]);
+
+  const previewSessions = useMemo(() => {
+    if (schedulingMode === 'single') {
+      return [
+        {
+          date: watch('sessionDate'),
+          available: true,
+        },
+      ];
+    }
+
+    const sessions: {
+      date: string;
+      available: boolean;
+    }[] = [];
+
+    if (!watchSelectedDays.length) return sessions;
+
+    const [year, month] = watch('monthYear')
+      .split('-')
+      .map(Number);
+
+    const currentDate = new Date(year, month - 1, 1);
+
+    while (currentDate.getMonth() === month - 1) {
+      const currentDay = currentDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+      }) as DayOfWeek;
+
+      if (watchSelectedDays.includes(currentDay)) {
+        sessions.push({
+          date: currentDate.toISOString(),
+          available: Math.random() > 0.2,
+        });
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return sessions;
+  }, [
+    schedulingMode,
+    watchSelectedDays,
+    watch,
+  ]);
+
+  const formatDateCard = (date: string) => {
+    const d = new Date(date);
+
+    return {
+      month: d.toLocaleDateString('en-US', {
+        month: 'short',
+      }),
+      day: d.getDate(),
+    };
+  };
+
+  const onSubmit = (data: any) => {
+    if (schedulingMode === 'single') {
+      onAdd(data as SessionFormData);
+    } else {
+      const batchData: MultipleSessionsPayload = {
+        formData: data as MultipleSessionsFormData,
+        selectedDays: watchSelectedDays,
+        sessions: previewSessions.map((session) => ({
+          date: session.date,
+          day: new Date(session.date).toLocaleDateString(
+            'en-US',
+            {
+              weekday: 'long',
+            }
+          ) as DayOfWeek,
+          time: data.startTime,
+        })),
+      };
+
+      onAdd(batchData);
+    }
+
+    reset();
+
+    onClose();
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
-      <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-[1000px] max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="w-full max-w-[1000px] max-h-[92vh] overflow-hidden bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col">
 
         {/* Header */}
-        <div className="px-8 py-5 border-b border-gray-100 flex items-start justify-between bg-white">
+        <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-[14px] bg-indigo-50 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-[#6366f1]" />
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-indigo-600" />
             </div>
+
             <div>
-              <h2 className="text-xl font-bold text-gray-900 leading-tight">Create New Session</h2>
-              <p className="text-[13px] font-semibold text-gray-400 mt-0.5">Configure and schedule learning tracks for students.</p>
+              <h2 className="text-xl font-bold text-gray-900">
+                Create New Session
+              </h2>
+
+              <p className="text-sm text-gray-400">
+                Configure and schedule sessions.
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors">
-            <X className="w-5 h-5" />
+
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-gray-100 transition"
+          >
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="flex flex-col lg:flex-row overflow-hidden">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col lg:flex-row overflow-hidden"
+        >
 
-          {/* Left Column - Configuration */}
-          <div className="w-full lg:w-[58%] p-6 md:p-8 bg-white overflow-y-auto custom-scrollbar">
-            {/* Student & Instructor Selectors */}
+          {/* LEFT */}
+          <div className="w-full lg:w-[58%] p-8 overflow-y-auto custom-scrollbar">
+
+            {/* Student + Teacher */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+
+              {/* Student */}
               <div>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  <Search className="w-3.5 h-3.5" /> Student
+                <label className="label">
+                  <Search className="w-3.5 h-3.5" />
+                  Student
                 </label>
+
                 <Controller
-                  name="student"
+                  name="studentId"
                   control={control}
                   render={({ field }) => (
                     <CustomSelect
-                      options={students?.data?.studentsData?.map((student: Student) => ({
-                        value: student.id,
-                        label: student.user.name
-                      })) || []}
+                      options={
+                        students?.data?.studentsData?.map(
+                          (student: Student) => ({
+                            value: String(student.id),
+                            label: student.user.name,
+                          })
+                        ) || []
+                      }
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Select Student"
-                      className={`rounded-2xl border-none bg-gray-50 ${errors.student ? 'ring-2 ring-red-500/20' : ''}`}
                     />
                   )}
                 />
-                {errors.student && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.student.message as string}</p>}
+
+                {errors.studentId && (
+                  <p className="error-text">
+                    {errors.studentId.message as string}
+                  </p>
+                )}
               </div>
+
+              {/* Teacher */}
               <div>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  <Search className="w-3.5 h-3.5" /> Instructor
+                <label className="label">
+                  <Search className="w-3.5 h-3.5" />
+                  Instructor
                 </label>
+
                 <Controller
-                  name="teacher"
+                  name="teacherId"
                   control={control}
                   render={({ field }) => (
                     <CustomSelect
-                      options={instructors?.teachers?.map((instructor: Teacher) => ({
-                        value: instructor.id,
-                        label: instructor.user.name
-                      })) || []}
+                      options={
+                        instructors?.teachers?.map(
+                          (teacher: Teacher) => ({
+                            value: String(teacher.id),
+                            label: teacher.user.name,
+                          })
+                        ) || []
+                      }
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Select Instructor"
-                      className={`rounded-2xl border-none bg-gray-50 ${errors.teacher ? 'ring-2 ring-red-500/20' : ''}`}
                     />
                   )}
                 />
-                {errors.teacher && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.teacher.message as string}</p>}
+
+                {errors.teacherId && (
+                  <p className="error-text">
+                    {errors.teacherId.message as string}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Student Plan Info Card */}
+            {/* Plan Card */}
             {selectedStudentData && studentPlanInfo && (
-              <div className="mb-6 bg-gradient-to-r from-indigo-50/60 to-fuchsia-50/40 border border-indigo-100/60 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
-                    <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                  </div>
-                  <span className="text-[11px] font-bold text-indigo-900/60 uppercase tracking-wider">Student Plan Details</span>
+              <div className="mb-6 p-4 rounded-3xl border border-indigo-100 bg-indigo-50/50">
+                <div className="flex items-center gap-2 mb-4">
+                  <Layers className="w-4 h-4 text-indigo-600" />
+
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-700">
+                    Student Plan
+                  </h3>
                 </div>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="w-3.5 h-3.5 text-fuchsia-500" />
-                    <span className="text-xs font-bold text-gray-700">
-                      {studentPlanInfo.planName || 'No Plan Assigned'}
-                    </span>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">
+                      Plan
+                    </p>
+
+                    <p className="font-bold text-sm">
+                      {studentPlanInfo.planName ||
+                        'No Plan'}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-center">
-                      <p className="text-sm font-black text-indigo-600">{studentPlanInfo.totalSessions}</p>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
-                    </div>
-                    <div className="w-px h-6 bg-gray-200"></div>
-                    <div className="text-center">
-                      <p className="text-sm font-black text-emerald-600">{studentPlanInfo.sessionsRemaining}</p>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Remaining</p>
-                    </div>
-                    <div className="w-px h-6 bg-gray-200"></div>
-                    <div className="text-center">
-                      <p className="text-sm font-black text-amber-600">{studentPlanInfo.sessionsAttended}</p>
-                      <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Attended</p>
-                    </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">
+                      Remaining
+                    </p>
+
+                    <p className="font-black text-emerald-600">
+                      {studentPlanInfo.sessionsRemaining}
+                    </p>
                   </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">
+                      Attended
+                    </p>
+
+                    <p className="font-black text-amber-500">
+                      {studentPlanInfo.sessionsAttended}
+                    </p>
+                  </div>
+
+                  
                 </div>
-                {studentPlanInfo.sessionsRemaining <= 0 && studentPlanInfo.totalSessions > 0 && (
-                  <div className="mt-3 flex items-center gap-2 text-red-500 bg-red-50 px-3 py-1.5 rounded-xl border border-red-100">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-bold">No remaining sessions — student plan is fully consumed.</span>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* Session Title */}
+            {/* Title */}
             <div className="mb-6">
-              <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                <Video className="w-3.5 h-3.5" /> Session Title
+              <label className="label">
+                <Video className="w-3.5 h-3.5" />
+                Session Title
               </label>
+
               <input
                 type="text"
-                placeholder="e.g. Mathematics - Algebra Basics"
                 {...register('title')}
-                className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.title ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300`}
+                placeholder="Session Title"
+                className="input"
               />
-              {errors.title && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.title.message as string}</p>}
+
+              {errors.title && (
+                <p className="error-text">
+                  {errors.title.message as string}
+                </p>
+              )}
             </div>
 
             {/* Description */}
             <div className="mb-6">
-              <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                <AlertCircle className="w-3.5 h-3.5" /> Description
+              <label className="label">
+                <AlertCircle className="w-3.5 h-3.5" />
+                Description
               </label>
+
               <textarea
-                placeholder="Briefly describe the session goals..."
                 {...register('description')}
-                className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.description ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300 resize-none h-24`}
+                placeholder="Description..."
+                className="textarea"
               />
-              {errors.description && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.description.message as string}</p>}
+
+              {errors.description && (
+                <p className="error-text">
+                  {errors.description.message as string}
+                </p>
+              )}
             </div>
 
-            {/* Subject & Session Type */}
+            {/* Subject + Type */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+
+              {/* Subject */}
               <div>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  <Calendar className="w-3.5 h-3.5" /> Subject
+                <label className="label">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  course
                 </label>
+
                 <Controller
-                  name="subject"
+                  name="courseId"
                   control={control}
                   render={({ field }) => (
                     <CustomSelect
-                      options={subjects?.map((s: any) => ({
-                        value: s.id,
-                        label: s.name
-                      })) || []}
+                      options={courseOptions}
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Select Subject"
-                      className={`rounded-2xl border-none bg-gray-50 ${errors.subject ? 'ring-2 ring-red-500/20' : ''}`}
                     />
                   )}
                 />
-                {errors.subject && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.subject.message as string}</p>}
+
+                {errors.courseId && (
+                  <p className="error-text">
+                    {errors.courseId.message as string}
+                  </p>
+                )}
               </div>
-              <div>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  <Clock className="w-3.5 h-3.5" /> Session Type
-                </label>
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <CustomSelect
-                      options={[
-                        { value: 'full', label: language === 'ar' ? 'كاملة (60 د)' : 'Full (60m)' },
-                        { value: 'half', label: language === 'ar' ? 'نصف (30 د)' : 'Half (30m)' }
-                      ]}
-                      value={field.value}
-                      onChange={field.onChange}
-                      className="rounded-2xl border-none bg-gray-50"
-                    />
-                  )}
-                />
+
+              {/* Type + Language */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+                {/* Type */}
+                <div>
+                  <label className="label">
+                    <Clock className="w-3.5 h-3.5" />
+                    Session Type
+                  </label>
+
+                  <Controller
+                    name="type"
+                    control={control}
+                    render={({ field }) => (
+                      <CustomSelect
+                        options={[
+                          {
+                            value: 'full',
+                            label: 'Full (60m)',
+                          },
+                          {
+                            value: 'half',
+                            label: 'Half (30m)',
+                          },
+                        ]}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </div>
+
+                {/* Language */}
+                <div>
+                  <label className="label">
+                    <Layers className="w-3.5 h-3.5" />
+                    Language
+                  </label>
+
+                  <Controller
+                    name="language"
+                    control={control}
+                    render={({ field }) => (
+                      <CustomSelect
+                        options={[
+                          { value: 'en', label: 'English' },
+                          { value: 'ar', label: 'Arabic' },
+                        ]}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Scheduling Mode Toggle */}
+            {/* Toggle */}
             <div className="mb-6">
-              <label className="block text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">Scheduling Mode</label>
-              <div className="flex p-1 bg-gray-50 rounded-[18px]">
+              <div className="flex bg-gray-100 rounded-2xl p-1">
                 <button
-                  onClick={() => setSchedulingMode('single')}
-                  className={`flex-1 py-2.5 text-xs font-bold rounded-[14px] transition-all ${schedulingMode === 'single' ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-100' : 'text-gray-500 hover:text-gray-700'}`}
+                  type="button"
+                  onClick={() =>
+                    setSchedulingMode('single')
+                  }
+                  className={`toggle-btn ${
+                    schedulingMode === 'single'
+                      ? 'active-toggle'
+                      : ''
+                  }`}
                 >
-                  Single Session
+                  Single
                 </button>
+
                 <button
-                  onClick={() => setSchedulingMode('batch')}
-                  className={`flex-1 py-2.5 text-xs font-bold rounded-[14px] transition-all ${schedulingMode === 'batch' ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-gray-100' : 'text-gray-500 hover:text-gray-700'}`}
+                  type="button"
+                  onClick={() =>
+                    setSchedulingMode('batch')
+                  }
+                  className={`toggle-btn ${
+                    schedulingMode === 'batch'
+                      ? 'active-toggle'
+                      : ''
+                  }`}
                 >
-                  Batch Scheduling
+                  Batch
                 </button>
               </div>
             </div>
 
-            {/* Batch Config Card */}
-            {schedulingMode === 'batch' ? (
-              <div className="bg-indigo-50/40 border border-indigo-100/50 rounded-3xl p-6 mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+            {/* SINGLE */}
+            {schedulingMode === 'single' ? (
+              <div className="card-box">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
                   <div>
-                    <label className="block text-[11px] font-bold text-indigo-900/40 mb-2 uppercase tracking-wider">Target Month</label>
+                    <label className="label">
+                      Session Date
+                    </label>
+
                     <input
-                      type="month"
-                      {...register('monthYear')}
-                      className="w-full px-4 py-3 bg-white border border-indigo-50 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
-                    />
-                    {errors.monthYear && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.monthYear.message as string}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-indigo-900/40 mb-2 uppercase tracking-wider">Default Start Time</label>
-                    <input
-                      type="time"
-                      {...register('startTime')}
-                      className="w-full px-4 py-3 bg-white border border-indigo-50 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+                      type="date"
+                      {...register('sessionDate')}
+                      className="input"
                     />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+
+                    <div>
+                      <label className="label">
+                        Start
+                      </label>
+
+                      <input
+                        type="time"
+                        {...register('startTime')}
+                        className="input"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label">
+                        End
+                      </label>
+
+                      <input
+                        type="time"
+                        {...register('endTime')}
+                        readOnly
+                        className="input bg-gray-100"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="card-box">
+
+                <div className="mb-5">
+                  <label className="label">
+                    Target Month
+                  </label>
+
+                  <input
+                    type="month"
+                    {...register('monthYear')}
+                    className="input"
+                  />
+                </div>
+
+                <div className="mb-5">
+                  <label className="label">
+                    Start Time
+                  </label>
+
+                  <input
+                    type="time"
+                    {...register('startTime')}
+                    className="input"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-indigo-900/40 mb-3 uppercase tracking-wider">Weekly Schedule</label>
+                  <label className="label">
+                    Weekly Schedule
+                  </label>
+
                   <div className="flex flex-wrap gap-2">
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
-                      const isSelected = watchSelectedDays.includes(day as DayOfWeek);
+                    {DAYS.map((day) => {
+                      const selected =
+                        watchSelectedDays.includes(day);
+
                       return (
                         <button
                           key={day}
                           type="button"
                           onClick={() => {
-                            const current = watchSelectedDays;
-                            if (isSelected) setValue('selectedDays', current.filter((d: string) => d !== day));
-                            else setValue('selectedDays', [...current, day]);
+                            if (selected) {
+                              setValue(
+                                'selectedDays',
+                                watchSelectedDays.filter(
+                                  (d) => d !== day
+                                )
+                              );
+                            } else {
+                              setValue(
+                                'selectedDays',
+                                [
+                                  ...watchSelectedDays,
+                                  day,
+                                ]
+                              );
+                            }
                           }}
-                          className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${isSelected
-                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
-                            : 'bg-white border-transparent text-gray-500 hover:border-indigo-100'
-                            }`}
+                          className={`day-btn ${
+                            selected
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-white'
+                          }`}
                         >
-                          {day.substring(0, 3)}
+                          {day.slice(0, 3)}
                         </button>
-                      )
+                      );
                     })}
-                  </div>
-                  {errors.selectedDays && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.selectedDays.message as string}</p>}
-                </div>
-              </div>
-            ) : (
-              <div className="bg-emerald-50/40 border border-emerald-100/50 rounded-3xl p-6 mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-emerald-900/40 mb-2 uppercase tracking-wider">Session Date</label>
-                    <input
-                      type="date"
-                      {...register('sessionDate')}
-                      className="w-full px-4 py-3 bg-white border border-emerald-50 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/10"
-                    />
-                    {errors.sessionDate && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.sessionDate.message as string}</p>}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-bold text-emerald-900/40 mb-2 uppercase tracking-wider">Start</label>
-                      <input
-                        type="time"
-                        {...register('startTime')}
-                        className="w-full px-4 py-2 bg-white border border-emerald-50 rounded-2xl text-sm font-bold text-gray-900"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-emerald-900/40 mb-2 uppercase tracking-wider">End</label>
-                      <input
-                        type="time"
-                        {...register('endTime')}
-                        readOnly
-                        className="w-full px-4 py-2 bg-gray-50 border border-emerald-50 rounded-2xl text-sm font-bold text-gray-400 cursor-not-allowed"
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Notification & Custom Link */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+            {/* Link + Video + Slides */}
+            <div className="grid grid-cols-1 gap-5 mb-6">
+              {/* Link */}
               <div>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  <Bell className="w-3.5 h-3.5" /> Notification
+                <label className="label">
+                  <MonitorPlay className="w-3.5 h-3.5" />
+                  Meeting Link
                 </label>
-                <Controller
-                  name="notification_Time"
-                  control={control}
-                  render={({ field }) => (
-                    <CustomSelect
-                      options={[
-                        { value: '10', label: language === 'ar' ? 'قبل 10 دقائق' : '10 minutes before' },
-                        { value: '30', label: language === 'ar' ? 'قبل 30 دقيقة' : '30 minutes before' },
-                        { value: '60', label: language === 'ar' ? 'قبل ساعة' : '1 hour before' }
-                      ]}
-                      value={field.value}
-                      onChange={field.onChange}
-                      className="rounded-2xl border-none bg-gray-50"
-                    />
-                  )}
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  <MonitorPlay className="w-3.5 h-3.5" /> Custom Link
-                </label>
+
                 <input
                   type="url"
-                  placeholder="https://zoom.us/..."
-                  {...register('meetingLink')}
-                  className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.meetingLink ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300`}
-                  dir="ltr"
+                  {...register('link')}
+                  placeholder="https://zoom.us/j/..."
+                  className="input"
                 />
-                {errors.meetingLink && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.meetingLink.message as string}</p>}
+
+                {errors.link && (
+                  <p className="error-text">
+                    {errors.link.message as string}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* Video URL */}
+                <div>
+                  <label className="label">
+                    <Video className="w-3.5 h-3.5" />
+                    Video URL
+                  </label>
+
+                  <input
+                    type="url"
+                    {...register('videoUrl')}
+                    placeholder="Recording URL..."
+                    className="input"
+                  />
+                </div>
+
+                {/* Slides URL */}
+                <div>
+                  <label className="label">
+                    <Layers className="w-3.5 h-3.5" />
+                    Slides URL
+                  </label>
+
+                  <input
+                    type="url"
+                    {...register('slidesUrl')}
+                    placeholder="Presentation URL..."
+                    className="input"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Meeting Platform buttons */}
+            {/* Notes */}
             <div className="mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider">Meeting Platform</label>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-gray-500 uppercase">Apply to all</span>
-                  <div className="w-8 h-4.5 bg-indigo-600 rounded-full relative cursor-pointer">
-                    <div className="absolute right-0.5 top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-sm"></div>
-                  </div>
-                </div>
-              </div>
+              <label className="label">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Notes
+              </label>
+
+              <textarea
+                {...register('notes')}
+                placeholder="Private notes..."
+                className="textarea"
+              />
+            </div>
+
+            {/* Platform */}
+            <div className="mb-6">
+              <label className="label mb-3">
+                Meeting Platform
+              </label>
+
               <div className="grid grid-cols-2 gap-4">
+
                 <button
                   type="button"
-                  onClick={() => setValue('platform', 'zoom')}
-                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${watchPlatform === 'zoom'
-                    ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]'
-                    : 'bg-white border-gray-100 text-gray-700 hover:border-indigo-100'
-                    }`}
+                  onClick={() =>
+                    setValue('platform', 'zoom')
+                  }
+                  className={`platform-btn ${
+                    watchPlatform === 'zoom'
+                      ? 'active-platform'
+                      : ''
+                  }`}
                 >
                   <Video className="w-4 h-4" />
-                  Zoom Meet
+                  Zoom
                 </button>
+
                 <button
                   type="button"
-                  onClick={() => setValue('platform', 'google')}
-                  className={`flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${watchPlatform === 'google'
-                    ? 'bg-slate-900 border-slate-900 text-white shadow-lg scale-[1.02]'
-                    : 'bg-white border-gray-100 text-gray-700 hover:border-indigo-100'
-                    }`}
+                  onClick={() =>
+                    setValue('platform', 'google')
+                  }
+                  className={`platform-btn ${
+                    watchPlatform === 'google'
+                      ? 'active-platform'
+                      : ''
+                  }`}
                 >
                   <MonitorPlay className="w-4 h-4" />
                   Google Meet
@@ -471,176 +814,256 @@ export default function AddSessionModal({ isOpen, onClose, onAdd }: AddSessionMo
               </div>
             </div>
 
-            {/* Notes */}
-            <div className="mb-2">
-              <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                <AlertTriangle className="w-3.5 h-3.5" /> Private Notes
-              </label>
-              <textarea
-                placeholder="Add any internal notes..."
-                {...register('notes')}
-                className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.notes ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300 resize-none h-24`}
-              />
-              {errors.notes && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.notes.message as string}</p>}
-            </div>
+            {/* Footer Buttons */}
+            <div className="flex items-center justify-end gap-4">
 
+              <button
+                type="button"
+                onClick={onClose}
+                className="secondary-btn"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                className="primary-btn"
+              >
+                {schedulingMode === 'single'
+                  ? 'Create Session'
+                  : 'Schedule Batch'}
+              </button>
+            </div>
           </div>
 
-          {/* Right Column - Schedule Preview */}
-          <div className="w-full lg:w-[42%] bg-[#fcfdfe] border-l border-gray-100/80 flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-gray-100/50 flex items-center justify-between bg-white/50 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-indigo-500" />
-                <h3 className="font-bold text-gray-900 text-sm">Schedule Preview</h3>
-              </div>
-              <span className="px-3 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-bold rounded-full uppercase tracking-wider shadow-sm">
-                12 Sessions
-              </span>
+          {/* RIGHT */}
+          <div className="w-full lg:w-[42%] bg-[#fcfdfe] border-l border-gray-100 overflow-y-auto">
+
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="font-bold text-gray-900">
+                Schedule Preview
+              </h3>
+
+              <p className="text-xs text-gray-400 mt-1">
+                {previewSessions.length} Sessions
+              </p>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+            <div className="p-6 space-y-4">
 
-              {/* Card 1 */}
-              <div className="bg-white border border-gray-100 rounded-2xl p-3 flex gap-4 shadow-sm hover:border-gray-200 transition-all">
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex flex-col items-center justify-center flex-shrink-0 border border-gray-100/50">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Oct</span>
-                  <span className="text-sm font-black text-gray-900">24</span>
-                </div>
-                <div className="flex-1 pt-0.5">
-                  <div className="flex items-start justify-between">
-                    <h4 className="text-xs font-bold text-gray-900">{watchTitle || 'Session 01'} - {subjectsData?.subjects?.find((s: any) => s.id === watchSubject)?.[language === 'ar' ? 'name_ar' : 'name_en'] || 'Mathematics'}</h4>
-                    <span className="px-1.5 py-0.5 bg-green-50 text-green-600 border border-green-200 text-[8px] font-black uppercase tracking-widest rounded shadow-sm">Available</span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[10px] font-bold text-gray-400">02:00 PM - Room 402</span>
-                  </div>
-                </div>
-              </div>
+              {previewSessions.length ? (
+                previewSessions.map((session, index) => {
+                  const date = formatDateCard(
+                    session.date
+                  );
 
-              {/* Card 2 - Conflict */}
-              <div className="bg-red-50/30 border border-red-300 rounded-2xl p-3 flex gap-4 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
-                <div className="w-12 h-12 bg-red-50 rounded-xl flex flex-col items-center justify-center flex-shrink-0 border border-red-100">
-                  <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Oct</span>
-                  <span className="text-sm font-black text-red-600">26</span>
-                </div>
-                <div className="flex-1 pt-0.5">
-                  <div className="flex items-start justify-between">
-                    <h4 className="text-xs font-bold text-gray-900">{watchTitle || 'Session 02'} - {subjectsData?.subjects?.find((s: any) => s.id === watchSubject)?.[language === 'ar' ? 'name_ar' : 'name_en'] || 'Mathematics'}</h4>
-                    <span className="px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-bold uppercase tracking-wider rounded flex items-center gap-1 shadow-sm">
-                      <AlertTriangle className="w-2.5 h-2.5" /> Clash Detected
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[10px] font-bold text-red-500 flex items-center gap-1">
-                      Room 402 Occupied
-                    </span>
-                  </div>
-                  <button className="text-[10px] font-bold text-[#6366f1] hover:underline mt-1.5">
-                    Relocate to Room 10B
-                  </button>
-                </div>
-              </div>
+                  return (
+                    <div
+                      key={index}
+                      className={`rounded-2xl p-4 border ${
+                        session.available
+                          ? 'bg-white border-gray-100'
+                          : 'bg-red-50 border-red-200'
+                      }`}
+                    >
+                      <div className="flex gap-4">
 
-              {/* Card 3 */}
-              <div className="bg-white border border-gray-100 rounded-2xl p-3 flex gap-4 shadow-sm hover:border-gray-200 transition-all">
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex flex-col items-center justify-center flex-shrink-0 border border-gray-100/50">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Oct</span>
-                  <span className="text-sm font-black text-gray-900">31</span>
-                </div>
-                <div className="flex-1 pt-0.5">
-                  <div className="flex items-start justify-between">
-                    <h4 className="text-xs font-bold text-gray-900">{watchTitle || 'Session 03'} - {subjectsData?.subjects?.find((s: any) => s.id === watchSubject)?.[language === 'ar' ? 'name_ar' : 'name_en'] || 'Mathematics'}</h4>
-                    <span className="px-1.5 py-0.5 bg-green-50 text-green-600 border border-green-200 text-[8px] font-black uppercase tracking-widest rounded shadow-sm">Available</span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[10px] font-bold text-gray-400">02:00 PM - Room 402</span>
-                  </div>
-                </div>
-              </div>
+                        <div className="w-14 h-14 rounded-xl bg-gray-100 flex flex-col items-center justify-center">
+                          <span className="text-[10px] uppercase font-black text-gray-500">
+                            {date.month}
+                          </span>
 
-              {/* Card 4 */}
-              <div className="bg-white border border-gray-100 rounded-2xl p-3 flex gap-4 shadow-sm hover:border-gray-200 transition-all">
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex flex-col items-center justify-center flex-shrink-0 border border-gray-100/50">
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Nov</span>
-                  <span className="text-sm font-black text-gray-900">02</span>
-                </div>
-                <div className="flex-1 pt-0.5">
-                  <div className="flex items-start justify-between">
-                    <h4 className="text-xs font-bold text-gray-900">{watchTitle || 'Session 04'} - {subjectsData?.subjects?.find((s: any) => s.id === watchSubject)?.[language === 'ar' ? 'name_ar' : 'name_en'] || 'Mathematics'}</h4>
-                    <span className="px-1.5 py-0.5 bg-green-50 text-green-600 border border-green-200 text-[8px] font-black uppercase tracking-widest rounded shadow-sm">Available</span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[10px] font-bold text-gray-400">02:00 PM - Room 402</span>
-                  </div>
-                </div>
-              </div>
+                          <span className="font-black text-lg">
+                            {date.day}
+                          </span>
+                        </div>
 
-              <div className="text-center pt-4 pb-6">
-                <button className="text-[11px] font-bold text-indigo-500 hover:text-indigo-600 hover:underline flex items-center justify-center gap-1 w-full transition-colors">
-                  View 8 more sessions <ChevronDown className="w-3.5 h-3.5" />
+                        <div className="flex-1">
+
+                          <div className="flex items-start justify-between gap-3">
+
+                            <h4 className="text-sm font-bold text-gray-900">
+                              {watchTitle ||
+                                'Untitled Session'}
+                            </h4>
+
+                            <span
+                              className={`text-[10px] px-2 py-1 rounded-full font-bold ${
+                                session.available
+                                  ? 'bg-green-100 text-green-600'
+                                  : 'bg-red-100 text-red-600'
+                              }`}
+                            >
+                              {session.available
+                                ? 'Available'
+                                : 'Conflict'}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-gray-500 mt-1">
+                            {selectedCourse?.title ||
+                              'No Subject'}
+                          </p>
+
+                          <p className="text-xs text-gray-400 mt-2">
+                            {watchStartTime}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-20">
+                  <Calendar className="w-10 h-10 mx-auto text-gray-300 mb-3" />
+
+                  <p className="text-sm text-gray-400">
+                    No sessions generated yet
+                  </p>
+                </div>
+              )}
+
+              {previewSessions.length > 5 && (
+                <button
+                  type="button"
+                  className="w-full text-indigo-600 text-sm font-bold flex items-center justify-center gap-1"
+                >
+                  View More
+                  <ChevronDown className="w-4 h-4" />
                 </button>
-              </div>
-
+              )}
             </div>
           </div>
-        </div>
+        </form>
 
-        {/* Footer */}
-        <div className="px-8 py-6 border-t border-gray-100 bg-white/80 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5 text-red-500 bg-red-50 px-4 py-2 rounded-full border border-red-100">
-            <AlertTriangle className="w-4 h-4" />
-            <span className="text-[11px] font-bold tracking-tight">1 Potential Conflict Detected</span>
-          </div>
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-            <button
-              onClick={onClose}
-              className="flex-1 sm:flex-none px-7 py-3 text-xs font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-2xl transition-all"
-            >
-              Save Draft
-            </button>
-            <button
-              onClick={handleSubmit((data) => {
-                if (schedulingMode === 'single') {
-                  onAdd(data as SessionFormData);
-                } else {
-                  // Format batch payload
-                  const batchData: MultipleSessionsPayload = {
-                    formData: data as MultipleSessionsFormData,
-                    selectedDays: watchSelectedDays as DayOfWeek[],
-                    sessions: [
-                      { date: `${data.monthYear}-01`, day: watchSelectedDays[0] || 'Mon', time: data.startTime }
-                    ]
-                  };
-                  onAdd(batchData);
-                  reset();
-                }
-              })}
-              className="flex-1 sm:flex-none px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-2xl transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_-5px_rgba(79,70,229,0.3)] active:scale-95"
-            >
-              {schedulingMode === 'single' ? 'Create Session' : 'Schedule Batch'}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-            </button>
-          </div>
-        </div>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              .label {
+                display:flex;
+                align-items:center;
+                gap:8px;
+                font-size:11px;
+                font-weight:700;
+                color:#94a3b8;
+                margin-bottom:8px;
+                text-transform:uppercase;
+                letter-spacing:.08em;
+              }
 
+              .input {
+                width:100%;
+                padding:12px 16px;
+                border-radius:18px;
+                background:#f8fafc;
+                border:1px solid transparent;
+                font-size:14px;
+                font-weight:600;
+                outline:none;
+              }
+
+              .textarea {
+                width:100%;
+                min-height:100px;
+                padding:14px 16px;
+                border-radius:18px;
+                background:#f8fafc;
+                border:1px solid transparent;
+                resize:none;
+                outline:none;
+              }
+
+              .input:focus,
+              .textarea:focus {
+                border-color:#c7d2fe;
+                background:white;
+              }
+
+              .error-text {
+                font-size:11px;
+                color:#ef4444;
+                margin-top:4px;
+                margin-left:4px;
+                font-weight:700;
+              }
+
+              .toggle-btn {
+                flex:1;
+                padding:10px;
+                border-radius:14px;
+                font-size:13px;
+                font-weight:700;
+                transition:.2s;
+              }
+
+              .active-toggle {
+                background:white;
+                color:#4f46e5;
+                box-shadow:0 1px 3px rgba(0,0,0,.08);
+              }
+
+              .card-box {
+                padding:24px;
+                border-radius:28px;
+                background:#f8fafc;
+                margin-bottom:24px;
+              }
+
+              .day-btn {
+                padding:10px 14px;
+                border-radius:14px;
+                border:1px solid #e5e7eb;
+                font-size:12px;
+                font-weight:700;
+                transition:.2s;
+              }
+
+              .platform-btn {
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                gap:8px;
+                padding:14px;
+                border-radius:18px;
+                border:2px solid #e5e7eb;
+                font-weight:700;
+                transition:.2s;
+              }
+
+              .active-platform {
+                background:#111827;
+                color:white;
+                border-color:#111827;
+              }
+
+              .primary-btn {
+                background:#4f46e5;
+                color:white;
+                padding:12px 24px;
+                border-radius:18px;
+                font-weight:700;
+              }
+
+              .secondary-btn {
+                background:#f3f4f6;
+                color:#374151;
+                padding:12px 24px;
+                border-radius:18px;
+                font-weight:700;
+              }
+
+              .custom-scrollbar::-webkit-scrollbar {
+                width:5px;
+              }
+
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background:#cbd5e1;
+                border-radius:999px;
+              }
+            `,
+          }}
+        />
       </div>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 5px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #e2e8f0;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #cbd5e1;
-        }
-      `}} />
     </div>
   );
 }

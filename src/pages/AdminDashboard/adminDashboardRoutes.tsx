@@ -22,7 +22,8 @@ import {
   Coins,
   ShieldCheck,
   Repeat,
-  Trophy
+  Trophy,
+  HelpCircle
 } from 'lucide-react';
 import TransactionRequests from "../../features/admin/pages/TransactionRequests";
 
@@ -63,6 +64,7 @@ const LibraryPage = lazy(() => import("../../features/admin/pages/Library"));
 const RanksPage = lazy(() => import("../../features/admin/pages/Ranks"));
 const PoliciesPage = lazy(() => import("../../features/admin/pages/Policies"));
 const ReportsPage = lazy(() => import("../../features/admin/pages/Reports"));
+const SupportPage = lazy(() => import("../../features/admin/pages/Support"));
 
 
 export const adminDashboardRoutes: RouteConfig[] = [
@@ -308,5 +310,12 @@ export const adminDashboardRoutes: RouteConfig[] = [
     icon: ShieldCheck,
     path: "policies",
     element: <PoliciesPage />,
+  },
+  {
+    id: "support",
+    label: "Support",
+    icon: HelpCircle,
+    path: "support",
+    element: <SupportPage />,
   },
 ];

@@ -3,7 +3,7 @@ export type ScheduleType = 'full' | 'half';
 export interface CreateSchedulePayload {
     studentId: string;
     teacherId: string;
-    subject_id: string;
+    courseId: string;
     title: string;
     description: string;
     link: string;
@@ -12,6 +12,9 @@ export interface CreateSchedulePayload {
     type: ScheduleType;
     notification_Time: string;
     platform: string;
+    language: string;
+    videoUrl?: string;
+    slidesUrl?: string;
 }
 
 export interface UpdateSchedulePayload {
@@ -36,7 +39,7 @@ export type DayOfWeek =
 export interface CreateRecurringSchedulePayload {
     studentId: string;
     teacherId: string;
-    subject_id: string;
+    courseId: string;
     title: string;
     description: string;
     link: string;
@@ -47,6 +50,7 @@ export interface CreateRecurringSchedulePayload {
     endDate: string;
     notification_Time: string;
     type: ScheduleType;
+    language: string;
 }
 
 // Aliases for Services
@@ -144,7 +148,11 @@ export interface GetSessionsResponse {
     message: string;
     status: number;
     data: {
-        schedule: Schedule[];
+        schedule: {
+            upcomingSchedule: Schedule[];
+            toDaySchedule: Schedule[];
+            previousSchedule: Schedule[];
+        };
         pagination: SessionsPagination;
     };
 }

@@ -1,4 +1,4 @@
-import { X, Phone, Mail, GraduationCap, DollarSign, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { X, Phone, Mail, GraduationCap, DollarSign, Calendar, CheckCircle, Clock, Users } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useSessions } from '../../contexts/SessionsContext';
 import { Teacher } from '../../types/teachers';
@@ -53,181 +53,159 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
     (c: Currency) => c.id === teacher.currencyId
   );
   const currencySymbol = teacherCurrency?.symbol || teacherCurrency?.code || 'EGP';
-  // Safe subject extraction
-  const subjects = (teacher.teacherSubjects || []).map((s: any) => {
-    if (s.subject) {
-      return s.subject.name_ar || s.subject.name_en || s.subject.name || '';
-    }
-    return '';
-  }).filter(Boolean);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh]  overflow-y-auto no-scrollbar" dir={language === "ar" ? "rtl" : "ltr"}>
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10" >
-          <h2 className="text-xl font-bold text-gray-900">{teacher.user?.name}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-100 animate-in zoom-in-95 duration-300" dir={language === "ar" ? "rtl" : "ltr"}>
+        
+        {/* Header */}
+        <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-20">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-[24px] bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-100">
+               <GraduationCap className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-slate-900 leading-tight">{teacher.user?.name}</h2>
+              <div className="flex items-center gap-3 mt-1">
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                  teacher.active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'
+                }`}>
+                  {teacher.active ? t('active') : t('inactive')}
+                </span>
+                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Instructor Profile</p>
+              </div>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-4 hover:bg-slate-50 rounded-3xl transition-all text-slate-400 hover:text-slate-600">
+            <X className="w-6 h-6" />
           </button>
         </div>
-        <div className="p-6">
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-4 shadow-lg">
-              <GraduationCap className="w-12 h-12 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">{teacher.user?.name}</h3>
 
-            <div className="flex items-center gap-4 mb-4 flex-wrap justify-center">
-              <a href={`tel:${teacher.user?.code_country}${teacher.user?.phone}`} className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors">
-                <Phone className="w-4 h-4" />
-                <span className="text-sm">{teacher.user?.code_country} {teacher.user?.phone}</span>
-              </a>
-              <a href={`mailto:${teacher.user?.email}`} className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors">
-                <Mail className="w-4 h-4" />
-                <span className="text-sm">{teacher.user?.email}</span>
-              </a>
-            </div>
-
-            <div className="flex flex-wrap gap-2 justify-center mb-4">
-              {subjects.map((sub, index) => (
-                <span key={index} className="inline-flex px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium">
-                  {sub}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex gap-4 items-center flex-wrap justify-center">
-              <div className={`rounded-xl px-6 py-3 text-center border ${teacher.active ? 'bg-green-50 border-green-100' : 'bg-gray-50 border-gray-200'}`}>
-                <p className="text-xs text-gray-500 mb-1">{t('status')}</p>
-                <p className={`text-lg font-bold ${teacher.active ? 'text-green-700' : 'text-gray-600'}`}>
-                  {teacher.active ? t('active') : t('inactive')}
-                </p>
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-12">
+          
+          {/* Quick Info Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-slate-50 rounded-[32px] p-6 border border-slate-100">
+              <div className="p-3 bg-white rounded-2xl w-fit mb-4 shadow-sm">
+                <Mail className="w-5 h-5 text-indigo-600" />
               </div>
-              <div className="bg-blue-50 rounded-xl px-6 py-3 text-center border border-blue-100">
-                <p className="text-xs text-blue-600 mb-1">{t('hourlyRate') || (language === 'ar' ? 'السعر بالساعة' : 'Hourly Rate')}</p>
-                <p className="text-lg font-bold text-blue-700">{hourPrice.toFixed(2)} {currencySymbol}</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('email')}</p>
+              <p className="text-sm font-bold text-slate-900 truncate">{teacher.user?.email}</p>
+            </div>
+
+            <div className="bg-slate-50 rounded-[32px] p-6 border border-slate-100">
+              <div className="p-3 bg-white rounded-2xl w-fit mb-4 shadow-sm">
+                <Phone className="w-5 h-5 text-emerald-600" />
               </div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('phone')}</p>
+              <p className="text-sm font-bold text-slate-900">{teacher.user?.code_country} {teacher.user?.phone}</p>
+            </div>
+
+            <div className="bg-slate-50 rounded-[32px] p-6 border border-slate-100">
+              <div className="p-3 bg-white rounded-2xl w-fit mb-4 shadow-sm">
+                <DollarSign className="w-5 h-5 text-amber-600" />
+              </div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('hourlyRate')}</p>
+              <p className="text-sm font-black text-slate-900">{hourPrice.toFixed(2)} {currencySymbol}</p>
+            </div>
+
+            <div className="bg-slate-50 rounded-[32px] p-6 border border-slate-100">
+              <div className="p-3 bg-white rounded-2xl w-fit mb-4 shadow-sm">
+                <Users className="w-5 h-5 text-fuchsia-600" />
+              </div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Age</p>
+              <p className="text-sm font-bold text-slate-900">{teacher.age || 'N/A'} Years</p>
             </div>
           </div>
 
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4 justify-start">
-              <h4 className="text-lg font-bold text-gray-900">{t('statistics') || (language === 'ar' ? 'الإحصائيات' : 'Statistics')}</h4>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="p-2 rounded-lg bg-blue-50 w-fit mb-3">
-                  <GraduationCap className="w-5 h-5 text-blue-600" />
-                </div>
-                <p className="text-sm text-gray-600 mb-1 text-start">{t('students') || (language === 'ar' ? 'عدد الطلاب' : 'Students')}</p>
-                <p className="text-2xl font-bold text-gray-900 text-start">{uniqueStudents.length}</p>
+          {/* Stats & Earnings Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            {/* Statistics */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('statistics')}</h4>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="p-2 rounded-lg bg-orange-50 w-fit mb-3">
-                  <Calendar className="w-5 h-5 text-orange-600" />
-                </div>
-                <p className="text-sm text-gray-600 mb-1 text-start">{t('todaySessions') || (language === 'ar' ? 'حصص اليوم' : "Today's Sessions")}</p>
-                <p className="text-2xl font-bold text-gray-900 text-start">{todaySessions.length}</p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="p-2 rounded-lg bg-green-50 w-fit mb-3">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                </div>
-                <p className="text-sm text-gray-600 mb-1 text-start">{t('completedSessions') || (language === 'ar' ? 'حصص مكتملة' : 'Completed')}</p>
-                <p className="text-2xl font-bold text-gray-900 text-start">{completedSessions.length}</p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="p-2 rounded-lg bg-yellow-50 w-fit mb-3">
-                  <Clock className="w-5 h-5 text-yellow-600" />
-                </div>
-                <p className="text-sm text-gray-600 mb-1 text-start">{t('upcomingSessions') || (language === 'ar' ? 'حصص قادمة' : 'Upcoming')}</p>
-                <p className="text-2xl font-bold text-gray-900 text-start">{upcomingSessions.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 mb-4 justify-start">
-              <DollarSign className="w-5 h-5 text-green-600" />
-              <h4 className="text-lg font-bold text-gray-900">{t('earningsDetails') || (language === 'ar' ? 'تفاصيل الأرباح' : 'Earnings Details')}</h4>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 text-start">
-              <p className="text-xs text-blue-700 font-semibold mb-1">{t('formula') || (language === 'ar' ? 'المعادلة الحسابية' : 'Formula')}</p>
-              <p className="text-sm text-blue-800 font-mono">
-                {language === 'ar'
-                  ? `الأرباح = عدد الساعات × ${hourPrice} ${currencySymbol}/ساعة`
-                  : `Earnings = Hours × ${hourPrice} ${currencySymbol}/hour`}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="rounded-xl p-5 bg-blue-50 text-blue-700">
-                <p className="text-sm mb-2 text-start opacity-80">{t('totalHours') || (language === 'ar' ? 'إجمالي الساعات' : 'Total Hours')}</p>
-                <p className="text-2xl font-bold text-start">{totalHours.toFixed(1)} {language === 'ar' ? 'ساعة' : 'hrs'}</p>
-              </div>
-              <div className="rounded-xl p-5 bg-white text-gray-900 border border-gray-200">
-                <p className="text-sm mb-2 text-start opacity-80">{t('ratePerHour') || (language === 'ar' ? 'السعر / ساعة' : 'Rate / Hour')}</p>
-                <p className="text-2xl font-bold text-start">{hourPrice.toFixed(2)} {currencySymbol}</p>
-              </div>
-              <div className="rounded-xl p-5 bg-green-50 text-green-700">
-                <p className="text-sm mb-2 text-start opacity-80">{t('totalOwed') || (language === 'ar' ? 'إجمالي المستحق' : 'Total Owed')}</p>
-                <p className="text-2xl font-bold text-start">{totalOwed.toFixed(2)} {currencySymbol}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="rounded-xl p-5 bg-green-50 text-green-700">
-                <p className="text-sm mb-2 text-start opacity-80">{t('completedEarnings') || (language === 'ar' ? 'أرباح الحصص المكتملة' : 'Completed Earnings')}</p>
-                <p className="text-2xl font-bold text-start">{totalEarnings.toFixed(2)} {currencySymbol}</p>
-                <p className="text-xs opacity-60 text-start mt-1">{completedHours.toFixed(1)} {language === 'ar' ? 'ساعة' : 'hrs'}</p>
-              </div>
-              <div className="rounded-xl p-5 bg-orange-50 text-orange-700">
-                <p className="text-sm mb-2 text-start opacity-80">{t('pendingEarnings') || (language === 'ar' ? 'أرباح معلقة' : 'Pending Earnings')}</p>
-                <p className="text-2xl font-bold text-start">{pendingEarnings.toFixed(2)} {currencySymbol}</p>
-                <p className="text-xs opacity-60 text-start mt-1">{pendingHours.toFixed(1)} {language === 'ar' ? 'ساعة' : 'hrs'}</p>
-              </div>
-              <div className="rounded-xl p-5 bg-gray-50 text-gray-700 border border-gray-200">
-                <p className="text-sm mb-2 text-start opacity-80">{t('availableForWithdrawal') || (language === 'ar' ? 'رصيد متاح للسحب' : 'Available for Withdrawal')}</p>
-                <p className="text-2xl font-bold text-start">{totalEarnings.toFixed(2)} {currencySymbol}</p>
-              </div>
-            </div>
-
-            <div className="rounded-xl p-5 bg-red-50 text-red-700">
-              <p className="text-sm mb-2 text-start opacity-80">{t('pendingWithdrawalRequests') || (language === 'ar' ? 'طلبات سحب معلقة' : 'Pending Withdrawal Requests')}</p>
-              <p className="text-2xl font-bold text-start">0.00 {currencySymbol}</p>
-            </div>
-          </div>
-
-          {teacherSessions.length > 0 && (
-            <div className="mt-8">
-              <div className="flex items-center gap-2 mb-4 justify-start">
-                <h4 className="text-lg font-bold text-gray-900">{t('recentSessions') || (language === 'ar' ? 'آخر الحصص' : 'Recent Sessions')}</h4>
-              </div>
-              <div className="space-y-2">
-                {teacherSessions.slice(0, 5).map(session => (
-                  <div key={session.id} className="flex items-center justify-between bg-gray-50 rounded-xl p-3 border border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${session.date < today ? 'bg-green-400' : session.date === today ? 'bg-blue-400' : 'bg-yellow-400'}`} />
-                      <span className="text-xs text-gray-500">{session.time} - {session.endTime}</span>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: 'Students', value: uniqueStudents.length, icon: Users, color: 'indigo' },
+                  { label: 'Today', value: todaySessions.length, icon: Clock, color: 'emerald' },
+                  { label: 'Completed', value: completedSessions.length, icon: CheckCircle, color: 'blue' },
+                  { label: 'Upcoming', value: upcomingSessions.length, icon: Calendar, color: 'fuchsia' },
+                ].map((stat, i) => (
+                  <div key={i} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-5">
+                    <div className={`p-4 bg-${stat.color}-50 rounded-2xl`}>
+                      <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
                     </div>
-                    <div className="text-start">
-                      <p className="text-sm font-medium text-gray-900">{session.studentName}</p>
-                      <p className="text-xs text-gray-400">{session.date} · {session.subject}</p>
+                    <div>
+                      <p className="text-2xl font-black text-slate-900 leading-none mb-1">{stat.value}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          )}
+
+            {/* Financials */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('earningsDetails')}</h4>
+              </div>
+              <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-500 group-hover:scale-110" />
+                <div className="relative z-10">
+                  <p className="text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-2">Total Owed</p>
+                  <div className="flex items-baseline gap-2 mb-8">
+                    <span className="text-5xl font-black">{totalOwed.toFixed(2)}</span>
+                    <span className="text-sm font-bold text-indigo-400 uppercase tracking-widest">{currencySymbol}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
+                    <div>
+                      <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Completed</p>
+                      <p className="text-xl font-bold text-emerald-400">{totalEarnings.toFixed(2)} <span className="text-xs">{currencySymbol}</span></p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-1">Pending</p>
+                      <p className="text-xl font-bold text-amber-400">{pendingEarnings.toFixed(2)} <span className="text-xs">{currencySymbol}</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="space-y-6">
+             <div className="flex items-center justify-between">
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('recentSessions')}</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {teacherSessions.slice(0, 6).map(session => (
+                  <div key={session.id} className="bg-white p-5 rounded-3xl border border-slate-50 shadow-sm hover:border-indigo-100 transition-all flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                      session.date < today ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'
+                    }`}>
+                      <Clock className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-slate-900 truncate">{session.studentName}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{session.date} · {session.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+          </div>
         </div>
 
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-2xl">
-          <button onClick={onClose} className="w-full px-6 py-3 bg-gray-700 hover:bg-gray-800 text-white rounded-xl transition-colors font-medium">
-            {t('close') || (language === 'ar' ? 'إغلاق' : 'Close')}
+        {/* Footer */}
+        <div className="px-10 py-8 bg-slate-50 border-t border-slate-100 sticky bottom-0">
+          <button onClick={onClose} className="w-full px-8 py-4 bg-slate-900 hover:bg-black text-white rounded-[24px] transition-all font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200">
+            {t('close')}
           </button>
         </div>
       </div>
     </div>
   );
 }
+

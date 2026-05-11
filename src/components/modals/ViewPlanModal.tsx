@@ -1,4 +1,4 @@
-import { X, CheckCircle, Package, CreditCard, Users } from 'lucide-react';
+import { X, CheckCircle, Package, CreditCard, Clock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 interface ViewPlanModalProps {
@@ -20,148 +20,108 @@ interface ViewPlanModalProps {
 }
 
 export default function ViewPlanModal({ isOpen, onClose, plan }: ViewPlanModalProps) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
-  const text = {
-    title: { ar: 'تفاصيل الخطة', en: 'Plan Details' },
-    nameAr: { ar: 'اسم الخطة (عربي)', en: 'Plan Name (Arabic)' },
-    nameEn: { ar: 'اسم الخطة (إنجليزي)', en: 'Plan Name (English)' },
-    description: { ar: 'الوصف', en: 'Description' },
-    price: { ar: 'السعر', en: 'Price' },
-    currency: { ar: 'العملة', en: 'Currency' },
-    duration: { ar: 'المدة', en: 'Duration' },
-    month: { ar: 'شهر', en: 'month' },
-    months: { ar: 'أشهر', en: 'months' },
-    sessionsCount: { ar: 'عدد الحصص', en: 'Sessions Count' },
-    session: { ar: 'حصة', en: 'session' },
-    sessions: { ar: 'حصص', en: 'sessions' },
-    features: { ar: 'المميزات', en: 'Features' },
-    status: { ar: 'الحالة', en: 'Status' },
-    active: { ar: 'نشط', en: 'Active' },
-    inactive: { ar: 'غير نشط', en: 'Inactive' },
-    isPopular: { ar: 'الأكثر شعبية', en: 'Most Popular' },
-    yes: { ar: 'نعم', en: 'Yes' },
-    no: { ar: 'لا', en: 'No' },
-    close: { ar: 'إغلاق', en: 'Close' },
-    planInfo: { ar: 'معلومات الخطة', en: 'Plan Information' },
-    pricing: { ar: 'التسعير', en: 'Pricing' }
-  };
-
-  if (!isOpen) return null;
-
-  const getStatusStyle = (status: string) => {
-    return status === 'active'
-      ? 'bg-green-50 text-green-700 border-green-200'
-      : 'bg-gray-50 text-gray-700 border-gray-200';
-  };
+  if (!isOpen || !plan) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh]  overflow-y-auto no-scrollbar">
-        <div className="sticky top-0 bg-primary border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-2xl font-bold text-white">{text.title[language]}</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-6 h-6 text-white" />
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-100 animate-in zoom-in-95 duration-300" dir={language === "ar" ? "rtl" : "ltr"}>
+        
+        {/* Header */}
+        <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-20">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-[24px] bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-100">
+               <Package className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-black text-slate-900 leading-tight">
+                {language === 'ar' ? plan.name : plan.nameEn}
+              </h2>
+              <div className="flex items-center gap-3 mt-1">
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                  plan.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'
+                }`}>
+                  {plan.status === 'active' ? t('active') : t('inactive')}
+                </span>
+                {plan.isPopular && (
+                  <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-wider">
+                    {t('popular')}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-4 hover:bg-slate-50 rounded-3xl transition-all text-slate-400 hover:text-slate-600">
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
-          {plan.isPopular && (
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-center py-3 px-6 rounded-xl font-bold text-lg shadow-lg">
-              {text.isPopular[language]}
-            </div>
-          )}
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-10 text-start">
+          
+          {/* Description Section */}
+          <div className="space-y-4">
+             <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">{t('description')}</h4>
+             <p className="text-slate-600 font-bold leading-relaxed">{plan.description}</p>
+          </div>
 
-          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Package className="w-6 h-6 text-blue-600" />
-              <h3 className="text-lg font-bold text-gray-900">{text.planInfo[language]}</h3>
+          {/* Pricing & Structure Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-slate-50 rounded-[32px] p-8 border border-slate-100 flex flex-col items-center text-center group hover:bg-white hover:border-indigo-100 transition-all">
+              <div className="p-4 bg-white rounded-2xl shadow-sm mb-4 group-hover:scale-110 transition-transform">
+                <CreditCard className="w-6 h-6 text-indigo-600" />
+              </div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{t('price')}</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-black text-slate-900">{plan.price}</span>
+                <span className="text-xs font-bold text-slate-400">{plan.currency}</span>
+              </div>
             </div>
+
+            <div className="bg-slate-50 rounded-[32px] p-8 border border-slate-100 flex flex-col items-center text-center group hover:bg-white hover:border-fuchsia-100 transition-all">
+              <div className="p-4 bg-white rounded-2xl shadow-sm mb-4 group-hover:scale-110 transition-transform">
+                <Clock className="w-6 h-6 text-fuchsia-600" />
+              </div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{t('duration')}</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-black text-slate-900">{plan.duration}</span>
+                <span className="text-xs font-bold text-slate-400">{plan.duration === 1 ? t('month') : t('months')}</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-[32px] p-8 border border-slate-100 flex flex-col items-center text-center group hover:bg-white hover:border-emerald-100 transition-all">
+              <div className="p-4 bg-white rounded-2xl shadow-sm mb-4 group-hover:scale-110 transition-transform">
+                <CheckCircle className="w-6 h-6 text-emerald-600" />
+              </div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{t('sessions')}</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-black text-slate-900">{plan.sessionsCount}</span>
+                <span className="text-xs font-bold text-slate-400">Total</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Features Section */}
+          <div className="space-y-6">
+            <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">{t('features')}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">{text.nameAr[language]}</p>
-                <p className="text-base font-semibold text-gray-900">{plan.name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">{text.nameEn[language]}</p>
-                <p className="text-base font-semibold text-gray-900">{plan.nameEn}</p>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-sm text-gray-600 mb-1">{text.description[language]}</p>
-                <p className="text-base font-semibold text-gray-900">{plan.description}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">{text.status[language]}</p>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(plan.status)}`}>
-                  {text[plan.status][language]}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <CreditCard className="w-6 h-6 text-green-600" />
-              <h3 className="text-lg font-bold text-gray-900">{text.pricing[language]}</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg p-4 border border-green-200">
-                <p className="text-sm text-gray-600 mb-3 text-center">{text.price[language]}</p>
-                <div className="flex items-center justify-center gap-3">
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-4xl font-bold text-green-600">{plan.price}</p>
-                    <span className="text-lg font-semibold text-gray-700">{plan.currency}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 border border-blue-200">
-                <p className="text-sm text-gray-600 mb-3 text-center">{text.duration[language]}</p>
-                <div className="flex items-baseline justify-center gap-2">
-                  <p className="text-4xl font-bold text-blue-600">{plan.duration}</p>
-                  <span className="text-lg font-semibold text-gray-700">
-                    {plan.duration === 1 ? text.month[language] : text.months[language]}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4">
-              <div className="bg-white rounded-lg p-4 border border-orange-200">
-                <p className="text-sm text-gray-600 mb-3 text-center">{text.sessionsCount[language]}</p>
-                <div className="flex items-baseline justify-center gap-2">
-                  <p className="text-4xl font-bold text-orange-600">{plan.sessionsCount}</p>
-                  <span className="text-lg font-semibold text-gray-700">
-                    {plan.sessionsCount === 1 ? text.session[language] : text.sessions[language]}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Users className="w-6 h-6 text-purple-600" />
-              <h3 className="text-lg font-bold text-gray-900">{text.features[language]}</h3>
-            </div>
-            <div className="space-y-3">
               {plan.features.map((feature, index) => (
-                <div key={index} className="flex items-start gap-3 bg-white rounded-lg p-3 border border-purple-200">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-gray-700 flex-1 text-start">{feature}</span>
+                <div key={index} className="flex items-center gap-4 bg-white p-5 rounded-3xl border border-slate-50 shadow-sm hover:border-indigo-100 transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-700">{feature}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end rounded-b-2xl">
-          <button
-            onClick={onClose}
-            className="px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
-          >
-            {text.close[language]}
+        {/* Footer */}
+        <div className="px-10 py-8 bg-slate-50 border-t border-slate-100 sticky bottom-0">
+          <button onClick={onClose} className="w-full px-8 py-4 bg-slate-900 hover:bg-black text-white rounded-[24px] transition-all font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200">
+            {t('close')}
           </button>
         </div>
       </div>

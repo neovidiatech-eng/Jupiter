@@ -4,16 +4,19 @@ import { DayOfWeek } from '../../types/scheduales';
 type TFunc = (key: string, options?: any) => string;
 
 const getBaseSession = (t: TFunc) => z.object({
-  student: z.string().min(1, t("validation.required")),
-  teacher: z.string().min(1, t("validation.required")),
-  subject: z.string().min(1, t("validation.required")),
+  studentId: z.string().min(1, t("validation.required")),
+  teacherId: z.string().min(1, t("validation.required")),
+  courseId: z.string().min(1, t("validation.required")),
   title: z.string().min(3, t("validation.min", { count: 3 })),
   description: z.string().min(5, t("validation.required")),
   type: z.enum(['full', 'half']),
   notification_Time: z.string(),
-  meetingLink: z.string().url(t("validation.email")).optional().or(z.literal('')), // Adjust key if 'url' specific exists
+  link: z.string().url(t("validation.email")).optional().or(z.literal('')), 
   notes: z.string().min(10, t("validation.min", { count: 10 })),
   platform: z.string().min(1, 'Platform is required'),
+  language: z.string().min(1, 'Language is required'),
+  videoUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+  slidesUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
 });
 
 export const getSessionSchema = (t: TFunc) => getBaseSession(t).extend({
