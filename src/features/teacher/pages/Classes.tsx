@@ -1,10 +1,11 @@
 import React from "react";
-import { Search, Monitor , MessageSquare } from "lucide-react";
-import { Table, Tag, Space, Button } from "antd";
+import { Search, Monitor , Pencil, LogOut } from "lucide-react";
+import { Table, Tag, Space, Button, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useUserSessions } from "../../../hooks/useSessions";
+import {  useJoinSession, useUserSessions, useEndSession } from "../../../hooks/useSessions";
 import { Schedule, Student, ScheduleSubject } from "../../../types/scheduales";
 import AddRequestModal from "../components/AddRequestModal";
+import FeedbackModal from "../components/FeedbackModal";
 
 const ClassesPage: React.FC = () => {
   const [search, setSearch] = React.useState("");
@@ -14,46 +15,80 @@ const ClassesPage: React.FC = () => {
     title: "",
   });
 
-  const { data: userSessions, isLoading } = useUserSessions(search);
-  const sessions = userSessions?.data || [];
+  const [feedbackModal, setFeedbackModal] = React.useState<{ visible: boolean; id: string; title: string }>({
+    visible: false,
+    id: "",
+    title: "",
+  });
 
-  const handleOpenRequest = (record: Schedule) => {
-    setRequestModal({
+  const { data: userSessions, isLoading } = useUserSessions(search);
+  const {mutateAsync: joinSession} = useJoinSession()
+  const {mutateAsync: endSession} = useEndSession()
+  const sessions = React.useMemo(() => {
+    return [...(userSessions?.data || [])].sort((a, b) => 
+      new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+    );
+  }, [userSessions]);
+
+  const handleJoinSession = async (id: string, link: string) => {
+ try {
+    await joinSession(id);
+      window.open(link, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      // Error is handled by the global axios interceptor in axios.ts
+    }
+
+  };
+
+  const handleEndSession = async (id: string) => {
+    try {
+      await endSession(id);
+    } catch (error) {
+      // Error is handled by the global axios interceptor
+    }
+  };
+
+  const handleOpenFeedback = (record: Schedule) => {
+    setFeedbackModal({
       visible: true,
       id: record.id,
       title: record.title,
     });
   };
 
+
+  
+
   const columns: ColumnsType<Schedule> = [
     // ... existing columns ...
+
+    {
+      title: "Order",
+      key: "order",
+      width: 120,
+      align: 'center',
+      render: (_1, _2, index) => (
+        <span className="font-bold text-slate-400">
+          {String(index + 1)}
+        </span>
+      ),
+    },
     {
       title: "STUDENT",
       dataIndex: "student",
+      width: 200,
       key: "student",
-      render: (student: Student) => {
-        const initials = student.user.name
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2);
-        return (
-          <div className="flex items-center gap-4">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[12px] border-2 border-white shadow-sm bg-blue-50 text-blue-600"
-            >
-              {initials}
-            </div>
-            <span className="font-bold text-slate-700">{student.user.name}</span>
-          </div>
-        );
-      },
+      render: (student: Student) => (
+        <div className="flex items-center gap-4">
+          <span className="font-bold text-slate-700">{student.user.name}</span>
+        </div>
+      ),
     },
     {
       title: "LESSON",
       dataIndex: "title",
       key: "lesson",
+      width: 220,
       render: (text) => (
         <span className="font-semibold text-slate-600">{text}</span>
       ),
@@ -62,6 +97,7 @@ const ClassesPage: React.FC = () => {
       title: "TYPE",
       dataIndex: "type",
       key: "type",
+      width: 100,
       render: (type) => (
         <Tag
           className="rounded-full px-4 py-0.5 border-none font-bold text-[10px] uppercase tracking-wider"
@@ -72,9 +108,10 @@ const ClassesPage: React.FC = () => {
       ),
     },
     {
-      title: "SUBJECT",
+      title: "Language",
       dataIndex: "subject",
       key: "subject",
+      width: 150,
       render: (subject: ScheduleSubject) => (
         <span className="px-3 py-1 bg-slate-50 border border-gray-100 rounded-lg text-[11px] font-bold text-slate-500">
           {subject?.name || "N/A"}
@@ -85,6 +122,8 @@ const ClassesPage: React.FC = () => {
       title: "SCHEDULE",
       dataIndex: "start_time",
       key: "schedule",
+      width: 200,
+      sorter: (a: Schedule, b: Schedule) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
       render: (time) => (
         <span className="text-sm font-bold text-slate-600">
           {new Date(time).toLocaleString("en-US", {
@@ -101,52 +140,128 @@ const ClassesPage: React.FC = () => {
       title: "STATUS",
       dataIndex: "status",
       key: "status",
+      width: 170,
       render: (status) => (
         <span className="text-sm font-semibold text-slate-500 uppercase">{status}</span>
       ),
     },
-    {
-      title: "MATERIAL",
-      key: "material",
-      render: (record: Schedule) => (
-        <Space size="middle">
-          {record.link && (
-            <a 
-              href={record.link} 
-              target="_blank" 
+    // {
+    //   title: "Materials",
+    //   key: "materials",
+    //   width: 140,
+    //   render: () => (
+    //     <Space size="middle">
+    //       <a
+    //         href="#"
+    //         target="_blank"
+    //         rel="noreferrer"
+    //         className="flex items-center gap-2 px-3 py-1.5 border border-blue-100 bg-blue-50/30 rounded-full text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition-all"
+    //       >
+    //         <Monitor size={12} /> Materials
+    //       </a>
+    //     </Space>
+    //   )
+    // },
+
+{
+  title: "Materials",
+  key: "materials",
+  width: 140,
+  render: () => (
+    <Space size="middle">
+      <Tooltip
+        placement="top"
+        color="white"
+        overlayInnerStyle={{ padding: '2px' }}
+        title={
+          <div className="flex items-center gap-1 bg-slate-50/50 p-1 rounded-lg">
+            <a
+              href="https://video-url.com"
+              target="_blank"
               rel="noreferrer"
+              className="px-3 py-1.5 bg-white text-blue-600 rounded-md text-[10px] font-bold shadow-sm hover:text-blue-700 transition-all whitespace-nowrap"
+            >
+              VIDEO
+            </a>
+            <a
+              href="https://lecture-url.com"
+              target="_blank"
+              rel="noreferrer"
+              className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-white/50 rounded-md text-[10px] font-bold transition-all whitespace-nowrap"
+            >
+              PDF
+            </a>
+            <a
+              href="https://slides-url.com"
+              target="_blank"
+              rel="noreferrer"
+              className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-white/50 rounded-md text-[10px] font-bold transition-all whitespace-nowrap"
+            >
+              SLIDES
+            </a>
+          </div>
+        }
+      >
+        <a
+          href="#"
+          onClick={(e) => e.preventDefault()}
+          className="flex items-center gap-2 px-3 py-1.5 border border-blue-100 bg-blue-50/30 rounded-full text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition-all"
+        >
+          <Monitor size={12} />
+          Materials
+        </a>
+      </Tooltip>
+    </Space>
+  ),
+},
+    {
+      title: "Actions",
+      key: "actions",
+      width: 280,
+      render: (record: Schedule) => (
+        <Space size="small">
+          {record.link && (
+            <a
+              href={record.link}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => {
+                e.preventDefault();
+                handleJoinSession(record.id, record.link);
+              }}
               className="flex items-center gap-2 px-3 py-1.5 border border-blue-100 bg-blue-50/30 rounded-full text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition-all"
             >
               <Monitor size={12} /> Join Class
             </a>
           )}
-         
+
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              handleEndSession(record.id);
+            }}
+            className="flex items-center gap-2 px-3 py-1.5 border border-red-100 bg-red-50/30 rounded-full text-[10px] font-bold text-red-600 hover:bg-red-100 transition-all"
+          >
+            <LogOut size={12} /> End Session
+          </a>
         </Space>
       ),
     },
+
     {
-       title: "REQUESTS",
-      key: "requests",
+      title: "FEEDBACK",
+      key: "feedback",
+      width: 100,
       render: (record: Schedule) => (
-        <Button 
-            onClick={() => handleOpenRequest(record)}
-            className="flex items-center gap-2 px-3 py-1.5 border border-orange-100 bg-orange-50 rounded-full text-[10px] font-bold text-orange-600 hover:bg-orange-100 transition-all"
-          >
-            <MessageSquare size={12} /> Add Request
-          </Button>
-      )
+        <Button
+          type="primary"
+          icon={<Pencil size={14} />}
+          onClick={() => handleOpenFeedback(record)}
+          className="bg-[#2563eb] h-9 w-9 flex items-center justify-center rounded-lg shadow-blue-500/20"
+        />
+      ),
     },
-    // {
-    //   title: "FEEDBACK",
-    //   key: "feedback",
-    //   render: () => (
-    //     <Button
-    //       type="primary"
-    //       icon={<Pencil size={14} />}
-    //       className="bg-[#2563eb] h-9 w-9 flex items-center justify-center rounded-lg shadow-blue-500/20"
-    //     />
-    //   ),
-    // },
   ];
 
 
@@ -177,7 +292,7 @@ const ClassesPage: React.FC = () => {
           />
         </div>
 
-        {/* <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
+        <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
           <div className="flex bg-slate-100/80 p-1.5 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
             {["History", "Today", "Upcoming"].map((tab) => (
               <button
@@ -197,7 +312,7 @@ const ClassesPage: React.FC = () => {
               <option>All Status</option>
             </select>
           </div>
-        </div> */}
+        </div>
       </div>
 
       {/* Classes Table using Ant Design */}
@@ -212,15 +327,22 @@ const ClassesPage: React.FC = () => {
             className: "px-6 py-4",
           }}
           className="custom-antd-table"
-          scroll={{ x: 1000 }}
+          scroll={{ x: 1400 }}
         />
       </div>
 
-      <AddRequestModal 
+      <AddRequestModal
         visible={requestModal.visible}
         onClose={() => setRequestModal({ ...requestModal, visible: false })}
         sessionId={requestModal.id}
         sessionTitle={requestModal.title}
+      />
+
+      <FeedbackModal 
+        visible={feedbackModal.visible}
+        onClose={() => setFeedbackModal({ ...feedbackModal, visible: false })}
+        sessionId={feedbackModal.id}
+        sessionTitle={feedbackModal.title}
       />
 
       <style>{`
@@ -263,3 +385,4 @@ const ClassesPage: React.FC = () => {
 };
 
 export default ClassesPage;
+

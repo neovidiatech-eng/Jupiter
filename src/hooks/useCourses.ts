@@ -31,7 +31,7 @@ export const useCreateCourse = () => {
 
 export const useUpdateCourse = () => {
     return useMutation({
-        mutationFn: ({id, data}: {id: string, data: Course}) => updateCourse(id, data),
+        mutationFn: ({id, data}: {id: string, data: FormData | Course}) => updateCourse(id, data),
         onSuccess: () => {
             ErrorService.success("Course updated successfully");
         },

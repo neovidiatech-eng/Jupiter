@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Video } from "lucide-react";
-import { useUserSessions } from "../../hooks/useSessions";
+import { useJoinSession, useUserSessions } from "../../hooks/useSessions";
 import { Schedule } from "../../types/scheduales";
 import { useLanguage } from "../../contexts/LanguageContext";
 
@@ -14,6 +14,7 @@ interface CountdownState {
 export default function MiniHeaderTimer() {
   const { language } = useLanguage();
   const { data, isLoading } = useUserSessions("");
+  const { mutateAsync: joinSession } = useJoinSession();
 
   const [timeLeft, setTimeLeft] = useState<CountdownState>({
     days: 0,
@@ -21,6 +22,7 @@ export default function MiniHeaderTimer() {
     minutes: 0,
     seconds: 0,
   });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Get nearest upcoming session
   const nextSession = useMemo<Schedule | null>(() => {
@@ -40,7 +42,7 @@ export default function MiniHeaderTimer() {
       );
 
     return upcomingSessions[0] || null;
-  }, [data]);
+  }, [data, refreshTrigger]);
 
   useEffect(() => {
     if (!nextSession) return;
@@ -51,8 +53,7 @@ export default function MiniHeaderTimer() {
       const distance = sessionTime - now;
 
       if (distance <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        clearInterval(interval);
+        setRefreshTrigger(prev => prev + 1);
         return;
       }
 
@@ -76,9 +77,14 @@ export default function MiniHeaderTimer() {
 
   const isReady = totalSecondsLeft > 0 && totalSecondsLeft <= 120; // 2 minutes
 
-  const handleJoinSession = () => {
-    if (!nextSession?.link) return;
-    window.open(nextSession.link, "_blank");
+  const handleJoinSession = async () => {
+    if (!nextSession?.id || !nextSession?.link) return;
+    try {
+      await joinSession(nextSession.id);
+      window.open(nextSession.link, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      // Error is handled by global interceptor
+    }
   };
 
   if (!nextSession || isLoading) return null;

@@ -70,11 +70,14 @@ class ErrorService {
         return data.errors.join(' | ');
       }
       
-      // Handle object with message field
-      if (data.message) return data.message;
+      // Handle object with error field (often more descriptive)
+      if (data.error && typeof data.error === 'string') return data.error;
       
-      // Handle object with error field
-      if (data.error) return data.error;
+      // Handle object with message field
+      if (data.message && data.message !== 'error') return data.message;
+      
+      // Fallback to error field if message was 'error'
+      if (data.error) return String(data.error);
     }
 
     if (error?.message) return error.message;

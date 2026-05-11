@@ -30,6 +30,61 @@ export interface ProfilePlan {
   currency: ProfilePlanCurrency;
 }
 
+export interface ProfileRank {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+  ageRange: {
+    maxAge: number;
+    minAge: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProfileScheduleTeacherUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  image: string | null;
+}
+
+export interface ProfileScheduleTeacher {
+  user: ProfileScheduleTeacherUser;
+}
+
+export interface ProfileScheduleSubject {
+  id: string;
+  name: string;
+}
+
+export interface ProfileSchedule {
+  id: string;
+  teacherId: string;
+  studentId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  notes: string;
+  description: string;
+  link: string;
+  title: string;
+  platform: string;
+  type: string;
+  end_time: string;
+  start_time: string;
+  day_of_week: string | null;
+  is_recurring: boolean;
+  parent_recurring_id: string | null;
+  subjectId: string;
+  rescheduledFromId: string | null;
+  rescheduledToId: string | null;
+  teacher: ProfileScheduleTeacher;
+  subject: ProfileScheduleSubject;
+}
+
 export interface ProfileData {
   id: string;
   user_id: string;
@@ -47,13 +102,15 @@ export interface ProfileData {
   totalReviews: number;
   rankId: string | null;
   user: ProfileUser;
-  schedules: any[];
+  schedules: ProfileSchedule[];
   plan: ProfilePlan;
+  rank: ProfileRank | null;
 }
 
 export interface StudentProfileResponse {
   message: string;
   status: number;
+  lang: string;
   data: ProfileData;
 }
 

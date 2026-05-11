@@ -154,3 +154,11 @@ export interface GetUserSchedulesResponse {
     status: number;
     data: Schedule[];
 }
+
+
+export interface SendReviewSchedulePayload {
+    comment: string;
+    rating: number;
+    teacherAttended: boolean;
+    studentAttended: boolean;
+}

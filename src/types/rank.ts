@@ -10,6 +10,7 @@ export interface RankItem {
   color: string;
   ageRange: AgeRange;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Pagination {

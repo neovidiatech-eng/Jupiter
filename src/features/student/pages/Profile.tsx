@@ -159,8 +159,8 @@ export default function StudentProfile() {
             <h3 className="text-2xl font-bold text-slate-800 tracking-tight mb-8">Academic Information</h3>
             <div className="space-y-6">
               {[
-                { label: 'Current Level', value: subscriptionInfo.planName, icon: Award, color: 'bg-blue-50 text-blue-500' },
-                { label: 'Current Rank', value: 'Silver', icon: BookOpen, color: 'bg-amber-50 text-amber-500' },
+                { label: 'Current Plan', value: subscriptionInfo.planName, icon: Award, color: 'bg-blue-50 text-blue-500' },
+                { label: 'Current Rank', value: profileData?.rank?.name || 'No Rank Yet', icon: BookOpen, color: 'bg-amber-50 text-amber-500' },
                 { label: 'Sessions Completed', value: `${subscriptionInfo.sessionsUsed} / ${subscriptionInfo.totalSessions}`, icon: Calendar, color: 'bg-emerald-50 text-emerald-500' }
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center gap-5 p-4 rounded-3xl hover:bg-slate-50 transition-colors group">

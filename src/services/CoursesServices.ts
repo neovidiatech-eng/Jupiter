@@ -12,13 +12,17 @@ export const getCourseById = async (id: string): Promise<Course> => {
     return response.data.data;
 }
 
-export const createCourse = async (data: Course): Promise<Course> => {
-    const response = await api.post<CourseResponse>(`/materials/courses`, data);
+export const createCourse = async (data: FormData): Promise<Course> => {
+    const response = await api.post<CourseResponse>(`/materials/courses`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data.data;
 }
 
-export const updateCourse = async (id: string, data: Course): Promise<Course> => {
-    const response = await api.patch<CourseResponse>(`/materials/courses/${id}`, data);
+export const updateCourse = async (id: string, data: FormData | Course): Promise<Course> => {
+    const response = await api.patch<CourseResponse>(`/materials/courses/${id}`, data, {
+        headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {},
+    });
     return response.data.data;
 }
 

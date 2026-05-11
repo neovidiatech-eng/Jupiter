@@ -5,6 +5,7 @@ import {
   User,
   MessageSquare,
   ChevronRight,
+  Star,
 } from "lucide-react";
 // Student Dashboard Page
 import { useState, useEffect, useMemo } from "react";
@@ -16,7 +17,7 @@ import { useDashboardData } from "../../features/student/hooks/useDashboardData"
 import { useCreateConversation } from "../../hooks/useMessages";
 
 import { useLanguage } from "../../contexts/LanguageContext";
-import FeedbackCard from "../../features/student/components/Feedback";
+import TeacherFeedback from "../../features/student/components/Feedback";
 
 export default function StudentDashboard() {
   const { language } = useLanguage();
@@ -190,140 +191,87 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* 2. Subscription & Quick Stats Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Your Subscription Card */}
-        <div className="lg:col-span-2 bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
-          <div className="flex justify-between items-start mb-8">
-            <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
-                Your Subscription
-              </h3>
-              <p className="text-slate-400 font-bold text-sm tracking-wide">
-                {metadata?.plan?.name || "No Plan"}
-              </p>
-            </div>
-            <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
-              Annual
-            </span>
-          </div>
-
-          <div className="space-y-10">
-            <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <span className="text-sm font-bold text-slate-500">
-                  Sessions Progress
-                </span>
-                <span className="text-sm font-black text-slate-800 tracking-tighter">
-                  {metadata?.sessions_attended || 0} / {metadata?.sessions || 0}
-                </span>
-              </div>
-              <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
-                <div
-                  className="h-full bg-blue-500 rounded-full transition-all duration-1000"
-                  style={{ width: `${((metadata?.sessions_attended || 0) / (metadata?.sessions || 1)) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-8 pt-4 pb-0">
+      {/* Main Content Area: Subscription & Feedback Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-8">
+        <div className="lg:col-span-2 h-full">
+          {/* Your Subscription Card */}
+          <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group h-full flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-4 mt-10">
               <div className="space-y-1">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Sessions Remaining
-                </p>
-                <p className="text-3xl font-black text-slate-800 tracking-tighter">
-                  {metadata?.sessions_remaining || 0}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Price
-                </p>
-                <p className="text-3xl font-black text-slate-800 tracking-tighter">
-                  {metadata?.plan?.price}  {metadata?.plan?.currency?.symbol}
+                <h3 className="text-xl font-bold text-slate-800 tracking-tight">
+                  Your Subscription
+                </h3>
+                <p className="text-slate-400 font-bold text-xs tracking-wide">
+                  {metadata?.plan?.name || "No Plan"}
                 </p>
               </div>
+              <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                Annual
+              </span>
             </div>
 
+            <div className="space-y-4 flex-1 flex flex-col justify-center">
+              <div className="space-y-2 mb-10">
+                <div className="flex justify-between items-end">
+                  <span className="text-xs font-bold text-slate-500">
+                    Sessions Progress
+                  </span>
+                  <span className="text-xs font-black text-slate-800 tracking-tighter">
+                    {metadata?.sessions_attended || 0} / {metadata?.sessions || 0}
+                  </span>
+                </div>
+                <div className="h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
+                  <div
+                    className="h-full bg-blue-500 rounded-full transition-all duration-1000"
+                    style={{ width: `${((metadata?.sessions_attended || 0) / (metadata?.sessions || 1)) * 100}%` }}
+                  />
+                </div>
+              </div>
 
-          </div>
-        </div>
-
-        {/* Quick Stats Card */}
-        {/* <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-          <h3 className="text-2xl font-bold text-slate-800 tracking-tight mb-8">
-            Quick Stats
-          </h3>
-          <div className="space-y-6">
-            {[
-              {
-                label: "Videos Watched",
-                value: `${metadata?.sessions_attended || 0} / ${metadata?.sessions || 0}`,
-                icon: Play,
-                color: "bg-blue-50 text-blue-500",
-              },
-              {
-                label: "Current Level",
-                value: metadata?.rank?.name || 'No Rank',
-                icon: Award,
-                color: "bg-amber-50 text-amber-500",
-              },
-              {
-                label: "Joined On",
-                value: metadata?.joindate ? new Date(metadata.joindate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "Aug 2025",
-                icon: Calendar,
-                color: "bg-emerald-50 text-emerald-500",
-              },
-            ].map((stat, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 p-2 group cursor-default"
-              >
-                <div
-                  className={`w-14 h-14 rounded-2xl ${stat.color} flex items-center justify-center transition-transform group-hover:scale-110 duration-300 shadow-sm`}
-                >
-                  <stat.icon size={24} />
+              <div className="grid grid-cols-2 gap-4 pt-2 pb-0 mt-10">
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Sessions Remaining
+                  </p>
+                  <p className="text-2xl font-black text-slate-800 tracking-tighter">
+                    {metadata?.sessions_remaining || 0}
+                  </p>
                 </div>
                 <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-slate-400 tracking-wide">
-                    {stat.label}
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Price
                   </p>
-                  <p className="text-xl font-black text-slate-800 tracking-tight">
-                    {stat.value}
+                  <p className="text-2xl font-black text-slate-800 tracking-tighter">
+                    {metadata?.plan?.price}  {metadata?.plan?.currency?.symbol}
                   </p>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div> */}
-        <FeedbackCard
-          studentName="Ahmed"
-          teacherName="Mohamed"
-          rating={4.9}
-          feedback="Excellent participation today! Keep practicing reading every day 📚✨"
-          badge="Reading Superstar"
-        />
-      </div>
-
-      {/* 3. Learning Path Timeline */}
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-2xl font-bold text-slate-800 tracking-tight">
-            Learning Path
-          </h3>
-          {/* <button
-            onClick={() => navigate('/student-dashboard/recorded-videos')}
-            className="flex items-center gap-2 bg-slate-50 text-slate-600 px-5 py-2.5 rounded-2xl text-sm font-bold hover:bg-slate-100 transition-all"
-          >
-            <Play size={16} className="fill-current" />
-            View All Videos
-          </button> */}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {/* Active Level Card */}
+        <div className="lg:col-span-1 h-full">
+          <TeacherFeedback
+            teacher="Mohamed"
+            student="Ali"
+            rating={3}
+            message="Excellent participation today! Keep practicing reading every day ."
+          />
+        </div>
+      </div>
+
+      {/* Learning Path Section - Aligned with Subscription (2/3 width) */}
+      <div className="space-y-8 lg:w-2/3">
+        <div className="flex justify-between items-center">
+          <h3 className="text-2xl font-black text-slate-800 tracking-tighter">
+            Learning Path
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Active Level Card - Enhanced & Enlarged */}
           <div
-            className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:translate-y-[-4px] transition-all cursor-pointer group relative overflow-hidden"
+            className="group relative bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 transition-all cursor-pointer overflow-hidden"
             onClick={() => {
               const rank = metadata?.rank;
               if (rank) {
@@ -335,46 +283,56 @@ export default function StudentDashboard() {
               }
             }}
           >
-            <div className="absolute top-0 right-0 p-4">
-              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
-                <ChevronRight size={18} strokeWidth={3} />
-              </div>
-            </div>
-            <div className="space-y-6">
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-700 relative shadow-inner">
-                <Award size={32} />
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-sm">
-                  2
+            {/* Background Accent */}
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-[80px] -mr-6 -mt-6 transition-transform group-hover:scale-110 duration-700" />
+
+            <div className="relative z-10 flex flex-col gap-8">
+              <div className="flex justify-between items-start">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                  <Award size={32} strokeWidth={1.5} />
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-blue-600 group-hover:translate-x-1 transition-transform">
+                  <ChevronRight size={20} strokeWidth={3} />
                 </div>
               </div>
-              <div className="space-y-1">
-                <h4 className="text-xl font-bold text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors">
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest">
+                    Active Level
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <h4 className="text-2xl font-black text-slate-800 tracking-tighter group-hover:text-blue-600 transition-colors">
                   {metadata?.rank?.name || 'No Rank'}
                 </h4>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  {metadata?.rank?.courses.length + ' ' + 'Curriculums'}
-                </p>
+                <div className="flex items-center gap-2 text-slate-400">
+                  <BookOpen size={16} className="text-blue-400" />
+                  <p className="text-xs font-bold uppercase tracking-widest">
+                    {metadata?.rank?.courses.length + ' ' + 'Curriculums Available'}
+                  </p>
+                </div>
               </div>
 
+              <div className="pt-2 flex items-center gap-4">
+                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 w-2/3 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                </div>
+                <span className="text-xs font-black text-slate-800">65%</span>
+              </div>
             </div>
           </div>
 
-          {/* Locked Level Cards */}
-          {/* {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-slate-50/50 rounded-[32px] p-8 border border-slate-100/50 flex flex-col items-center justify-center gap-6 group cursor-not-allowed grayscale"
-            >
-              <div className="w-16 h-16 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-300 shadow-sm opacity-60">
-                <Lock size={32} />
-              </div>
-              <div className="text-center space-y-1 opacity-40">
-                <h4 className="text-xl font-bold text-slate-400 tracking-tight">
-                  Locked
-                </h4>
-              </div>
+          {/* Stats/Next Goal Card */}
+          <div className="bg-slate-50/50 rounded-[32px] p-8 border border-dashed border-slate-200 flex flex-col justify-center items-center gap-4 text-center group hover:bg-white hover:border-solid hover:border-blue-200 transition-all">
+            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-slate-300 group-hover:text-blue-400 transition-colors shadow-sm">
+              <Star size={24} />
             </div>
-          ))} */}
+            <div className="space-y-1">
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Next Milestone</p>
+              <h5 className="text-lg font-bold text-slate-600 group-hover:text-slate-800 leading-tight">Keep learning to unlock the next rank!</h5>
+            </div>
+          </div>
         </div>
       </div>
     </div>
