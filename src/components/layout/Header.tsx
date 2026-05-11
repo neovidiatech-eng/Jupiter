@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../features/student/hooks/useProfile";
 import { useTeacherProfile } from "../../features/teacher/hooks/useTeacherProfile";
 import { disconnectSocket } from "../../lib/socket";
+import MiniHeaderTimer from "../ui/Counter";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -59,11 +60,11 @@ export default function Header({
         path: "/teacher-dashboard/profile"
       };
     }
-    return { 
-      name: userName || "---", 
-      subtext: userRole, 
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "U")}&background=1e1b4b&color=fff`, 
-      path: "/dashboard" 
+    return {
+      name: userName || "---",
+      subtext: userRole,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "U")}&background=1e1b4b&color=fff`,
+      path: "/dashboard"
     };
   }, [isStudent, isTeacher, profileData, teacherData, userName, userRole]);
 
@@ -108,6 +109,12 @@ export default function Header({
           </div>
         </div>
 
+        {isTeacherOrStudent && (
+  <div className="flex-1 flex justify-center px-4">
+    <MiniHeaderTimer />
+  </div>
+)}
+
         {/* 2. Right Side: Profile / Actions */}
         <div className="flex items-center gap-2 md:gap-6 shrink-0">
           {isTeacherOrStudent ? (
@@ -136,7 +143,7 @@ export default function Header({
                 <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
               </div>
 
-              <div 
+              <div
                 className="flex items-center gap-2 cursor-pointer md:pl-4 md:border-l border-gray-100 group"
                 onClick={() => navigate("/dashboard/profile")}
               >

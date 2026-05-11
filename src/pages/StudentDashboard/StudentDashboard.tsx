@@ -1,7 +1,6 @@
 import {
   Calendar,
   Award,
-  Play,
   BookOpen,
   User,
   MessageSquare,
@@ -17,6 +16,7 @@ import { useDashboardData } from "../../features/student/hooks/useDashboardData"
 import { useCreateConversation } from "../../hooks/useMessages";
 
 import { useLanguage } from "../../contexts/LanguageContext";
+import FeedbackCard from "../../features/student/components/Feedback";
 
 export default function StudentDashboard() {
   const { language } = useLanguage();
@@ -250,7 +250,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Quick Stats Card */}
-        <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+        {/* <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all">
           <h3 className="text-2xl font-bold text-slate-800 tracking-tight mb-8">
             Quick Stats
           </h3>
@@ -295,7 +295,14 @@ export default function StudentDashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
+        <FeedbackCard
+          studentName="Ahmed"
+          teacherName="Mohamed"
+          rating={4.9}
+          feedback="Excellent participation today! Keep practicing reading every day 📚✨"
+          badge="Reading Superstar"
+        />
       </div>
 
       {/* 3. Learning Path Timeline */}

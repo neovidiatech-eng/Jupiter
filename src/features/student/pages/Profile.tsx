@@ -160,7 +160,7 @@ export default function StudentProfile() {
             <div className="space-y-6">
               {[
                 { label: 'Current Level', value: subscriptionInfo.planName, icon: Award, color: 'bg-blue-50 text-blue-500' },
-                { label: 'Current Curriculum', value: 'Python Fundamentals', icon: BookOpen, color: 'bg-amber-50 text-amber-500' },
+                { label: 'Current Rank', value: 'Silver', icon: BookOpen, color: 'bg-amber-50 text-amber-500' },
                 { label: 'Sessions Completed', value: `${subscriptionInfo.sessionsUsed} / ${subscriptionInfo.totalSessions}`, icon: Calendar, color: 'bg-emerald-50 text-emerald-500' }
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center gap-5 p-4 rounded-3xl hover:bg-slate-50 transition-colors group">
