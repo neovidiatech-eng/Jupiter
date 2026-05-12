@@ -160,8 +160,12 @@ export interface GetSessionsResponse {
 export interface GetUserSchedulesResponse {
     message: string;
     status: number;
-    data: Schedule[];
-}
+    data:  {
+            upcomingSchedule: Schedule[];
+            toDaySchedule: Schedule[];
+            previousSchedule: Schedule[];
+        };
+}       
 
 
 export interface SendReviewSchedulePayload {

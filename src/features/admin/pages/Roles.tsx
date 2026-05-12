@@ -72,7 +72,7 @@ export default function Roles() {
                 }
             });
         } else {
-            addRole({ name: data.name }, {
+            addRole({ name: data.name, permissionIds: data.permissionIds }, {
                 onSuccess: () => {
                     setIsModalOpen(false);
                 }

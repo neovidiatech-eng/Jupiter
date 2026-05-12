@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, Eye, Trash2, Edit, ExternalLink, MoreVertical , ChevronLeft, ChevronRight, Bell } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { useSearchSchedules, useCreateSchedule, useCreateRecurringSchedule, useUpdateSchedule, useDeleteSchedule, useDeleteGroupedSchedule } from '../hooks/useSchedules';
 import { useTeacher } from '../hooks/useTeacher';
 import { useTeacherAvailability } from '../hooks/useTeacherAvailabilty';
@@ -10,16 +9,12 @@ import EditSessionModal from '../../../components/modals/EditSessionModal';
 import ConfirmModal from '../../../components/modals/ConfirmModal';
 import { Schedule, UpdateSchedulePayload } from '../../../types/scheduales';
 import { SessionFormData, MultipleSessionsPayload } from '../../../lib/schemas/SessionSchema';
-import { useSubjects } from '../hooks/useSubjects';
-import { Subject } from '../../../types/subject';
 import { Table, Dropdown } from "antd";
 import { Link } from 'react-router-dom';
 
 type GroupedSchedule = Schedule & { groupCount?: number };
 
 export default function Sessions() {
-  const { i18n } = useTranslation();
-  const language = i18n.language.split('-')[0];
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,7 +77,7 @@ export default function Sessions() {
           description: data.description || '',
           link: data.link || '',
           notes: data.notes || '',
-          start_time: `${data.sessionDate}T${data.startTime}:00.000Z`,
+          start_time: new Date(`${data.sessionDate}T${data.startTime}`).toISOString(),
           type: data.type,
           notification_Time: data.notification_Time,
           platform: data.platform,
@@ -233,16 +228,7 @@ export default function Sessions() {
     }
   };
 
-  const { data: subjects } = useSubjects();
-  const dynamicsubjects = subjects?.subjects || [];
 
-  const getSubjectName = (session: Schedule) => {
-    if (session.subject) {
-      return session.subject.name ;
-    }
-    const subject = dynamicsubjects.find((s: Subject) => s.id === session.subjectId);
-    return subject ? (language === 'ar' ? subject.name_ar : subject.name_en) : 'Subject';
-  };
 
   const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -288,9 +274,7 @@ export default function Sessions() {
           </div>
           <div>
             <div className="text-sm font-bold text-gray-900">{record.student?.user?.name || "Unknown"}</div>
-            <div className="text-[11px] font-bold text-gray-400 mt-0.5">
-              {getSubjectName(record)}
-            </div>
+            
           </div>
         </div>
       ),

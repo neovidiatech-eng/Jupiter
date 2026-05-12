@@ -142,8 +142,8 @@ export default function Curriculum() {
               <h1 className="text-2xl font-bold text-gray-900">{selectedCourse.title}</h1>
             </div>
           </div>
-          <Button 
-            icon={<Plus size={16} />} 
+          <Button
+            icon={<Plus size={16} />}
             onClick={() => setIsAddLectureModalVisible(true)}
             className="rounded-xl font-bold text-gray-600 border-gray-200"
           >
@@ -292,9 +292,9 @@ export default function Curriculum() {
                           <FileText size={16} className="text-red-500" />
                           <span className="text-sm font-bold">Lecture Resources (PDF)</span>
                         </div>
-                        <a 
-                          href={activeLecture.pdfUrl} 
-                          target="_blank" 
+                        <a
+                          href={activeLecture.pdfUrl}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-4 p-4 rounded-2xl bg-red-50 border border-red-100 group hover:bg-red-100 transition-all cursor-pointer"
                         >
@@ -412,17 +412,17 @@ export default function Curriculum() {
             >
               {viewMode === 'grid' ? (
                 <div className="flex flex-col h-full">
-                 <div
-  className="h-40 p-6 flex flex-col justify-between relative overflow-hidden bg-cover bg-center"
-  style={{
-    backgroundImage:
-      course?.image 
-        ? `url("https://agro-plus.net/${course.image}")`
-        : "linear-gradient(to bottom right, #6366f1, #a855f7)"
-  }}
->
-  {course?.image && <img src={`https://agro-plus.net/${course.image}`} alt={course.title} className="absolute top-0 left-0 w-full h-full object-cover" />}
-              
+                  <div
+                    className="h-40 p-6 flex flex-col justify-between relative overflow-hidden bg-cover bg-center"
+                    style={{
+                      backgroundImage:
+                        course?.image
+                          ? `url("https://agro-plus.net/${course.image}")`
+                          : "linear-gradient(to bottom right, #6366f1, #a855f7)"
+                    }}
+                  >
+                    {course?.image && <img src={`https://agro-plus.net/${course.image}`} alt={course.title} className="absolute top-0 left-0 w-full h-full object-cover" />}
+
                     <div className="absolute top-0 right-0 p-8 opacity-10" >
                       <BookOpen size={100} className="text-white" />
                     </div>
@@ -431,17 +431,30 @@ export default function Curriculum() {
                         {course.rank.name}
                       </Tag>
                       <Dropdown
+                        overlayClassName="custom-dropdown"
                         menu={{
+                          className: "bg-white text-black",
                           items: [
-                            { key: 'edit', label: 'Edit Course', icon: <Edit size={14} />, onClick: (info) => handleEdit(course, info.domEvent as any) },
-                            { key: 'delete', label: 'Delete', icon: <Trash2 size={14} />, danger: true, onClick: (info) => handleDelete(course.id, info.domEvent as any) },
+                            {
+                              key: 'edit',
+                              label: 'Edit Course',
+                              icon: <Edit size={14} />,
+                              onClick: (info) => handleEdit(course, info.domEvent as any)
+                            },
+                            {
+                              key: 'delete',
+                              label: 'Delete',
+                              icon: <Trash2 size={14} />,
+                              danger: true,
+                              onClick: (info) => handleDelete(course.id, info.domEvent as any)
+                            },
                           ]
                         }}
                         trigger={['click']}
                       >
                         <button
                           onClick={(e) => e.stopPropagation()}
-                          className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all"
+                          className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black hover:bg-black/80 transition-all"
                         >
                           <MoreVertical size={16} />
                         </button>

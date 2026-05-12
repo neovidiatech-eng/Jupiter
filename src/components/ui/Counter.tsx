@@ -28,9 +28,20 @@ export default function MiniHeaderTimer() {
   const nextSession = useMemo<Schedule | null>(() => {
     if (!data?.data) return null;
 
+    // data.data could be an array or an object with schedule categories
+    const sessions: Schedule[] = Array.isArray(data.data)
+      ? data.data
+      : [
+          ...((data.data as any).upcomingSchedule || []),
+          ...((data.data as any).toDaySchedule || []),
+          ...((data.data as any).previousSchedule || []),
+        ];
+
+    if (!sessions.length) return null;
+
     const now = new Date();
 
-    const upcomingSessions = data.data
+    const upcomingSessions = sessions
       .filter(
         (session: Schedule) =>
           new Date(session.start_time).getTime() > now.getTime()

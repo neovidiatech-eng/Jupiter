@@ -2,15 +2,11 @@ import { motion } from "framer-motion";
 import { Quote, Star, StarIcon } from "lucide-react";
 
 type TeacherFeedbackProps = {
-  teacher: string;
-  student: string;
   message: string;
   rating: number;
 };
 
 export default function TeacherFeedback({
-  teacher,
-  student,
   message,
   rating,
 }: TeacherFeedbackProps) {
@@ -69,20 +65,12 @@ export default function TeacherFeedback({
 
         {/* Text */}
         <div>
-          <h2 className="text-xl font-black text-slate-800 tracking-tight">
-            {`Hi ${student} `}
-          </h2>
-
-          <p className="text-slate-500 font-semibold text-sm">
-            {`From ${teacher} Teacher`}
-          </p>
-
           <div
             className="
             mt-1 inline-flex items-center gap-2
-            bg-blue-50 text-blue-600
+           text-primary
             px-3 py-1 rounded-full
-            text-[10px] font-black uppercase tracking-wider
+            text-lg font-black uppercase tracking-wider
           "
           >
             Session Feedback
@@ -141,7 +129,7 @@ export default function TeacherFeedback({
               {/* Inner Circle */}
               <div
                 className="
-                w-[95px] h-[95px]
+                w-[95px] h-[100px]
                 rounded-full bg-white
                 flex flex-col items-center justify-center
                 shadow-inner
@@ -150,7 +138,7 @@ export default function TeacherFeedback({
 
 
                 {/* Rating */}
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight">
+                <h2 className="text-3xl text-primary tracking-tight">
                   {rating}
                 </h2>
 
@@ -211,7 +199,7 @@ export default function TeacherFeedback({
           </div>
 
           {/* Message */}
-          <p className="text-slate-700 leading-relaxed text-base font-semibold">
+          <p className="text-primary leading-relaxed text-base font-semibold">
             {message}
           </p>
 

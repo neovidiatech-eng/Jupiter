@@ -3,7 +3,6 @@ import {
   X,
   Search,
   Video,
-  ChevronDown,
   AlertCircle,
   Calendar,
   MonitorPlay,
@@ -35,6 +34,13 @@ import { Teacher, DayOfWeek } from '../../types/scheduales';
 import { Course } from '../../types/courses';
 
 import { useTranslation } from 'react-i18next';
+
+// Sub-components
+import StudentPlanCard from './add-session/StudentPlanCard';
+import SchedulingSettings from './add-session/SchedulingSettings';
+import PlatformSelector from './add-session/PlatformSelector';
+import SessionPreview from './add-session/SessionPreview';
+import ModalStyles from './add-session/ModalStyles';
 
 interface AddSessionModalProps {
   isOpen: boolean;
@@ -209,8 +215,12 @@ export default function AddSessionModal({
       }) as DayOfWeek;
 
       if (watchSelectedDays.includes(currentDay)) {
+        const y = currentDate.getFullYear();
+        const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const d = String(currentDate.getDate()).padStart(2, '0');
+        
         sessions.push({
-          date: currentDate.toISOString(),
+          date: `${y}-${m}-${d}`,
           available: Math.random() > 0.2,
         });
       }
@@ -226,7 +236,10 @@ export default function AddSessionModal({
   ]);
 
   const formatDateCard = (date: string) => {
-    const d = new Date(date);
+    // Handle both YYYY-MM-DD and ISO strings safely
+    const datePart = date.includes('T') ? date.split('T')[0] : date;
+    const [year, month, day] = datePart.split('-').map(Number);
+    const d = new Date(year, month - 1, day);
 
     return {
       month: d.toLocaleDateString('en-US', {
@@ -245,7 +258,7 @@ export default function AddSessionModal({
         selectedDays: watchSelectedDays,
         sessions: previewSessions.map((session) => ({
           date: session.date,
-          day: new Date(session.date).toLocaleDateString(
+          day: new Date(session.date + 'T00:00:00').toLocaleDateString(
             'en-US',
             {
               weekday: 'long',
@@ -376,52 +389,7 @@ export default function AddSessionModal({
             </div>
 
             {/* Plan Card */}
-            {selectedStudentData && studentPlanInfo && (
-              <div className="mb-6 p-4 rounded-3xl border border-indigo-100 bg-indigo-50/50">
-                <div className="flex items-center gap-2 mb-4">
-                  <Layers className="w-4 h-4 text-indigo-600" />
-
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-700">
-                    Student Plan
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">
-                      Plan
-                    </p>
-
-                    <p className="font-bold text-sm">
-                      {studentPlanInfo.planName ||
-                        'No Plan'}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">
-                      Remaining
-                    </p>
-
-                    <p className="font-black text-emerald-600">
-                      {studentPlanInfo.sessionsRemaining}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">
-                      Attended
-                    </p>
-
-                    <p className="font-black text-amber-500">
-                      {studentPlanInfo.sessionsAttended}
-                    </p>
-                  </div>
-
-                  
-                </div>
-              </div>
-            )}
+            <StudentPlanCard studentPlanInfo={studentPlanInfo} />
 
             {/* Title */}
             <div className="mb-6">
@@ -550,159 +518,14 @@ export default function AddSessionModal({
               </div>
             </div>
 
-            {/* Toggle */}
-            <div className="mb-6">
-              <div className="flex bg-gray-100 rounded-2xl p-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSchedulingMode('single')
-                  }
-                  className={`toggle-btn ${
-                    schedulingMode === 'single'
-                      ? 'active-toggle'
-                      : ''
-                  }`}
-                >
-                  Single
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSchedulingMode('batch')
-                  }
-                  className={`toggle-btn ${
-                    schedulingMode === 'batch'
-                      ? 'active-toggle'
-                      : ''
-                  }`}
-                >
-                  Batch
-                </button>
-              </div>
-            </div>
-
-            {/* SINGLE */}
-            {schedulingMode === 'single' ? (
-              <div className="card-box">
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-                  <div>
-                    <label className="label">
-                      Session Date
-                    </label>
-
-                    <input
-                      type="date"
-                      {...register('sessionDate')}
-                      className="input"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-
-                    <div>
-                      <label className="label">
-                        Start
-                      </label>
-
-                      <input
-                        type="time"
-                        {...register('startTime')}
-                        className="input"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="label">
-                        End
-                      </label>
-
-                      <input
-                        type="time"
-                        {...register('endTime')}
-                        readOnly
-                        className="input bg-gray-100"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="card-box">
-
-                <div className="mb-5">
-                  <label className="label">
-                    Target Month
-                  </label>
-
-                  <input
-                    type="month"
-                    {...register('monthYear')}
-                    className="input"
-                  />
-                </div>
-
-                <div className="mb-5">
-                  <label className="label">
-                    Start Time
-                  </label>
-
-                  <input
-                    type="time"
-                    {...register('startTime')}
-                    className="input"
-                  />
-                </div>
-
-                <div>
-                  <label className="label">
-                    Weekly Schedule
-                  </label>
-
-                  <div className="flex flex-wrap gap-2">
-                    {DAYS.map((day) => {
-                      const selected =
-                        watchSelectedDays.includes(day);
-
-                      return (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => {
-                            if (selected) {
-                              setValue(
-                                'selectedDays',
-                                watchSelectedDays.filter(
-                                  (d) => d !== day
-                                )
-                              );
-                            } else {
-                              setValue(
-                                'selectedDays',
-                                [
-                                  ...watchSelectedDays,
-                                  day,
-                                ]
-                              );
-                            }
-                          }}
-                          className={`day-btn ${
-                            selected
-                              ? 'bg-indigo-600 text-white'
-                              : 'bg-white'
-                          }`}
-                        >
-                          {day.slice(0, 3)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
+            <SchedulingSettings
+              schedulingMode={schedulingMode}
+              setSchedulingMode={setSchedulingMode}
+              register={register}
+              watchSelectedDays={watchSelectedDays}
+              setValue={setValue}
+              DAYS={DAYS}
+            />
 
             {/* Link + Video + Slides */}
             <div className="grid grid-cols-1 gap-5 mb-6">
@@ -774,45 +597,10 @@ export default function AddSessionModal({
               />
             </div>
 
-            {/* Platform */}
-            <div className="mb-6">
-              <label className="label mb-3">
-                Meeting Platform
-              </label>
-
-              <div className="grid grid-cols-2 gap-4">
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setValue('platform', 'zoom')
-                  }
-                  className={`platform-btn ${
-                    watchPlatform === 'zoom'
-                      ? 'active-platform'
-                      : ''
-                  }`}
-                >
-                  <Video className="w-4 h-4" />
-                  Zoom
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setValue('platform', 'google')
-                  }
-                  className={`platform-btn ${
-                    watchPlatform === 'google'
-                      ? 'active-platform'
-                      : ''
-                  }`}
-                >
-                  <MonitorPlay className="w-4 h-4" />
-                  Google Meet
-                </button>
-              </div>
-            </div>
+            <PlatformSelector
+              watchPlatform={watchPlatform}
+              setValue={setValue}
+            />
 
             {/* Footer Buttons */}
             <div className="flex items-center justify-end gap-4">
@@ -836,233 +624,16 @@ export default function AddSessionModal({
             </div>
           </div>
 
-          {/* RIGHT */}
-          <div className="w-full lg:w-[42%] bg-[#fcfdfe] border-l border-gray-100 overflow-y-auto">
-
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="font-bold text-gray-900">
-                Schedule Preview
-              </h3>
-
-              <p className="text-xs text-gray-400 mt-1">
-                {previewSessions.length} Sessions
-              </p>
-            </div>
-
-            <div className="p-6 space-y-4">
-
-              {previewSessions.length ? (
-                previewSessions.map((session, index) => {
-                  const date = formatDateCard(
-                    session.date
-                  );
-
-                  return (
-                    <div
-                      key={index}
-                      className={`rounded-2xl p-4 border ${
-                        session.available
-                          ? 'bg-white border-gray-100'
-                          : 'bg-red-50 border-red-200'
-                      }`}
-                    >
-                      <div className="flex gap-4">
-
-                        <div className="w-14 h-14 rounded-xl bg-gray-100 flex flex-col items-center justify-center">
-                          <span className="text-[10px] uppercase font-black text-gray-500">
-                            {date.month}
-                          </span>
-
-                          <span className="font-black text-lg">
-                            {date.day}
-                          </span>
-                        </div>
-
-                        <div className="flex-1">
-
-                          <div className="flex items-start justify-between gap-3">
-
-                            <h4 className="text-sm font-bold text-gray-900">
-                              {watchTitle ||
-                                'Untitled Session'}
-                            </h4>
-
-                            <span
-                              className={`text-[10px] px-2 py-1 rounded-full font-bold ${
-                                session.available
-                                  ? 'bg-green-100 text-green-600'
-                                  : 'bg-red-100 text-red-600'
-                              }`}
-                            >
-                              {session.available
-                                ? 'Available'
-                                : 'Conflict'}
-                            </span>
-                          </div>
-
-                          <p className="text-xs text-gray-500 mt-1">
-                            {selectedCourse?.title ||
-                              'No Subject'}
-                          </p>
-
-                          <p className="text-xs text-gray-400 mt-2">
-                            {watchStartTime}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-20">
-                  <Calendar className="w-10 h-10 mx-auto text-gray-300 mb-3" />
-
-                  <p className="text-sm text-gray-400">
-                    No sessions generated yet
-                  </p>
-                </div>
-              )}
-
-              {previewSessions.length > 5 && (
-                <button
-                  type="button"
-                  className="w-full text-indigo-600 text-sm font-bold flex items-center justify-center gap-1"
-                >
-                  View More
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
+          <SessionPreview
+            previewSessions={previewSessions}
+            formatDateCard={formatDateCard}
+            watchTitle={watchTitle}
+            selectedCourse={selectedCourse}
+            watchStartTime={watchStartTime}
+          />
         </form>
 
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              .label {
-                display:flex;
-                align-items:center;
-                gap:8px;
-                font-size:11px;
-                font-weight:700;
-                color:#94a3b8;
-                margin-bottom:8px;
-                text-transform:uppercase;
-                letter-spacing:.08em;
-              }
-
-              .input {
-                width:100%;
-                padding:12px 16px;
-                border-radius:18px;
-                background:#f8fafc;
-                border:1px solid transparent;
-                font-size:14px;
-                font-weight:600;
-                outline:none;
-              }
-
-              .textarea {
-                width:100%;
-                min-height:100px;
-                padding:14px 16px;
-                border-radius:18px;
-                background:#f8fafc;
-                border:1px solid transparent;
-                resize:none;
-                outline:none;
-              }
-
-              .input:focus,
-              .textarea:focus {
-                border-color:#c7d2fe;
-                background:white;
-              }
-
-              .error-text {
-                font-size:11px;
-                color:#ef4444;
-                margin-top:4px;
-                margin-left:4px;
-                font-weight:700;
-              }
-
-              .toggle-btn {
-                flex:1;
-                padding:10px;
-                border-radius:14px;
-                font-size:13px;
-                font-weight:700;
-                transition:.2s;
-              }
-
-              .active-toggle {
-                background:white;
-                color:#4f46e5;
-                box-shadow:0 1px 3px rgba(0,0,0,.08);
-              }
-
-              .card-box {
-                padding:24px;
-                border-radius:28px;
-                background:#f8fafc;
-                margin-bottom:24px;
-              }
-
-              .day-btn {
-                padding:10px 14px;
-                border-radius:14px;
-                border:1px solid #e5e7eb;
-                font-size:12px;
-                font-weight:700;
-                transition:.2s;
-              }
-
-              .platform-btn {
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                gap:8px;
-                padding:14px;
-                border-radius:18px;
-                border:2px solid #e5e7eb;
-                font-weight:700;
-                transition:.2s;
-              }
-
-              .active-platform {
-                background:#111827;
-                color:white;
-                border-color:#111827;
-              }
-
-              .primary-btn {
-                background:#4f46e5;
-                color:white;
-                padding:12px 24px;
-                border-radius:18px;
-                font-weight:700;
-              }
-
-              .secondary-btn {
-                background:#f3f4f6;
-                color:#374151;
-                padding:12px 24px;
-                border-radius:18px;
-                font-weight:700;
-              }
-
-              .custom-scrollbar::-webkit-scrollbar {
-                width:5px;
-              }
-
-              .custom-scrollbar::-webkit-scrollbar-thumb {
-                background:#cbd5e1;
-                border-radius:999px;
-              }
-            `,
-          }}
-        />
+        <ModalStyles />
       </div>
     </div>
   );

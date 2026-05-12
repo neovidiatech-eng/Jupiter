@@ -10,7 +10,6 @@ import {
 // Student Dashboard Page
 import { useState, useEffect, useMemo } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
-import SubscribePlanModal from "../../components/modals/SubscribePlanModal";
 import StudentDashboardLayout from "./StudentDashboardLayout";
 import { studentDashboardRoutes } from "./studentDashboardRoutes";
 import { useDashboardData } from "../../features/student/hooks/useDashboardData";
@@ -22,7 +21,6 @@ import TeacherFeedback from "../../features/student/components/Feedback";
 export default function StudentDashboard() {
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
   const { data: dashboardResponse, isLoading: isDashboardLoading } = useDashboardData();
   const dashboardData = dashboardResponse?.data;
@@ -117,7 +115,7 @@ export default function StudentDashboard() {
                   <>
                     <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
                       <BookOpen size={16} />
-                      <span className="text-sm">{nextSession?.subject?.name || "-"}</span>
+                      <span className="text-sm">{nextSession?.course?.title || "-"}</span>
                     </div>
                     <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
                       <User size={16} />
@@ -163,7 +161,7 @@ export default function StudentDashboard() {
                               teacherId: nextSession?.teacher?.id,
                               teacherUserId: nextSession?.teacher?.user?.id,
                               teacherName: nextSession?.teacher?.user?.name || "Instructor",
-                              teacherSubject: nextSession?.subject?.name || "General",
+                              teacherSubject: nextSession?.course?.title || "General",
                               sessionTitle: nextSession?.title || "Not scheduled",
                               sessionTime: nextSession?.start_time,
                             },
@@ -252,10 +250,8 @@ export default function StudentDashboard() {
 
         <div className="lg:col-span-1 h-full">
           <TeacherFeedback
-            teacher="Mohamed"
-            student="Ali"
-            rating={3}
-            message="Excellent participation today! Keep practicing reading every day ."
+            rating={Number(dashboardData?.metadata?.user?.reviewsReceived?.[0]?.rating || 0)}
+            message={dashboardData?.metadata?.user?.reviewsReceived?.[0]?.comment || ""}
           />
         </div>
       </div>
@@ -372,10 +368,7 @@ export default function StudentDashboard() {
         )}
 
       </StudentDashboardLayout>
-      <SubscribePlanModal
-        isOpen={showSubscribeModal}
-        onClose={() => setShowSubscribeModal(false)}
-      />
+
     </>
   );
 }

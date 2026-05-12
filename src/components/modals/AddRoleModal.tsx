@@ -4,12 +4,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getRoleSchema, RoleFormData } from '../../lib/schemas/RoleSchema';
 import { useEffect } from 'react';
+import { usePermissions } from '../../features/admin/hooks/usePermissions';
+import { Controller } from 'react-hook-form';
+import { CustomCheckbox } from '../ui/CustomCheckbox';
 
 interface AddRoleModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: RoleFormData) => void;
-    initialData?: RoleFormData | null; // 👈 edit support
+    initialData?: RoleFormData | null;
     isLoading?: boolean;
 }
 
@@ -28,20 +31,26 @@ export default function AddRoleModal({
         register,
         handleSubmit,
         reset,
+        control,
         formState: { errors },
     } = useForm<RoleFormData>({
         resolver: zodResolver(getRoleSchema(t)),
         defaultValues: {
             name: '',
+            permissionIds: [],
         },
     });
 
-    // 🔥 fill data when editing
+    const { data: permissions, isLoading: isLoadingPermissions } = usePermissions();
+
     useEffect(() => {
         if (initialData) {
-            reset(initialData);
+            reset({
+                name: initialData.name,
+                permissionIds: initialData.permissionIds || [],
+            });
         } else {
-            reset({ name: '' });
+            reset({ name: '', permissionIds: [] });
         }
     }, [initialData, reset]);
 
@@ -59,7 +68,7 @@ export default function AddRoleModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col">
 
                 {/* Header */}
                 <div className="p-6 flex justify-between items-center bg-primary text-white">
@@ -93,6 +102,68 @@ export default function AddRoleModal({
                         {errors.name && (
                             <p className="text-red-500 text-sm mt-1">
                                 {errors.name.message}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Permissions */}
+                    <div>
+                        <label className="block mb-4 font-medium">
+                            {t('permissions')}
+                        </label>
+
+                        {isLoadingPermissions ? (
+                            <div className="space-y-3 w-[90%]">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+                                ))}
+                            </div>
+                        ) : (
+                            <Controller
+                                name="permissionIds"
+                                control={control}
+                                render={({ field }) => (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                                        {permissions?.data?.map((permission: any) => {
+                                            const isChecked = field.value?.includes(permission.id);
+                                            return (
+                                                <label
+                                                    key={permission.id}
+                                                    className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${isChecked
+                                                        ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                                        : 'border-gray-200 hover:border-primary/50 bg-white'
+                                                        }`}
+                                                >
+                                                    <CustomCheckbox
+                                                        checked={isChecked}
+                                                        onChange={() => {
+                                                            const newValue = isChecked
+                                                                ? field.value.filter((id: string) => id !== permission.id)
+                                                                : [...(field.value || []), permission.id];
+                                                            field.onChange(newValue);
+                                                        }}
+                                                    />
+                                                    <div className="flex flex-col">
+                                                        <span className={`font-semibold text-sm ${isChecked ? 'text-primary' : 'text-gray-700'}`}>
+                                                            {permission.name}
+                                                        </span>
+                                                        {permission.description && (
+                                                            <span className="text-xs text-gray-500 line-clamp-1">
+                                                                {permission.description}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            />
+                        )}
+
+                        {errors.permissionIds && (
+                            <p className="text-red-500 text-sm mt-2">
+                                {errors.permissionIds.message}
                             </p>
                         )}
                     </div>

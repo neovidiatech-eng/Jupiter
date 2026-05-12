@@ -27,6 +27,15 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
     notification_Time: '10',
   });
 
+  const toLocalDatetimeString = (date: Date) => {
+    const y = date.getFullYear();
+    const mo = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const mi = String(date.getMinutes()).padStart(2, '0');
+    return `${y}-${mo}-${d}T${h}:${mi}`;
+  };
+
   useEffect(() => {
     if (session && isOpen) {
       const startDate = session.start_time ? new Date(session.start_time) : null;
@@ -37,8 +46,8 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
         link: session.link || '',
         notes: session.notes || '',
         status: session.status === 'scheduled' ? 'planned' : (session.status || 'planned'),
-        start_time: startDate ? startDate.toISOString().slice(0, 16) : '',
-        end_time: endDate ? endDate.toISOString().slice(0, 16) : '',
+        start_time: startDate ? toLocalDatetimeString(startDate) : '',
+        end_time: endDate ? toLocalDatetimeString(endDate) : '',
         type: (session.type as 'full' | 'half') || 'full',
         notification_Time: '10',
       });

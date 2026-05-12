@@ -3,7 +3,6 @@ import {
 Calendar,Award, ShieldCheck, ArrowLeft, Edit3, 
 BookOpen} from 'lucide-react';
 import { useProfile, useUpdateProfile } from '../hooks/useProfile';
-import SubscribePlanModal from "../../../components/modals/SubscribePlanModal";
 import UpdateProfileModal from "../../../components/modals/UpdateProfileModal";
 import { useNavigate } from 'react-router-dom';
 import { baseURL } from '../../../consts';
@@ -13,7 +12,6 @@ export default function StudentProfile() {
   const navigate = useNavigate();
   const { data: profileResponse, isLoading, isError } = useProfile();
   const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
-  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
 
@@ -216,11 +214,6 @@ export default function StudentProfile() {
 
         </div>
       </div>
-
-      <SubscribePlanModal
-        isOpen={isPlanModalOpen}
-        onClose={() => setIsPlanModalOpen(false)}
-      />
 
       <UpdateProfileModal
         isOpen={isEditModalOpen}

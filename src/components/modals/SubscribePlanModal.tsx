@@ -15,9 +15,9 @@ export default function SubscribePlanModal({ isOpen, onClose }: SubscribePlanMod
 
   const text = {
     title: { ar: 'خطط الاشتراك المميزة', en: 'Premium Subscription Plans' },
-    subtitle: { 
-      ar: 'اختر الخطة المناسبة لك وابدأ رحلتك التعليمية بأفضل الأدوات والمميزات', 
-      en: 'Choose the right plan for you and start your educational journey with the best tools and features' 
+    subtitle: {
+      ar: 'اختر الخطة المناسبة لك وابدأ رحلتك التعليمية بأفضل الأدوات والمميزات',
+      en: 'Choose the right plan for you and start your educational journey with the best tools and features'
     },
     subscribe: { ar: 'اشترك الآن', en: 'Subscribe Now' },
     popular: { ar: 'الأكثر مبيعاً', en: 'Best Seller' },
@@ -44,7 +44,7 @@ export default function SubscribePlanModal({ isOpen, onClose }: SubscribePlanMod
   return (
     <div className="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-md overflow-y-auto no-scrollbar flex items-center justify-center p-4 md:p-8">
       <div className="bg-[#f8fafc] w-full max-w-7xl min-h-[90vh] rounded-[40px] shadow-2xl relative flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
-        
+
         {/* Background Decorative Elements */}
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-blue-50 to-transparent pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
@@ -85,11 +85,10 @@ export default function SubscribePlanModal({ isOpen, onClose }: SubscribePlanMod
               {plans.map((plan: Plan, index: number) => (
                 <div
                   key={plan.id}
-                  className={`group relative bg-white rounded-[32px] border transition-all duration-500 flex flex-col h-full ${
-                    plan.bestSeller
+                  className={`group relative bg-white rounded-[32px] border transition-all duration-500 flex flex-col h-full ${plan.bestSeller
                       ? 'border-blue-500 shadow-2xl shadow-blue-200/50 scale-[1.02] z-10'
                       : 'border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-2'
-                  }`}
+                    }`}
                 >
                   {/* Popular Badge */}
                   {plan.bestSeller && (
@@ -105,9 +104,9 @@ export default function SubscribePlanModal({ isOpen, onClose }: SubscribePlanMod
                       {getPlanIcon(index)}
                     </div>
                     <div className="text-right">
-                       <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">
-                          {plan.duration} {text.month[language]}
-                       </span>
+                      <span className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">
+                        {plan.duration} {text.month[language]}
+                      </span>
                     </div>
                   </div>
 
@@ -144,18 +143,17 @@ export default function SubscribePlanModal({ isOpen, onClose }: SubscribePlanMod
                           </span>
                         </div>
                       )) || (
-                        <div className="text-slate-400 text-sm italic text-center">
-                          {isRtl ? 'لا توجد مميزات مسجلة' : 'No features listed'}
-                        </div>
-                      )}
+                          <div className="text-slate-400 text-sm italic text-center">
+                            {isRtl ? 'لا توجد مميزات مسجلة' : 'No features listed'}
+                          </div>
+                        )}
                     </div>
 
                     <button
-                      className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 ${
-                        plan.bestSeller
+                      className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 ${plan.bestSeller
                           ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-200'
                           : 'bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-200'
-                      }`}
+                        }`}
                     >
                       {text.subscribe[language]}
                     </button>

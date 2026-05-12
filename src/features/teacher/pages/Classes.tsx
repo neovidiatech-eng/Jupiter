@@ -21,14 +21,23 @@ const ClassesPage: React.FC = () => {
     title: "",
   });
 
+  const [currentTab, setCurrentTab] = React.useState<"History" | "Today" | "Upcoming">("Today");
+
   const { data: userSessions, isLoading } = useUserSessions(search);
   const {mutateAsync: joinSession} = useJoinSession()
   const {mutateAsync: endSession} = useEndSession()
   const sessions = React.useMemo(() => {
-    return [...(userSessions?.data || [])].sort((a, b) => 
+    if (!userSessions?.data) return [];
+    
+    let data: Schedule[] = [];
+    if (currentTab === "Upcoming") data = userSessions.data.upcomingSchedule || [];
+    else if (currentTab === "Today") data = userSessions.data.toDaySchedule || [];
+    else if (currentTab === "History") data = userSessions.data.previousSchedule || [];
+
+    return [...data].sort((a, b) => 
       new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
     );
-  }, [userSessions]);
+  }, [userSessions, currentTab]);
 
   const handleJoinSession = async (id: string, link: string) => {
  try {
@@ -60,7 +69,6 @@ const ClassesPage: React.FC = () => {
   
 
   const columns: ColumnsType<Schedule> = [
-    // ... existing columns ...
 
     {
       title: "Order",
@@ -145,23 +153,6 @@ const ClassesPage: React.FC = () => {
         <span className="text-sm font-semibold text-slate-500 uppercase">{status}</span>
       ),
     },
-    // {
-    //   title: "Materials",
-    //   key: "materials",
-    //   width: 140,
-    //   render: () => (
-    //     <Space size="middle">
-    //       <a
-    //         href="#"
-    //         target="_blank"
-    //         rel="noreferrer"
-    //         className="flex items-center gap-2 px-3 py-1.5 border border-blue-100 bg-blue-50/30 rounded-full text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition-all"
-    //       >
-    //         <Monitor size={12} /> Materials
-    //       </a>
-    //     </Space>
-    //   )
-    // },
 
 {
   title: "Materials",
@@ -294,24 +285,18 @@ const ClassesPage: React.FC = () => {
 
         <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
           <div className="flex bg-slate-100/80 p-1.5 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
-            {["History", "Today", "Upcoming"].map((tab) => (
+            {(["History", "Today", "Upcoming"] as const).map((tab) => (
               <button
                 key={tab}
-                className={`flex-1 md:min-w-[120px] px-4 sm:px-8 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${tab === "Today" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                onClick={() => setCurrentTab(tab)}
+                className={`flex-1 md:min-w-[120px] px-4 sm:px-8 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${currentTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
               >
                 {tab}
               </button>
             ))}
           </div>
 
-          <div className="flex gap-3 sm:gap-4 w-full md:w-auto">
-            <select className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 border border-gray-100 rounded-xl bg-white text-xs sm:text-sm font-semibold text-slate-500 focus:outline-none shadow-sm cursor-pointer">
-              <option>All Types</option>
-            </select>
-            <select className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 border border-gray-100 rounded-xl bg-white text-xs sm:text-sm font-semibold text-slate-500 focus:outline-none shadow-sm cursor-pointer">
-              <option>All Status</option>
-            </select>
-          </div>
+        
         </div>
       </div>
 
