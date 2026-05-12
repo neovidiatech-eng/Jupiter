@@ -7,14 +7,12 @@ interface ViewPlanModalProps {
   plan: {
     id: string;
     name: string;
-    nameEn: string;
     description: string;
     price: number;
     currency: string;
     duration: number;
     sessionsCount: number;
     features: string[];
-    isPopular: boolean;
     status: 'active' | 'inactive';
   };
 }
@@ -36,7 +34,7 @@ export default function ViewPlanModal({ isOpen, onClose, plan }: ViewPlanModalPr
             </div>
             <div>
               <h2 className="text-2xl font-black text-slate-900 leading-tight">
-                {language === 'ar' ? plan.name : plan.nameEn}
+                {plan.name}
               </h2>
               <div className="flex items-center gap-3 mt-1">
                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
@@ -44,11 +42,6 @@ export default function ViewPlanModal({ isOpen, onClose, plan }: ViewPlanModalPr
                 }`}>
                   {plan.status === 'active' ? t('active') : t('inactive')}
                 </span>
-                {plan.isPopular && (
-                  <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-wider">
-                    {t('popular')}
-                  </span>
-                )}
               </div>
             </div>
           </div>

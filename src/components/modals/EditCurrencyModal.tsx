@@ -1,6 +1,10 @@
-import { useState } from 'react';
 import { X, Save } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { CurrencyFormData, getCurrencySchema } from '../../lib/schemas/CurrencySchema';
+import { useForm } from 'react-hook-form';
+import { Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState } from 'react';
 
 interface EditCurrencyModalProps {
   isOpen: boolean;
@@ -18,16 +22,35 @@ interface EditCurrencyModalProps {
 }
 
 export default function EditCurrencyModal({ isOpen, onClose, currency, onSave }: EditCurrencyModalProps) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'ar' | 'en'>('ar');
-  const [formData, setFormData] = useState({
-    code: currency.code,
-    nameAr: currency.nameAr,
-    nameEn: currency.nameEn,
-    symbol: currency.symbol,
-    exchangeRate: currency.exchangeRate.toString(),
-    isDefault: currency.isDefault
+
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<CurrencyFormData>({
+    resolver: zodResolver(getCurrencySchema(t)) as Resolver<CurrencyFormData>,
+    defaultValues: {
+      name_ar: currency.nameAr,
+      name_en: currency.nameEn,
+      symbol: currency.symbol,
+      code: currency.code,
+      default: currency.isDefault,
+      exchangeRate: currency.exchangeRate,
+    }
   });
+
+  const isDefault = watch('default');
+
+  useEffect(() => {
+    if (isOpen && currency) {
+      reset({
+        name_ar: currency.nameAr,
+        name_en: currency.nameEn,
+        symbol: currency.symbol,
+        code: currency.code,
+        default: currency.isDefault,
+        exchangeRate: currency.exchangeRate,
+      });
+    }
+  }, [isOpen, currency, reset]);
 
   const text = {
     title: { ar: 'تعديل العملة', en: 'Edit Currency' },
@@ -49,16 +72,15 @@ export default function EditCurrencyModal({ isOpen, onClose, currency, onSave }:
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: CurrencyFormData) => {
     onSave({
       id: currency.id,
-      code: formData.code.toUpperCase(),
-      nameAr: formData.nameAr,
-      nameEn: formData.nameEn,
-      symbol: formData.symbol,
-      exchangeRate: parseFloat(formData.exchangeRate),
-      isDefault: formData.isDefault
+      code: data.code.toUpperCase(),
+      nameAr: data.name_ar,
+      nameEn: data.name_en,
+      symbol: data.symbol,
+      exchangeRate: data.exchangeRate,
+      isDefault: data.default
     });
     onClose();
   };
@@ -76,20 +98,19 @@ export default function EditCurrencyModal({ isOpen, onClose, currency, onSave }:
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-              {text.code[language]} *
+              {text.code[language]}
             </label>
             <input
               type="text"
-              value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+              {...register('code')}
               placeholder={text.codePlaceholder[language]}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-start uppercase"
               maxLength={3}
-              required
             />
+            {errors.code && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.code.message}</p>}
           </div>
 
           <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -120,30 +141,28 @@ export default function EditCurrencyModal({ isOpen, onClose, currency, onSave }:
               {activeTab === 'ar' ? (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-                    {text.nameAr[language]} *
+                    {text.nameAr[language]}
                   </label>
                   <input
                     type="text"
-                    value={formData.nameAr}
-                    onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
+                    {...register('name_ar')}
                     placeholder={text.nameArPlaceholder[language]}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-start"
-                    required
                   />
+                  {errors.name_ar && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.name_ar.message}</p>}
                 </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-end">
-                    {text.nameAr[language]} *
+                    {text.nameAr[language]}
                   </label>
                   <input
                     type="text"
-                    value={formData.nameEn}
-                    onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
+                    {...register('name_en')}
                     placeholder={text.nameArPlaceholder[language]}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-end"
-                    required
                   />
+                  {errors.name_en && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.name_en.message}</p>}
                 </div>
               )}
             </div>
@@ -151,33 +170,30 @@ export default function EditCurrencyModal({ isOpen, onClose, currency, onSave }:
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-              {text.symbol[language]} *
+              {text.symbol[language]}
             </label>
             <input
               type="text"
-              value={formData.symbol}
-              onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+              {...register('symbol')}
               placeholder={text.symbolPlaceholder[language]}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-start"
               maxLength={5}
-              required
             />
+            {errors.symbol && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.symbol.message}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-              {text.exchangeRate[language]} *
+              {text.exchangeRate[language]}
             </label>
             <input
               type="number"
               step="0.0001"
-              value={formData.exchangeRate}
-              onChange={(e) => setFormData({ ...formData, exchangeRate: e.target.value })}
+              {...register('exchangeRate', { valueAsNumber: true })}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-start"
-              min="0.0001"
-              required
-              disabled={formData.isDefault}
+              disabled={isDefault}
             />
+            {errors.exchangeRate && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.exchangeRate.message}</p>}
             <p className="text-xs text-gray-500 mt-1 text-start">{text.exchangeRateHint[language]}</p>
           </div>
 
@@ -186,16 +202,11 @@ export default function EditCurrencyModal({ isOpen, onClose, currency, onSave }:
               <span className="text-sm font-medium text-gray-700">{text.isDefault[language]}</span>
               <input
                 type="checkbox"
-                checked={formData.isDefault}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  isDefault: e.target.checked,
-                  exchangeRate: e.target.checked ? '1' : formData.exchangeRate
-                })}
+                {...register('default')}
                 className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
             </label>
-            {!currency.isDefault && formData.isDefault && (
+            {!currency.isDefault && isDefault && (
               <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-xs text-yellow-800 text-start">{text.defaultWarning[language]}</p>
               </div>

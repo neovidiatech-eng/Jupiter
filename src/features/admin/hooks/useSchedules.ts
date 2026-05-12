@@ -1,7 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updateSchedule, createSchedule, createRecurringSchedule, deleteSchedule, deleteRecurringScheduale } from "../services/SchedulesServices";
 import { UpdateSchedulePayload, CreateSchedulePayload, CreateRecurringSchedulePayload } from "../../../types/scheduales";
-import { getAllSchedules, searchSchedules, getSchedulesForTeacher } from "../services/SessionsServices";
+import { getAllSchedules, searchSchedules, getSchedulesForTeacher, getScheduleById } from "../services/SessionsServices";
+
+export const useGetScheduleById = (id: string) => {
+    return useQuery({
+        queryKey: ["schedules", id],
+        queryFn: () => getScheduleById(id),
+        enabled: !!id,
+    });
+};
 import ErrorService from "../../../utils/ErrorService";
 import { useTranslation } from "react-i18next";
 

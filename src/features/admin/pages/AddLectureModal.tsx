@@ -1,9 +1,13 @@
-import { Modal, Form, Input, InputNumber, Button } from 'antd';
+import { Modal, Button, InputNumber } from 'antd';
 import { useCreateLecture, useUpdateLecture } from '../../../hooks/useLectures';
 import { useQueryClient } from '@tanstack/react-query';
-import { Video, AlignLeft, Type, Hash, FileText } from 'lucide-react';
+import { Video, AlignLeft, Type, Hash } from 'lucide-react';
 import { useEffect } from 'react';
 import { Lecture } from '../../../types/lectures';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getLectureSchema, LectureFormData } from '../../../lib/schemas/LectureSchema';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface AddLectureModalProps {
     visible: boolean;
@@ -13,29 +17,47 @@ interface AddLectureModalProps {
 }
 
 export default function AddLectureModal({ visible, onClose, courseId, lecture }: AddLectureModalProps) {
-    const [form] = Form.useForm();
+    const { t } = useLanguage();
     const queryClient = useQueryClient();
     const { mutate: createLecture, isPending: isCreating } = useCreateLecture();
     const { mutate: updateLecture, isPending: isUpdating } = useUpdateLecture();
 
     const isEditMode = !!lecture;
 
-    useEffect(() => {
-        if (visible && lecture) {
-            form.setFieldsValue({
-                title: lecture.title,
-                content: lecture.content,
-                videoUrl: lecture.videoUrl,
-                pdfUrl: lecture.pdfUrl,
-                order: lecture.order,
-            });
-        } else if (visible && !lecture) {
-            form.resetFields();
-            form.setFieldValue('order', 1);
+    const { register, handleSubmit, reset, control, formState: { errors } } = useForm<LectureFormData>({
+        resolver: zodResolver(getLectureSchema(t)),
+        defaultValues: {
+            title: '',
+            content: '',
+            videoUrl: '',
+            order: 1,
+            courseId: courseId,
         }
-    }, [visible, lecture, form]);
+    });
 
-    const handleSubmit = (values: any) => {
+    useEffect(() => {
+        if (visible) {
+            if (lecture) {
+                reset({
+                    title: lecture.title,
+                    content: lecture.content,
+                    videoUrl: lecture.videoUrl || '',
+                    order: lecture.order,
+                    courseId: courseId,
+                });
+            } else {
+                reset({
+                    title: '',
+                    content: '',
+                    videoUrl: '',
+                    order: 1,
+                    courseId: courseId,
+                });
+            }
+        }
+    }, [visible, lecture, courseId, reset]);
+
+    const onSubmit = (values: LectureFormData) => {
         const payload = { ...values, courseId };
         
         if (isEditMode && lecture) {
@@ -52,7 +74,7 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                     queryClient.invalidateQueries({ queryKey: ['courses', courseId] });
                     queryClient.invalidateQueries({ queryKey: ['courses'] });
                     onClose();
-                    form.resetFields();
+                    reset();
                 }
             });
         }
@@ -80,52 +102,62 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
             width={520}
             className="premium-modal"
         >
-            <Form
-                form={form}
-                layout="vertical"
-                onFinish={handleSubmit}
-                requiredMark={false}
-                className="mt-6"
-            >
-                <Form.Item
-                    label={<span className="text-gray-700 font-bold flex items-center gap-2"><Type size={14} className="text-indigo-500" /> Lecture Title</span>}
-                    name="title"
-                    rules={[{ required: true, message: 'Please enter lecture title' }]}
-                >
-                    <Input placeholder="e.g. Introduction to React Hooks" className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
-                </Form.Item>
-
-                <Form.Item
-                    label={<span className="text-gray-700 font-bold flex items-center gap-2"><AlignLeft size={14} className="text-indigo-500" /> Content / Description</span>}
-                    name="content"
-                    rules={[{ required: true, message: 'Please enter lecture content' }]}
-                >
-                    <Input.TextArea placeholder="Enter lecture details or transcript..." rows={4} className="rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
-                </Form.Item>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <Form.Item
-                        label={<span className="text-gray-700 font-bold flex items-center gap-2"><Video size={14} className="text-indigo-500" /> Video URL</span>}
-                        name="videoUrl"
-                        rules={[{ required: true, message: 'Please enter video URL' }]}
-                    >
-                        <Input placeholder="YouTube, Vimeo, etc." className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
-                    </Form.Item>
-                    <Form.Item
-                        label={<span className="text-gray-700 font-bold flex items-center gap-2"><FileText size={14} className="text-indigo-500" /> PDF URL</span>}
-                        name="pdfUrl"
-                    >
-                        <Input placeholder="Link to lecture notes" className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
-                    </Form.Item>
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5 text-start">
+                <div>
+                    <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                        <Type size={14} className="text-indigo-500" /> Lecture Title
+                    </label>
+                    <input 
+                        {...register('title')}
+                        placeholder="e.g. Introduction to React Hooks" 
+                        className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" 
+                    />
+                    {errors.title && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.title.message}</p>}
                 </div>
 
-                <Form.Item
-                    label={<span className="text-gray-700 font-bold flex items-center gap-2"><Hash size={14} className="text-indigo-500" /> Order</span>}
-                    name="order"
-                    rules={[{ required: true, message: 'Required' }]}
-                >
-                    <InputNumber min={1} className="w-full h-12 rounded-xl border-gray-200 flex items-center" />
-                </Form.Item>
+                <div>
+                    <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                        <AlignLeft size={14} className="text-indigo-500" /> Content / Description
+                    </label>
+                    <textarea 
+                        {...register('content')}
+                        placeholder="Enter lecture details or transcript..." 
+                        rows={4} 
+                        className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none" 
+                    />
+                    {errors.content && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.content.message}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                            <Video size={14} className="text-indigo-500" /> Video URL
+                        </label>
+                        <input 
+                            {...register('videoUrl')}
+                            placeholder="YouTube, Vimeo, etc." 
+                            className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" 
+                        />
+                        {errors.videoUrl && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.videoUrl.message}</p>}
+                    </div>
+                    <div>
+                        <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                            <Hash size={14} className="text-indigo-500" /> Order
+                        </label>
+                        <Controller
+                            name="order"
+                            control={control}
+                            render={({ field }) => (
+                                <InputNumber 
+                                    {...field}
+                                    min={1} 
+                                    className="w-full h-12 rounded-xl border-gray-200 flex items-center" 
+                                />
+                            )}
+                        />
+                        {errors.order && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.order.message}</p>}
+                    </div>
+                </div>
 
                 <div className="flex items-center justify-end gap-3 mt-10 pt-6 border-t border-gray-50">
                     <Button 
@@ -143,7 +175,7 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                         {isEditMode ? 'Update Lecture' : 'Add Lecture'}
                     </Button>
                 </div>
-            </Form>
+            </form>
         </Modal>
     );
 }

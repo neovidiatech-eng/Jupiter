@@ -1,4 +1,4 @@
-import { X, Calendar, Clock, User, GraduationCap, BookOpen, Video, FileText, Bell, ExternalLink, Repeat } from 'lucide-react';
+import { X, Calendar, Clock, User, GraduationCap, Video, FileText, Bell, ExternalLink, Repeat } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Schedule } from '../../types/scheduales';
 
@@ -41,6 +41,18 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
       return { date: formattedDate, time: formattedTime };
     } catch {
       return { date: dateString, time: '' };
+    }
+  };
+
+  const formatTimeOnly = (dateString: string | null) => {
+    if (!dateString) return '—';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+    } catch {
+      return '—';
     }
   };
 
@@ -112,7 +124,7 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
                   <p className="text-sm font-bold text-gray-900">{session.teacher?.user?.name || '—'}</p>
                 </div>
               </div>
-
+{/* 
               <div className="flex items-start gap-4 group">
                 <div className="p-2.5 rounded-xl bg-fuchsia-50 text-fuchsia-500 group-hover:scale-110 transition-transform">
                   <BookOpen className="w-4 h-4" />
@@ -121,7 +133,7 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t('subjectLabel')}</p>
                   <p className="text-sm font-bold text-gray-900">{session.subject?.[language === 'ar' ? 'name_ar' : 'name_en'] || session.description || '—'}</p>
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex items-start gap-4 group">
                 <div className="p-2.5 rounded-xl bg-amber-50 text-amber-500 group-hover:scale-110 transition-transform">
@@ -197,6 +209,72 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('notes')}</p>
                 </div>
                 <p className="text-sm font-medium text-gray-700 leading-relaxed">{session.notes}</p>
+              </div>
+            )}
+
+            {/* Session Logs */}
+            {session.scheduleLogs && (
+              <div className="mt-8 pt-8 border-t border-gray-100">
+                <div className="flex items-center gap-2 mb-6">
+                  <Clock className="w-5 h-5 text-indigo-500" />
+                  <h3 className="text-lg font-bold text-gray-900">{language === 'ar' ? 'سجلات الحضور' : 'Attendance Logs'}</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Student Logs */}
+                  <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100/50">
+                    <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <User className="w-3 h-3" />
+                      {t('studentLabel')}
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">{language === 'ar' ? 'وقت الانضمام' : 'Join Time'}</span>
+                        <span className="text-xs font-bold text-gray-700">{formatTimeOnly(session.scheduleLogs.joinTime_student)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">{language === 'ar' ? 'وقت المغادرة' : 'Leave Time'}</span>
+                        <span className="text-xs font-bold text-gray-700">{formatTimeOnly(session.scheduleLogs.leaveTime_student)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-blue-100/30">
+                        <span className="text-xs text-gray-500">{language === 'ar' ? 'الحالة' : 'Status'}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${session.scheduleLogs.isStudentAttended ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                          {session.scheduleLogs.isStudentAttended ? (language === 'ar' ? 'حضر' : 'Attended') : (language === 'ar' ? 'غائب' : 'Absent')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Teacher Logs */}
+                  <div className="bg-indigo-50/50 rounded-2xl p-5 border border-indigo-100/50">
+                    <p className="text-[11px] font-black text-indigo-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <GraduationCap className="w-3 h-3" />
+                      {t('teacherLabel')}
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">{language === 'ar' ? 'وقت الانضمام' : 'Join Time'}</span>
+                        <span className="text-xs font-bold text-gray-700">{formatTimeOnly(session.scheduleLogs.joinTime_teacher)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">{language === 'ar' ? 'وقت المغادرة' : 'Leave Time'}</span>
+                        <span className="text-xs font-bold text-gray-700">{formatTimeOnly(session.scheduleLogs.leaveTime_teacher)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">{language === 'ar' ? 'المدة' : 'Duration'}</span>
+                        <span className="text-xs font-bold text-gray-700">
+                          {session.scheduleLogs.duration_teacher ? `${Math.round(session.scheduleLogs.duration_teacher)} ${t('minutes')}` : '—'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-indigo-100/30">
+                        <span className="text-xs text-gray-500">{language === 'ar' ? 'تأخير' : 'Late'}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${session.scheduleLogs.isTeacherLate ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                          {session.scheduleLogs.isTeacherLate ? (language === 'ar' ? 'متأخر' : 'Late') : (language === 'ar' ? 'في الموعد' : 'On Time')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

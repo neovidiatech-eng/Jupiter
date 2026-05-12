@@ -1,5 +1,5 @@
 import api from "../../../lib/axios";
-import { CreateRecurringSessionBody, CreateSessionBody, GetSessionsResponse, UpdateSessionBody } from "../../../types/scheduales";
+import { CreateRecurringSessionBody, CreateSessionBody, GetSessionsResponse, UpdateSessionBody, Schedule } from "../../../types/scheduales";
 
 export const getAllSchedules = async (): Promise<GetSessionsResponse> => {
     const response = await api.get<GetSessionsResponse>("/schedules/");
@@ -59,5 +59,10 @@ export const updateSchedule = async (
         `/schedules/${scheduleId}`,
         scheduleData
     );
+    return response.data;
+};
+
+export const getScheduleById = async (id: string): Promise<{ data: { schedule: Schedule } }> => {
+    const response = await api.get<{ data: { schedule: Schedule } }>(`/schedules/${id}`);
     return response.data;
 };

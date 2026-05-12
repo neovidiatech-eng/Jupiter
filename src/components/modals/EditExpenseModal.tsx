@@ -1,35 +1,33 @@
-import { useState } from 'react';
 import { X, Save } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { ExpenseFormData, getExpenseSchema } from '../../lib/schemas/ExpenseSchema';
+import { useForm, Controller, Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import CustomSelect from '../ui/CustomSelect';
 import DatePickerField from '../ui/DatePickerField';
+
 interface EditExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  expense: {
-    id: string;
-    description: string;
-    amount: number;
-    currency: string;
-    category: string;
-    date: string;
-    paymentMethod: string;
-    status: 'paid' | 'pending';
-  };
-  onSave: (expense: any) => void;
+  expense: ExpenseFormData & { id: string };
+  onSave: (expense: ExpenseFormData & { id: string }) => void;
+  currencies: { id: string; code: string; symbol: string }[];
 }
 
-export default function EditExpenseModal({ isOpen, onClose, expense, onSave }: EditExpenseModalProps) {
-  const { language } = useLanguage();
-  const [formData, setFormData] = useState({
-    description: expense.description,
-    amount: expense.amount.toString(),
-    currency: expense.currency,
-    category: expense.category,
-    date: expense.date,
-    paymentMethod: expense.paymentMethod,
-    status: expense.status
+export default function EditExpenseModal({ isOpen, onClose, expense, onSave, currencies }: EditExpenseModalProps) {
+  const { language, t } = useLanguage();
+
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<ExpenseFormData>({
+    resolver: zodResolver(getExpenseSchema(t)) as Resolver<ExpenseFormData>,
+    defaultValues: expense,
   });
+
+  useEffect(() => {
+    if (isOpen && expense) {
+      reset(expense);
+    }
+  }, [isOpen, expense, reset]);
 
   const text = {
     title: { ar: 'تعديل المصروف', en: 'Edit Expense' },
@@ -56,34 +54,20 @@ export default function EditExpenseModal({ isOpen, onClose, expense, onSave }: E
   };
 
   const categories = [
-    { id: 'salaries', label: text.salaries },
-    { id: 'utilities', label: text.utilities },
-    { id: 'supplies', label: text.supplies },
-    { id: 'marketing', label: text.marketing },
+    { id: 'salary', label: text.salaries },
+    { id: 'amenities', label: text.utilities },
     { id: 'general', label: text.general },
-    { id: 'administrative', label: text.administrative },
+    { id: 'management', label: text.administrative },
+    { id: 'marketing', label: text.marketing },
     { id: 'other', label: text.other }
-  ];
-
-  const currencies = [
-    { code: 'SAR', symbol: 'ر.س' },
-    { code: 'EGP', symbol: 'ج.م' },
-    { code: 'USD', symbol: '$' }
   ];
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: ExpenseFormData) => {
     onSave({
-      id: expense.id,
-      description: formData.description,
-      amount: parseFloat(formData.amount),
-      currency: formData.currency,
-      category: formData.category,
-      date: formData.date,
-      paymentMethod: formData.paymentMethod,
-      status: formData.status
+      ...data,
+      id: expense.id
     });
     onClose();
   };
@@ -92,82 +76,99 @@ export default function EditExpenseModal({ isOpen, onClose, expense, onSave }: E
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh]  overflow-y-auto no-scrollbar">
         <div className="sticky top-0 bg-primary border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-2xl font-bold text-gray-900">{text.title[language]}</h2>
+          <h2 className="text-2xl font-bold text-white">{text.title[language]}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X className="w-6 h-6 text-gray-600" />
+            <X className="w-6 h-6 text-white" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-              {text.description[language]} *
+              {text.description[language]}
             </label>
             <input
               type="text"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              {...register('title')}
               placeholder={text.descriptionPlaceholder[language]}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-start"
-              required
             />
+            {errors.title && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.title.message}</p>}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-                {text.category[language]} *
+                {text.category[language]}
               </label>
-              <CustomSelect
-                value={formData.category}
-                onChange={(value) => setFormData({ ...formData, category: value as string })}
-                options={categories.map(cat => ({
-                  value: cat.id,
-                  label: cat.label[language]
-                }))}
+              <Controller
+                name="type"
+                control={control}
+                render={({ field }) => (
+                  <CustomSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={categories.map(cat => ({
+                      value: cat.id,
+                      label: cat.label[language]
+                    }))}
+                  />
+                )}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-                {text.currency[language]} *
+                {text.currency[language]}
               </label>
-              <CustomSelect
-                value={formData.currency}
-                onChange={(value) => setFormData({ ...formData, currency: value as string })}
-                options={currencies.map(curr => ({
-                  value: curr.code,
-                  label: curr.symbol
-                }))}
+              <Controller
+                name="currencyId"
+                control={control}
+                render={({ field }) => (
+                  <CustomSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={currencies.map(curr => ({
+                      value: curr.id,
+                      label: curr.symbol
+                    }))}
+                  />
+                )}
               />
+              {errors.currencyId && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.currencyId.message}</p>}
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-              {text.amount[language]} *
+              {text.amount[language]}
             </label>
             <input
               type="number"
               step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              {...register('amount', { valueAsNumber: true })}
               placeholder="0.00"
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-start"
-              min="0"
-              required
             />
+            {errors.amount && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.amount.message}</p>}
           </div>
 
           <div>
-            <DatePickerField
-              label={`${text.date[language]} *`}
-              value={formData.date}
-              onChange={(val) => setFormData({ ...formData, date: val })}
+            <Controller
+              name="date"
+              control={control}
+              render={({ field }) => (
+                <DatePickerField
+                  label={`${text.date[language]}`}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
+            {errors.date && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.date.message}</p>}
           </div>
 
           <div>
@@ -176,24 +177,30 @@ export default function EditExpenseModal({ isOpen, onClose, expense, onSave }: E
             </label>
             <input
               type="text"
-              value={formData.paymentMethod}
-              onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+              {...register('payment_type')}
               placeholder={text.paymentMethodPlaceholder[language]}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-start"
             />
+            {errors.payment_type && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.payment_type.message}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-              {text.status[language]} *
+              {text.status[language]}
             </label>
-            <CustomSelect
-              value={formData.status}
-              onChange={(value) => setFormData({ ...formData, status: value as 'paid' | 'pending' })}
-              options={[
-                { value: 'pending', label: text.pending[language] },
-                { value: 'paid', label: text.paid[language] }
-              ]}
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <CustomSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { value: 'pending', label: text.pending[language] },
+                    { value: 'paid', label: text.paid[language] }
+                  ]}
+                />
+              )}
             />
           </div>
 

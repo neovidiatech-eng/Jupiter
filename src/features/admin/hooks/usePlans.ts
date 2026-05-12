@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { getPlans } from "../services/PlansServices";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createPlan, deletePlans, getPlans, updatePlan, UpdatePlanPayload } from "../services/PlansServices";
 import { Plan } from "../../../types/plan";
 
 export const usePlans = () => {
@@ -7,4 +7,34 @@ export const usePlans = () => {
         queryKey: ['plans'],
         queryFn: getPlans,
     })
-}
+}
+
+export const useCreatePlan = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: createPlan,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+        },
+    });
+};
+
+export const useUpdatePlan = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: UpdatePlanPayload }) => updatePlan(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+        },
+    });
+};
+
+export const useDeletePlan = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: deletePlans,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+        },
+    });
+};

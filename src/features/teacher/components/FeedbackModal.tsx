@@ -1,7 +1,11 @@
-import { Modal, Form, Input, Rate, Button, Switch } from 'antd';
+import { Modal, Rate, Button, Switch } from 'antd';
 import { Star, MessageSquare, UserCheck, ShieldCheck } from 'lucide-react';
 import { useSendReview } from '../../../hooks/useSessions';
 import { SendReviewSchedulePayload } from '../../../types/scheduales';
+import { useForm, Controller, Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getFeedbackSchema, FeedbackFormData } from '../../../lib/schemas/FeedbackSchema';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface FeedbackModalProps {
   visible: boolean;
@@ -11,21 +15,31 @@ interface FeedbackModalProps {
 }
 
 export default function FeedbackModal({ visible, onClose, sessionId, sessionTitle }: FeedbackModalProps) {
-  const [form] = Form.useForm();
+  const { t } = useLanguage();
   const { mutate: sendReview, isPending } = useSendReview();
 
-  const handleSubmit = (values: any) => {
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FeedbackFormData>({
+    resolver: zodResolver(getFeedbackSchema(t)) as Resolver<FeedbackFormData>,
+    defaultValues: {
+      rating: 5,
+      teacherAttended: true,
+      studentAttended: true,
+      comment: '',
+    }
+  });
+
+  const onSubmit = (values: FeedbackFormData) => {
     const feedbackData: SendReviewSchedulePayload = {
       comment: values.comment,
       rating: values.rating,
-      teacherAttended: values.teacherAttended ?? false,
-      studentAttended: values.studentAttended ?? false,
+      teacherAttended: values.teacherAttended,
+      studentAttended: values.studentAttended,
     };
 
     sendReview({ id: sessionId, data: feedbackData }, {
       onSuccess: () => {
+        reset();
         onClose();
-        form.resetFields();
       },
     });
   };
@@ -50,62 +64,70 @@ export default function FeedbackModal({ visible, onClose, sessionId, sessionTitl
       width={480}
       className="premium-modal"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        className="mt-6"
-        initialValues={{ rating: 5, teacherAttended: true, studentAttended: true }}
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 text-start">
         <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 mb-8 flex flex-col items-center gap-4">
-            <span className="text-sm font-bold text-slate-600 uppercase tracking-widest">Rate the Session</span>
-            <Form.Item name="rating" rules={[{ required: true }]} noStyle>
-                <Rate className="text-3xl text-amber-400" />
-            </Form.Item>
+          <span className="text-sm font-bold text-slate-600 uppercase tracking-widest">Rate the Session</span>
+          <Controller
+            name="rating"
+            control={control}
+            render={({ field }) => (
+              <Rate
+                value={field.value}
+                onChange={field.onChange}
+                className="text-3xl text-amber-400"
+              />
+            )}
+          />
+          {errors.rating && <p className="text-red-500 text-[10px] font-black uppercase">{errors.rating.message}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="text-blue-500 bg-blue-50 p-2 rounded-lg">
-                        <ShieldCheck size={18} />
-                    </div>
-                    <span className="text-sm font-bold text-slate-700">Teacher Attended</span>
-                </div>
-                <Form.Item name="teacherAttended" valuePropName="checked" noStyle>
-                    <Switch size="small" />
-                </Form.Item>
+          <div className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="text-blue-500 bg-blue-50 p-2 rounded-lg">
+                <ShieldCheck size={18} />
+              </div>
+              <span className="text-sm font-bold text-slate-700">Teacher Attended</span>
             </div>
+            <Controller
+              name="teacherAttended"
+              control={control}
+              render={({ field }) => (
+                <Switch size="small" checked={field.value} onChange={field.onChange} />
+              )}
+            />
+          </div>
 
-            <div className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="text-emerald-500 bg-emerald-50 p-2 rounded-lg">
-                        <UserCheck size={18} />
-                    </div>
-                    <span className="text-sm font-bold text-slate-700">Student Attended</span>
-                </div>
-                <Form.Item name="studentAttended" valuePropName="checked" noStyle>
-                    <Switch size="small" />
-                </Form.Item>
+          <div className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="text-emerald-500 bg-emerald-50 p-2 rounded-lg">
+                <UserCheck size={18} />
+              </div>
+              <span className="text-sm font-bold text-slate-700">Student Attended</span>
             </div>
+            <Controller
+              name="studentAttended"
+              control={control}
+              render={({ field }) => (
+                <Switch size="small" checked={field.value} onChange={field.onChange} />
+              )}
+            />
+          </div>
         </div>
 
-        <Form.Item
-          label={
-            <div className="flex items-center gap-2">
-                <MessageSquare size={14} className="text-slate-400" />
-                <span className="text-sm font-bold text-slate-700">Additional Comments</span>
-            </div>
-          }
-          name="comment"
-          rules={[{ required: true, message: 'Please share your thoughts about the session' }]}
-        >
-          <Input.TextArea
+        <div>
+          <label className="flex items-center gap-2 mb-2">
+            <MessageSquare size={14} className="text-slate-400" />
+            <span className="text-sm font-bold text-slate-700">Additional Comments</span>
+          </label>
+          <textarea
+            {...register('comment')}
             placeholder="How was the session? Any specific notes or points for improvement?"
             rows={4}
-            className="rounded-xl border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/5 transition-all"
+            className="w-full p-4 rounded-xl border border-slate-200 focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all resize-none"
           />
-        </Form.Item>
+          {errors.comment && <p className="text-red-500 text-[10px] font-black mt-1 uppercase">{errors.comment.message}</p>}
+        </div>
 
         <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-50">
           <Button onClick={onClose} className="h-11 px-6 rounded-xl font-bold text-slate-600 hover:text-slate-800 transition-colors">
@@ -120,7 +142,7 @@ export default function FeedbackModal({ visible, onClose, sessionId, sessionTitl
             Send Feedback
           </Button>
         </div>
-      </Form>
+      </form>
     </Modal>
   );
 }

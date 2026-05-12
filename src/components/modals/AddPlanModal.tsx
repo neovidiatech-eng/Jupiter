@@ -5,29 +5,31 @@ import { Resolver, useForm, Controller } from 'react-hook-form';
 import CustomSelect from '../ui/CustomSelect';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
+import { Currency } from '../../types/currency';
 
 interface AddPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (plan: PlanFormData & { id?: string }) => void;
   initialData?: (PlanFormData & { id: string }) | null;
+  currencies: Currency[];
 }
 
-export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: AddPlanModalProps) {
+export default function AddPlanModal({ isOpen, onClose, onSave, initialData, currencies }: AddPlanModalProps) {
   const { language, t } = useLanguage();
 
   const { register, handleSubmit, reset, setValue, watch, control, formState: { errors } } = useForm<PlanFormData>({
     resolver: zodResolver(getPlanSchema(t)) as Resolver<PlanFormData>,
     defaultValues: {
       name: '',
-      nameEn: '',
       description: '',
       price: 0,
-      currency: 'EGP',
+      currencyId: '',
       duration: 1,
       sessionsCount: 0,
+      sessionTime: 60,
+      type: 'full',
       features: [''],
-      isPopular: false,
       status: 'active',
     },
   });
@@ -56,19 +58,19 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: A
       } else {
         reset({
           name: '',
-          nameEn: '',
           description: '',
           price: 0,
-          currency: 'EGP',
+          currencyId: currencies.find(c => c.default)?.id || currencies[0]?.id || '',
           duration: 1,
           sessionsCount: 0,
+          sessionTime: 60,
+          type: 'full',
           features: [''],
-          isPopular: false,
           status: 'active',
         });
       }
     }
-  }, [initialData, reset, isOpen]);
+  }, [initialData, reset, isOpen, currencies]);
 
   const onSubmit = (data: PlanFormData) => {
     onSave({
@@ -80,17 +82,6 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: A
   };
 
   if (!isOpen) return null;
-
-  const currencies = [
-    { code: 'EGP', nameAr: 'جنيه مصري', nameEn: 'Egyptian Pound' },
-    { code: 'USD', nameAr: 'دولار أمريكي', nameEn: 'US Dollar' },
-    { code: 'EUR', nameAr: 'يورو', nameEn: 'Euro' },
-    { code: 'GBP', nameAr: 'جنيه إسترليني', nameEn: 'British Pound' },
-    { code: 'SAR', nameAr: 'ريال سعودي', nameEn: 'Saudi Riyal' },
-    { code: 'AED', nameAr: 'درهم إماراتي', nameEn: 'UAE Dirham' },
-    { code: 'KWD', nameAr: 'دينار كويتي', nameEn: 'Kuwaiti Dinar' },
-    { code: 'QAR', nameAr: 'ريال قطري', nameEn: 'Qatari Riyal' }
-  ];
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
@@ -118,30 +109,16 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: A
               <div className="space-y-5">
                 <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4">Plan Identity</h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
-                      Name (Arabic)
-                    </label>
-                    <input 
-                      {...register('name')} 
-                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
-                      placeholder="اسم الخطة بالعربي"
-                    />
-                    {errors.name && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.name.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
-                      Name (English)
-                    </label>
-                    <input 
-                      {...register('nameEn')} 
-                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
-                      placeholder="Plan Name in English"
-                    />
-                    {errors.nameEn && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.nameEn.message}</p>}
-                  </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                    Name
+                  </label>
+                  <input 
+                    {...register('name')} 
+                    className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
+                    placeholder="اسم الخطة بالعربي"
+                  />
+                  {errors.name && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.name.message}</p>}
                 </div>
 
                 <div>
@@ -180,14 +157,14 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: A
                       Currency
                     </label>
                     <Controller
-                      name="currency"
+                      name="currencyId"
                       control={control}
                       render={({ field }) => (
                         <CustomSelect
                           {...field}
                           options={currencies.map((curr) => ({
-                            value: curr.code,
-                            label: `${curr.code} - ${language === 'ar' ? curr.nameAr : curr.nameEn}`
+                            value: curr.id,
+                            label: `${curr.code} - ${language === 'ar' ? curr.name_ar : curr.name_en}`
                           }))}
                         />
                       )}
@@ -218,6 +195,39 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: A
                       className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
                     />
                     {errors.sessionsCount && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.sessionsCount.message}</p>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      Session Time (Minutes)
+                    </label>
+                    <input 
+                      type="number"
+                      {...register('sessionTime', { valueAsNumber: true })} 
+                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
+                    />
+                    {errors.sessionTime && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.sessionTime.message}</p>}
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                      Plan Type
+                    </label>
+                    <Controller
+                      name="type"
+                      control={control}
+                      render={({ field }) => (
+                        <CustomSelect
+                          {...field}
+                          options={[
+                            { value: 'full', label: 'Full' },
+                            { value: 'half', label: 'Half' }
+                          ]}
+                        />
+                      )}
+                    />
                   </div>
                 </div>
               </div>
@@ -267,13 +277,8 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: A
                   <div className="bg-slate-50 rounded-2xl px-6 py-4 flex items-center justify-between">
                     <div>
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Visibility</p>
-                      <p className="text-xs font-bold text-slate-400 mt-0.5">Show "Popular" badge</p>
+                      <p className="text-xs font-bold text-slate-400 mt-0.5">Plan Status</p>
                     </div>
-                    <input 
-                      type="checkbox" 
-                      {...register('isPopular')}
-                      className="w-6 h-6 text-indigo-600 border-slate-200 rounded-lg focus:ring-indigo-500 transition-all cursor-pointer"
-                    />
                   </div>
 
                   <div>
@@ -319,4 +324,3 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData }: A
     </div>
   );
 }
-

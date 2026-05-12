@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, Eye, Trash2, Edit, ExternalLink, MoreVertical , ChevronLeft, ChevronRight, Bell } from 'lucide-react';
-import { useSearchSchedules, useCreateSchedule, useCreateRecurringSchedule, useUpdateSchedule, useDeleteSchedule, useDeleteGroupedSchedule } from '../hooks/useSchedules';
+import { useSearchSchedules, useCreateSchedule, useCreateRecurringSchedule, useUpdateSchedule, useDeleteSchedule, useDeleteGroupedSchedule, useGetScheduleById } from '../hooks/useSchedules';
 import { useTeacher } from '../hooks/useTeacher';
 import { useTeacherAvailability } from '../hooks/useTeacherAvailabilty';
 import AddSessionModal from '../../../components/modals/AddSessionModal';
@@ -25,12 +25,14 @@ export default function Sessions() {
   const [groupedSessions, setGroupedSessions] = useState<Schedule[]>([]);
   const [currentTab, setCurrentTab] = useState('Today');
   const [sessionToDelete, setSessionToDelete] = useState<Schedule | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
   const createSchedule = useCreateSchedule();
   const createRecurringSchedule = useCreateRecurringSchedule();
   const updateSchedule = useUpdateSchedule();
   const deleteSchedule = useDeleteSchedule();
   const deleteGroupedSchedule = useDeleteGroupedSchedule();
+  const { data: fullSessionData } = useGetScheduleById(viewingId || '');
   const { data: instructors } = useTeacher();
 
   // Fetch today's availability
@@ -215,13 +217,14 @@ export default function Sessions() {
         minute: '2-digit'
       });
 
-      const endDate = new Date(date.getTime() + 60 * 60 * 1000);
-      const endFormattedTime = endDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
 
-      return { date: formattedDate, time: `${formattedTime} - ${endFormattedTime}` };
+      // const endDate = new Date(date.getTime() + 60 * 60 * 1000);
+      // const endFormattedTime = endDate.toLocaleTimeString('en-US', {
+      //   hour: '2-digit',
+      //   minute: '2-digit'
+      // });
+
+      return { date: formattedDate, time: `${formattedTime} ` };
     } catch (e) {
       return { date: dateString, time: '' };
     }
@@ -263,6 +266,17 @@ export default function Sessions() {
   };
 
   const columns = [
+
+    {
+      title: "Order",
+      dataIndex: "order",
+      render: (text: number) => (
+        <div className="font-bold text-gray-700">
+          {text || '-'}
+        </div>
+      )
+    },
+
     {
       title: "Student",
       dataIndex: "student",
@@ -353,6 +367,7 @@ export default function Sessions() {
 
               setGroupedSessions(relatedSessions);
               setSelectedSession(record);
+              setViewingId(record.id);
               setShowViewModal(true);
             },
           },
@@ -616,8 +631,11 @@ export default function Sessions() {
 
       <ViewSessionModal
         isOpen={showViewModal}
-        onClose={() => { setShowViewModal(false); setSelectedSession(null); setGroupedSessions([]); }}
-        session={selectedSession}
+        onClose={() => {
+          setShowViewModal(false);
+          setViewingId(null);
+        }}
+        session={fullSessionData?.data?.schedule || selectedSession}
         groupedSessions={groupedSessions}
       />
 

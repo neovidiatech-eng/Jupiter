@@ -1,30 +1,25 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus, Edit, Trash2, Eye, Package, CheckCircle, Clock } from "lucide-react";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import AddPlanModal from "../../../components/modals/AddPlanModal";
 import ViewPlanModal from "../../../components/modals/ViewPlanModal";
-import { deletePlans, getPlans, updatePlan } from "../services/PlansServices";
 import { useConfirm } from "../../../hooks/useConfirm";
-type CurrencyCode =
-  | "EGP"
-  | "USD"
-  | "EUR"
-  | "GBP"
-  | "SAR"
-  | "AED"
-  | "KWD"
-  | "QAR";
+import { useCurrency } from "../hooks/useCurrency";
+import { usePlans, useCreatePlan, useUpdatePlan, useDeletePlan } from "../hooks/usePlans";
+import { PlanFormData } from "../../../lib/schemas/PlanSchema";
+// Removed CurrencyCode enum as it is no longer used due to dynamic currency IDs
 interface Plan {
   id: string;
   name: string;
-  nameEn: string;
   description: string;
   price: number;
-  currency: CurrencyCode;
+  currencyId: string;
+  currencyCode: string;
   duration: number;
   sessionsCount: number;
+  sessionTime: number;
+  type: "full" | "half";
   features: string[];
-  isPopular: boolean;
   status: "active" | "inactive";
 }
 
@@ -34,8 +29,28 @@ export default function Plans() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const { confirm, ConfirmDialog } = useConfirm();
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: plansData, isLoading: plansLoading } = usePlans();
+  const { mutateAsync: createPlanMutation } = useCreatePlan();
+  const { mutateAsync: updatePlanMutation } = useUpdatePlan();
+  const { mutateAsync: deletePlanMutation } = useDeletePlan();
+  
+  const { data: currenciesData } = useCurrency();
+  const currencies = currenciesData?.currencies || [];
+
+  const plans = plansData?.map((item: any) => ({
+    id: item.id,
+    name: item.name_ar || item.name,
+    description: item.description || "",
+    price: Number(item.price),
+    currencyId: item.currencyId || item.currency?.id || "",
+    currencyCode: item.currency?.code || "EGP",
+    duration: item.duration,
+    sessionsCount: item.sessionsCount || 0,
+    sessionTime: item.sessionTime || 60,
+    type: item.type || 'full',
+    features: item.features || [],
+    status: (item.active ? "active" : "inactive") as "active" | "inactive",
+  })) || [];
 
   const text = {
     title: { ar: "خطط الاشتراك", en: "Subscription Plans" },
@@ -56,48 +71,35 @@ export default function Plans() {
     },
   };
 
-  useEffect(() => {
-    const fetchPlans = async () => {
-      try {
-        setIsLoading(true);
-        const data = await getPlans();
-        const formatted = data.map((item: any) => ({
-          id: item.id,
-          name: item.name_ar,
-          nameEn: item.name_en,
-          description: item.description || "",
-          price: Number(item.price),
-          currency: item.currency?.code || "EGP",
-          duration: item.duration,
-          sessionsCount: item.sessionsCount || 0,
-          features: item.features || [],
-          isPopular: item.bestSeller,
-          status: (item.active ? "active" : "inactive") as "active" | "inactive",
-        }));
-        setPlans(formatted);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchPlans();
-  }, []);
+  // React Query handles fetching automatically via usePlans
 
-  const handleSavePlan = async (planData: Omit<Plan, "id"> & { id?: string }) => {
+  const handleSavePlan = async (planData: PlanFormData & { id?: string }) => {
     try {
       if (planData.id) {
-        await updatePlan(planData.id, {
-          name_ar: planData.name,
-          name_en: planData.nameEn,
+        await updatePlanMutation({
+          id: planData.id,
+          data: {
+            name: planData.name,
+            description: planData.description,
+            price: Number(planData.price),
+            duration: Number(planData.duration),
+            sessionsCount: Number(planData.sessionsCount),
+            active: planData.status === "active",
+            currencyId: planData.currencyId,
+            features: planData.features,
+          }
+        });
+      } else {
+        await createPlanMutation({
+          name: planData.name,
+          description: planData.description,
           price: Number(planData.price),
           duration: Number(planData.duration),
           sessionsCount: Number(planData.sessionsCount),
           active: planData.status === "active",
-          bestSeller: planData.isPopular,
+          currencyId: planData.currencyId,
           features: planData.features,
         });
-        setPlans(prev => prev.map(p => (p.id === planData.id ? (planData as Plan) : p)));
       }
       setIsModalOpen(false);
       setSelectedPlan(null);
@@ -111,8 +113,7 @@ export default function Plans() {
     });
     if (confirmed) {
       try {
-        await deletePlans(id);
-        setPlans(prev => prev.filter(p => p.id !== id));
+        await deletePlanMutation(id);
       } catch (error) { console.error(error); }
     }
   };
@@ -142,7 +143,7 @@ export default function Plans() {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-8">
-        {isLoading ? (
+        {plansLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[1, 2, 3].map(i => (
               <div key={i} className="bg-white rounded-[32px] h-[500px] animate-pulse border border-gray-100" />
@@ -158,21 +159,14 @@ export default function Plans() {
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                className={`group bg-white rounded-[32px] border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 flex flex-col overflow-hidden ${
-                  plan.isPopular ? "border-indigo-600" : "border-gray-100"
-                }`}
+                className="group bg-white rounded-[32px] border-2 border-gray-100 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 flex flex-col overflow-hidden"
               >
-                {plan.isPopular && (
-                  <div className="bg-indigo-600 text-white text-center py-3 font-black text-xs uppercase tracking-widest">
-                    {text.popular[language]}
-                  </div>
-                )}
-
+               
                 <div className="p-8 flex-1 flex flex-col">
                   <div className="flex items-start justify-between mb-6">
                     <div className="text-start">
                       <h3 className="text-2xl font-black text-gray-900 leading-tight">
-                        {language === "ar" ? plan.name : plan.nameEn}
+                        {plan.name}
                       </h3>
                       <span className={`inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                         plan.status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400"
@@ -191,7 +185,7 @@ export default function Plans() {
                         {plan.price}
                       </span>
                       <div className="text-start">
-                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{plan.currency}</p>
+                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{plan.currencyCode}</p>
                         <p className="text-[10px] font-bold text-gray-400">/{text.month[language]}</p>
                       </div>
                     </div>
@@ -212,7 +206,7 @@ export default function Plans() {
                     <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest text-start">
                       Included Features
                     </h4>
-                    {plan.features.map((feature, index) => (
+                    {plan.features.map((feature: string, index: number) => (
                       <div key={index} className="flex items-start gap-3 text-start group/feature">
                         <div className="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover/feature:bg-emerald-100 transition-colors">
                           <CheckCircle className="w-3 h-3 text-emerald-600" />
@@ -254,8 +248,23 @@ export default function Plans() {
         )}
       </div>
 
-      <AddPlanModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setSelectedPlan(null); }} onSave={handleSavePlan} initialData={selectedPlan} />
-      {selectedPlan && <ViewPlanModal isOpen={showViewModal} onClose={() => { setShowViewModal(false); setSelectedPlan(null); }} plan={selectedPlan} />}
+      <AddPlanModal 
+        isOpen={isModalOpen} 
+        onClose={() => { setIsModalOpen(false); setSelectedPlan(null); }} 
+        onSave={handleSavePlan} 
+        initialData={selectedPlan}
+        currencies={currencies}
+      />
+      {selectedPlan && (
+        <ViewPlanModal 
+          isOpen={showViewModal} 
+          onClose={() => { setShowViewModal(false); setSelectedPlan(null); }} 
+          plan={{
+            ...selectedPlan,
+            currency: selectedPlan.currencyCode
+          }} 
+        />
+      )}
       {ConfirmDialog}
     </div>
   );

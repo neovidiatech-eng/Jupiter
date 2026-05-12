@@ -185,6 +185,7 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
                         />
                       )}
                     />
+                    {errors.currency && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.currency.message}</p>}
                   </div>
 
                   <div className="text-start">
@@ -195,9 +196,10 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
                     <input
                       type="number"
                       placeholder="0.00"
-                      {...register('hourlyRate')}
+                      {...register('hourlyRate', { valueAsNumber: true })}
                       className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"
                     />
+                    {errors.hourlyRate && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.hourlyRate.message}</p>}
                   </div>
                 </div>
 
@@ -221,6 +223,7 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
                         />
                       )}
                     />
+                    {errors.status && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.status.message}</p>}
                   </div>
 
                   <div className="text-start">
@@ -242,6 +245,7 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
                         />
                       )}
                     />
+                    {errors.gender && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.gender.message}</p>}
                   </div>
                 </div>
               </div>

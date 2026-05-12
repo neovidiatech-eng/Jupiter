@@ -1,33 +1,46 @@
-import { useState } from 'react';
 import { X, Save } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import type { Transaction } from '../../pages/Transactions';
+import { TransactionFormData, getTransactionSchema } from '../../lib/schemas/TransactionSchema';
+import { Resolver, useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import CustomSelect from '../ui/CustomSelect';
 import DatePickerField from '../ui/DatePickerField';
+
 interface EditTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  transaction: Transaction;
-  onSave: (transaction: Transaction) => void;
+  transaction: TransactionFormData & { id: string };
+  onSave: (transaction: TransactionFormData & { id: string }) => void;
   currencies: { code: string; symbol: string; rate: number }[];
 }
 
 export default function EditTransactionModal({ isOpen, onClose, transaction, onSave, currencies }: EditTransactionModalProps) {
-  const { language } = useLanguage();
-  const [formData, setFormData] = useState({
-    type: transaction.type,
-    studentName: transaction.studentName || '',
-    teacherName: transaction.teacherName,
-    amount: transaction.amount.toString(),
-    currency: transaction.currency,
-    paymentMethod: transaction.paymentMethod,
-    date: transaction.date,
-    status: transaction.status,
-    notes: transaction.notes || '',
-    sessionCount: transaction.sessionCount?.toString() || '',
-    sessionDuration: transaction.sessionDuration || 60,
-    ratePerHour: transaction.ratePerHour?.toString() || ''
+  const { language, t } = useLanguage();
+
+  const { register, handleSubmit, reset, setValue, watch, control, formState: { errors } } = useForm<TransactionFormData>({
+    resolver: zodResolver(getTransactionSchema(t)) as Resolver<TransactionFormData>,
+    defaultValues: transaction,
   });
+
+  const transactionType = watch('type');
+  const sessionCount = watch('sessionCount');
+  const sessionDuration = watch('sessionDuration') || 60;
+  const ratePerHour = watch('ratePerHour');
+
+  useEffect(() => {
+    if (isOpen && transaction) {
+      reset(transaction);
+    }
+  }, [isOpen, transaction, reset]);
+
+  const handleCalculate = () => {
+    const sessions = Number(sessionCount) || 0;
+    const duration = Number(sessionDuration) || 60;
+    const rate = Number(ratePerHour) || 0;
+    const calculated = sessions * (duration / 60) * rate;
+    setValue('amount', Number(calculated.toFixed(2)));
+  };
 
   const text = {
     title: { ar: 'تعديل المعاملة', en: 'Edit Transaction' },
@@ -53,30 +66,10 @@ export default function EditTransactionModal({ isOpen, onClose, transaction, onS
 
   if (!isOpen) return null;
 
-  const handleCalculate = () => {
-    const sessions = parseFloat(formData.sessionCount) || 0;
-    const duration = formData.sessionDuration;
-    const rate = parseFloat(formData.ratePerHour) || 0;
-    const calculated = sessions * (duration / 60) * rate;
-    setFormData(prev => ({ ...prev, amount: calculated.toFixed(2) }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: TransactionFormData) => {
     onSave({
-      ...transaction,
-      type: formData.type,
-      studentName: formData.studentName,
-      teacherName: formData.teacherName,
-      amount: parseFloat(formData.amount),
-      currency: formData.currency,
-      paymentMethod: formData.paymentMethod,
-      date: formData.date,
-      status: formData.status,
-      notes: formData.notes,
-      sessionCount: parseInt(formData.sessionCount) || undefined,
-      sessionDuration: formData.sessionDuration,
-      ratePerHour: parseFloat(formData.ratePerHour) || undefined
+      ...data,
+      id: transaction.id
     });
     onClose();
   };
@@ -91,78 +84,85 @@ export default function EditTransactionModal({ isOpen, onClose, transaction, onS
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.type[language]}</label>
-            <CustomSelect
-              value={formData.type}
-              onChange={(value) => setFormData({ ...formData, type: value as 'income' | 'teacher_expense' })}
-              options={[
-                { value: 'income', label: text.income[language] },
-                { value: 'teacher_expense', label: text.teacher_expense[language] }
-              ]}
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }) => (
+                <CustomSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { value: 'income', label: text.income[language] },
+                    { value: 'teacher_expense', label: text.teacher_expense[language] }
+                  ]}
+                />
+              )}
             />
           </div>
 
-          {formData.type === 'income' && (
+          {transactionType === 'income' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.student[language]}</label>
               <input
                 type="text"
-                value={formData.studentName}
-                onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
+                {...register('studentName')}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-start"
               />
+              {errors.studentName && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.studentName.message}</p>}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.teacher[language]} *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.teacher[language]}</label>
             <input
               type="text"
-              value={formData.teacherName}
-              onChange={(e) => setFormData({ ...formData, teacherName: e.target.value })}
+              {...register('teacherName')}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-start"
-              required
             />
+            {errors.teacherName && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.teacherName.message}</p>}
           </div>
 
-          {formData.type === 'teacher_expense' && (
+          {transactionType === 'teacher_expense' && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1 text-start">{text.sessionCount[language]}</label>
                   <input
                     type="number"
-                    value={formData.sessionCount}
-                    onChange={(e) => setFormData({ ...formData, sessionCount: e.target.value })}
+                    {...register('sessionCount', { valueAsNumber: true })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-start text-sm"
-                    min="1"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1 text-start">{text.sessionDuration[language]}</label>
-                  <CustomSelect
-                    value={formData.sessionDuration}
-                    onChange={(value) => setFormData({ ...formData, sessionDuration: parseInt(value as string) })}
-                    options={[
-                      { value: 30, label: '30' },
-                      { value: 45, label: '45' },
-                      { value: 60, label: '60' },
-                      { value: 90, label: '90' },
-                      { value: 120, label: '120' }
-                    ]}
+                  <Controller
+                    name="sessionDuration"
+                    control={control}
+                    render={({ field }) => (
+                      <CustomSelect
+                        value={field.value}
+                        onChange={(value) => field.onChange(parseInt(value as string))}
+                        options={[
+                          { value: 30, label: '30' },
+                          { value: 45, label: '45' },
+                          { value: 60, label: '60' },
+                          { value: 90, label: '90' },
+                          { value: 120, label: '120' }
+                        ]}
+                      />
+                    )}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1 text-start">{text.ratePerHour[language]}</label>
                   <input
                     type="number"
-                    value={formData.ratePerHour}
-                    onChange={(e) => setFormData({ ...formData, ratePerHour: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-start text-sm"
-                    min="0"
                     step="0.01"
+                    {...register('ratePerHour', { valueAsNumber: true })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-start text-sm"
                   />
                 </div>
               </div>
@@ -178,43 +178,54 @@ export default function EditTransactionModal({ isOpen, onClose, transaction, onS
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.amount[language]} *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.amount[language]}</label>
               <input
                 type="number"
                 step="0.01"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                {...register('amount', { valueAsNumber: true })}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-start"
-                required
               />
+              {errors.amount && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.amount.message}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.currency[language]}</label>
-              <CustomSelect
-                value={formData.currency}
-                onChange={(value) => setFormData({ ...formData, currency: value as string })}
-                options={currencies.map(c => ({
-                  value: c.code,
-                  label: `${c.symbol} ${c.code}`
-                }))}
+              <Controller
+                name="currency"
+                control={control}
+                render={({ field }) => (
+                  <CustomSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    options={currencies.map(c => ({
+                      value: c.code,
+                      label: `${c.symbol} ${c.code}`
+                    }))}
+                  />
+                )}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <DatePickerField
-                label={`${text.date[language]} *`}
-                value={formData.date}
-                onChange={(val) => setFormData({ ...formData, date: val })}
+              <Controller
+                name="date"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerField
+                    label={`${text.date[language]}`}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
+              {errors.date && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.date.message}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.paymentMethod[language]}</label>
               <input
                 type="text"
-                value={formData.paymentMethod}
-                onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                {...register('paymentMethod')}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-start"
               />
             </div>
@@ -222,21 +233,26 @@ export default function EditTransactionModal({ isOpen, onClose, transaction, onS
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.status[language]}</label>
-            <CustomSelect
-              value={formData.status}
-              onChange={(value) => setFormData({ ...formData, status: value as 'completed' | 'pending' })}
-              options={[
-                { value: 'pending', label: text.pending[language] },
-                { value: 'completed', label: text.completed[language] }
-              ]}
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <CustomSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { value: 'pending', label: text.pending[language] },
+                    { value: 'completed', label: text.completed[language] }
+                  ]}
+                />
+              )}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 text-start">{text.notes[language]}</label>
             <textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              {...register('notes')}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-start resize-none"
               rows={3}
             />

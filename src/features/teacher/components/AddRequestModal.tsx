@@ -1,8 +1,12 @@
-import { Modal, Form, Input, Select, DatePicker, TimePicker, Button } from 'antd';
+import { Modal, Button, DatePicker, TimePicker } from 'antd';
 import { MessageSquare, Calendar, Clock } from 'lucide-react';
 import { useCreateRequest } from '../../../hooks/useRequests';
 import { RequestType } from '../../../types/requests';
 import dayjs from 'dayjs';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getSessionRequestSchema, SessionRequestFormData } from '../../../lib/schemas/SessionRequestSchema';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface AddRequestModalProps {
   visible: boolean;
@@ -12,10 +16,20 @@ interface AddRequestModalProps {
 }
 
 export default function AddRequestModal({ visible, onClose, sessionId, sessionTitle }: AddRequestModalProps) {
-  const [form] = Form.useForm();
+  const { t } = useLanguage();
   const { mutate: createRequest, isPending } = useCreateRequest();
 
-  const handleSubmit = (values: any) => {
+  const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<SessionRequestFormData>({
+    resolver: zodResolver(getSessionRequestSchema(t)) as any,
+    defaultValues: {
+      type: 'reschedule',
+      reason: ''
+    }
+  });
+
+  const requestType = watch('type');
+
+  const onSubmit = (values: SessionRequestFormData) => {
     let newStartTime = '';
 
     if (values.type === 'reschedule' && values.date && values.time) {
@@ -39,8 +53,8 @@ export default function AddRequestModal({ visible, onClose, sessionId, sessionTi
 
     createRequest(requestData, {
       onSuccess: () => {
+        reset();
         onClose();
-        form.resetFields();
       },
     });
   };
@@ -65,65 +79,67 @@ export default function AddRequestModal({ visible, onClose, sessionId, sessionTi
       width={480}
       className="premium-modal"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        className="mt-6"
-        initialValues={{ type: 'reschedule' }}
-      >
-        <Form.Item
-          label={<span className="text-sm font-bold text-slate-700">Request Type</span>}
-          name="type"
-          rules={[{ required: true }]}
-        >
-          <Select className="h-11 rounded-xl">
-            <Select.Option value="reschedule">Reschedule Session</Select.Option>
-            <Select.Option value="cancel">Cancel Session</Select.Option>
-          </Select>
-        </Form.Item>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5 text-start">
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-2">Request Type</label>
+          <select
+            {...register('type')}
+            className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+          >
+            <option value="reschedule">Reschedule Session</option>
+            <option value="cancel">Cancel Session</option>
+          </select>
+          {errors.type && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.type.message}</p>}
+        </div>
 
-        <Form.Item noStyle shouldUpdate={(prev, curr) => prev.type !== curr.type}>
-          {({ getFieldValue }) =>
-            getFieldValue('type') === 'reschedule' && (
-              <div className="grid grid-cols-2 gap-4">
-                <Form.Item
-                  label={<span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Calendar size={14} /> Date</span>}
-                  name="date"
-                  rules={[{ required: true, message: 'Select date' }]}
-                >
+        {requestType === 'reschedule' && (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-bold text-slate-700 flex items-center gap-2 mb-2"><Calendar size={14} /> Date</label>
+              <Controller
+                name="date"
+                control={control}
+                render={({ field }) => (
                   <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
                     className="w-full h-11 rounded-xl"
                     placeholder="Pick date"
                   />
-                </Form.Item>
-                <Form.Item
-                  label={<span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Clock size={14} /> Time</span>}
-                  name="time"
-                  rules={[{ required: true, message: 'Select time' }]}
-                >
+                )}
+              />
+              {errors.date && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{String(errors.date.message)}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-bold text-slate-700 flex items-center gap-2 mb-2"><Clock size={14} /> Time</label>
+              <Controller
+                name="time"
+                control={control}
+                render={({ field }) => (
                   <TimePicker
+                    value={field.value}
+                    onChange={field.onChange}
                     format="HH:mm"
                     className="w-full h-11 rounded-xl"
                     placeholder="Pick time"
                   />
-                </Form.Item>
-              </div>
-            )
-          }
-        </Form.Item>
+                )}
+              />
+               {errors.time && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{String(errors.time.message)}</p>}
+            </div>
+          </div>
+        )}
 
-        <Form.Item
-          label={<span className="text-sm font-bold text-slate-700">Reason / Details</span>}
-          name="reason"
-          rules={[{ required: true, message: 'Please provide a reason' }]}
-        >
-          <Input.TextArea
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-2">Reason / Details</label>
+          <textarea
+            {...register('reason')}
             placeholder="Explain why you are making this request..."
             rows={4}
-            className="rounded-xl"
+            className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none"
           />
-        </Form.Item>
+          {errors.reason && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.reason.message}</p>}
+        </div>
 
         <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-50">
           <Button onClick={onClose} className="h-11 px-6 rounded-xl font-bold text-slate-600">
@@ -138,8 +154,7 @@ export default function AddRequestModal({ visible, onClose, sessionId, sessionTi
             Submit Request
           </Button>
         </div>
-      </Form>
+      </form>
     </Modal>
   );
 }
-

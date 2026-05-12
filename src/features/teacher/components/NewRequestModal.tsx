@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Send } from 'lucide-react';
-import { useCreateRequest } from '../../../hooks/useMyRequests';
+import { useCreateRequest } from '../../../hooks/useRequests';
 import ErrorService from '../../../utils/ErrorService';
 import { RequestType } from '../../../types/requests';
 

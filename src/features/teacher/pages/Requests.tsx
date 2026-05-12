@@ -122,7 +122,37 @@ export default function TeacherRequests() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: dashboardData, isLoading } = useRequestDashboard();
 
-  const dashboard = dashboardData?.data;
+  const rawData = dashboardData?.data;
+  const dashboard = (() => {
+    if (!rawData) return null;
+    
+    // If it's already in the expected dashboard format
+    if (rawData && typeof rawData === 'object' && 'summary' in rawData && 'pending' in rawData) {
+      return rawData;
+    }
+    
+    // If it's an array of requests (compatibility)
+    const requests = Array.isArray(rawData) ? rawData : [];
+    
+    return {
+      summary: {
+        types: requests.reduce((acc: any, req: any) => {
+          if (req.type) {
+            acc[req.type] = (acc[req.type] || 0) + 1;
+          }
+          return acc;
+        }, {}),
+        statuses: {
+          pending: requests.filter((r: any) => r.status === 'pending').length,
+          approved: requests.filter((r: any) => r.status === 'approved').length,
+          rejected: requests.filter((r: any) => r.status === 'rejected').length,
+          total: requests.length
+        }
+      },
+      pending: requests.filter((r: any) => r.status === 'pending'),
+      history: requests.filter((r: any) => r.status !== 'pending')
+    };
+  })();
 
   const typeColors: any = {
     vacation: '#2563eb',
@@ -178,17 +208,17 @@ export default function TeacherRequests() {
 
       {/* Request Types Overview */}
       <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-wrap justify-between items-center gap-8 mb-10 overflow-x-auto no-scrollbar">
-        {dashboard && Object.entries(dashboard.summary.types).map(([type, count]) => (
-          <TypeCircle key={type} label={type} count={count} color={typeColors[type] || '#cbd5e1'} />
+        {dashboard?.summary?.types && Object.entries(dashboard.summary.types).map(([type, count]) => (
+          <TypeCircle key={type} label={type} count={count as number} color={typeColors[type] || '#cbd5e1'} />
         ))}
       </div>
 
       {/* Status Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <StatusOverviewCard label="Pending Approval" count={dashboard?.summary.statuses.pending} color="text-amber-500" bg="bg-amber-50" icon={Clock} />
-        <StatusOverviewCard label="Approved" count={dashboard?.summary.statuses.approved} color="text-green-500" bg="bg-green-50" icon={CheckCircle2} />
-        <StatusOverviewCard label="Rejected" count={dashboard?.summary.statuses.rejected} color="text-red-500" bg="bg-red-50" icon={XCircle} />
-        <StatusOverviewCard label="Total Requests" count={dashboard?.summary.statuses.total} color="text-blue-500" bg="bg-blue-50" icon={Activity} />
+        <StatusOverviewCard label="Pending Approval" count={dashboard?.summary?.statuses?.pending || 0} color="text-amber-500" bg="bg-amber-50" icon={Clock} />
+        <StatusOverviewCard label="Approved" count={dashboard?.summary?.statuses?.approved || 0} color="text-green-500" bg="bg-green-50" icon={CheckCircle2} />
+        <StatusOverviewCard label="Rejected" count={dashboard?.summary?.statuses?.rejected || 0} color="text-red-500" bg="bg-red-50" icon={XCircle} />
+        <StatusOverviewCard label="Total Requests" count={dashboard?.summary?.statuses?.total || 0} color="text-blue-500" bg="bg-blue-50" icon={Activity} />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
@@ -200,11 +230,11 @@ export default function TeacherRequests() {
               Pending Requests
             </h2>
             <Tag className="rounded-full bg-amber-50 text-amber-600 border-none px-4 font-bold">
-              {dashboard?.pending.length || 0} New
+              {dashboard?.pending?.length || 0} New
             </Tag>
           </div>
 
-          {dashboard?.pending.length ? (
+          {dashboard?.pending?.length ? (
             <div className="grid grid-cols-1 gap-6">
               {dashboard.pending.map(request => (
                 <RequestCard key={request.id} request={request} />
@@ -228,7 +258,7 @@ export default function TeacherRequests() {
             <History size={24} className="text-slate-300" />
           </div>
 
-          {dashboard?.history.length ? (
+          {dashboard?.history?.length ? (
             <div className="grid grid-cols-1 gap-6">
               {dashboard.history.map(request => (
                 <RequestCard key={request.id} request={request} />

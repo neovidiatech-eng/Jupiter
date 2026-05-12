@@ -8,15 +8,15 @@ const getBaseSession = (t: TFunc) => z.object({
   teacherId: z.string().min(1, t("validation.required")),
   courseId: z.string().min(1, t("validation.required")),
   title: z.string().min(3, t("validation.min", { count: 3 })),
-  description: z.string().min(5, t("validation.required")),
+  description: z.string().min(10, t("validation.min", { count: 10 })),
   type: z.enum(['full', 'half']),
   notification_Time: z.string(),
-  link: z.string().url(t("validation.email")).optional().or(z.literal('')), 
+  link: z.string().url(t("validation.email")).or(z.literal('')), 
   notes: z.string().min(10, t("validation.min", { count: 10 })),
-  platform: z.string().min(1, 'Platform is required'),
+  platform: z.enum(['zoom', 'google']),
   language: z.string().min(1, 'Language is required'),
-  videoUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
-  slidesUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
+  videoUrl: z.string().url('Invalid URL').or(z.literal('')),
+  slidesUrl: z.string().url('Invalid URL').or(z.literal('')),
 });
 
 export const getSessionSchema = (t: TFunc) => getBaseSession(t).extend({

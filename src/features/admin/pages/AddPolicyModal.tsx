@@ -1,7 +1,14 @@
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Switch, Button, ColorPicker } from 'antd';
-import { Shield, Info, Edit3, Type, Palette, Activity, FileText } from 'lucide-react';
+import { useEffect } from 'react';
+import { Modal, Button, Switch, ColorPicker } from 'antd';
+import { Shield, Edit3, Type, Palette, Activity, FileText, Info } from 'lucide-react';
 import { Policy } from '../../../types/polices';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getPolicySchema, PolicyFormData } from '../../../lib/schemas/PolicySchema';
+import { useLanguage } from '../../../contexts/LanguageContext';
+import { Typography } from 'antd';
+
+const { Text } = Typography;
 
 interface AddPolicyModalProps {
   visible: boolean;
@@ -13,40 +20,58 @@ interface AddPolicyModalProps {
 }
 
 export default function AddPolicyModal({ visible, onClose, onSave, loading, editingPolicy, isNotice }: AddPolicyModalProps) {
-  const [form] = Form.useForm();
+  const { t } = useLanguage();
+
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<PolicyFormData>({
+    resolver: zodResolver(getPolicySchema(t)) as any,
+    defaultValues: {
+      title: '',
+      description: '',
+      content: '',
+      icon: 'shield',
+      color: '#4f46e5',
+      active: true,
+    }
+  });
 
   useEffect(() => {
-    if (visible && editingPolicy) {
-      form.setFieldsValue({
-        title: editingPolicy.title,
-        description: editingPolicy.description,
-        content: editingPolicy.content,
-        icon: editingPolicy.icon,
-        color: editingPolicy.color,
-        active: editingPolicy.active,
-      });
-    } else if (visible && !editingPolicy) {
-      form.resetFields();
-      form.setFieldsValue({ active: true, color: '#4f46e5', icon: 'shield' });
+    if (visible) {
+      if (editingPolicy) {
+        reset({
+          title: editingPolicy.title,
+          description: editingPolicy.description || '',
+          content: editingPolicy.content || '',
+          icon: editingPolicy.icon || 'shield',
+          color: editingPolicy.color || '#4f46e5',
+          active: editingPolicy.active,
+        });
+      } else {
+        reset({
+          title: '',
+          description: '',
+          content: '',
+          icon: 'shield',
+          color: '#4f46e5',
+          active: true,
+        });
+      }
     }
-  }, [visible, editingPolicy, form]);
+  }, [visible, editingPolicy, reset]);
 
-  const handleSubmit = (values: any) => {
+  const onSubmit = (values: PolicyFormData) => {
     const formattedValues = {
       ...values,
-      color: typeof values.color === 'string' ? values.color : values.color?.toHexString?.() || '#4f46e5',
+      color: typeof values.color === 'string' ? values.color : (values.color as any)?.toHexString?.() || '#4f46e5',
     };
     
-    // If it's a notice, we ensure we only send what's allowed
     if (isNotice) {
       const noticeData = {
         title: formattedValues.title,
-        content: formattedValues.content || formattedValues.description, // Fallback if user filled description
+        content: formattedValues.content || formattedValues.description,
         active: formattedValues.active
       };
       onSave(noticeData);
     } else {
-      // For normal policy, remove content if it exists to avoid validation error
       const { content, ...policyData } = formattedValues;
       onSave(policyData);
     }
@@ -76,65 +101,92 @@ export default function AddPolicyModal({ visible, onClose, onSave, loading, edit
       width={540}
       className="premium-modal"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        className="mt-6"
-        requiredMark={false}
-      >
-        <Form.Item
-          label={<span className="text-sm font-bold text-gray-700 flex items-center gap-2"><Type size={14} className="text-indigo-500" /> Title</span>}
-          name="title"
-          rules={[{ required: true, message: 'Please enter title' }]}
-        >
-          <Input placeholder="e.g. Attendance Policy" className="h-11 rounded-xl" />
-        </Form.Item>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-6 text-start">
+        <div>
+          <label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
+            <Type size={14} className="text-indigo-500" /> Title
+          </label>
+          <input 
+            {...register('title')}
+            placeholder="e.g. Attendance Policy" 
+            className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" 
+          />
+          {errors.title && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.title.message}</p>}
+        </div>
 
         {!isNotice && (
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item
-              label={<span className="text-sm font-bold text-gray-700 flex items-center gap-2"><Info size={14} className="text-indigo-500" /> Icon Name</span>}
-              name="icon"
-              rules={[{ required: true, message: 'e.g. shield, clock' }]}
-            >
-              <Input placeholder="shield, clock, book" className="h-11 rounded-xl" />
-            </Form.Item>
+            <div>
+              <label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
+                <Info size={14} className="text-indigo-500" /> Icon Name
+              </label>
+              <input 
+                {...register('icon')}
+                placeholder="shield, clock, book" 
+                className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20" 
+              />
+              {errors.icon && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.icon.message}</p>}
+            </div>
 
-            <Form.Item
-              label={<span className="text-sm font-bold text-gray-700 flex items-center gap-2"><Palette size={14} className="text-indigo-500" /> Theme Color</span>}
-              name="color"
-            >
-              <ColorPicker showText className="w-full h-11" />
-            </Form.Item>
+            <div>
+              <label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
+                <Palette size={14} className="text-indigo-500" /> Theme Color
+              </label>
+              <Controller
+                name="color"
+                control={control}
+                render={({ field }) => (
+                  <ColorPicker 
+                    value={field.value} 
+                    onChange={(val) => field.onChange(val.toHexString())} 
+                    showText 
+                    className="w-full h-11" 
+                  />
+                )}
+              />
+            </div>
           </div>
         )}
 
         {isNotice ? (
-          <Form.Item
-            label={<span className="text-sm font-bold text-gray-700 flex items-center gap-2"><Edit3 size={14} className="text-indigo-500" /> Notice Content</span>}
-            name="content"
-            rules={[{ required: true, message: 'Please enter the notice content' }]}
-          >
-            <Input.TextArea placeholder="Enter the message for teachers..." rows={6} className="rounded-xl" />
-          </Form.Item>
+          <div>
+            <label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
+              <Edit3 size={14} className="text-indigo-500" /> Notice Content
+            </label>
+            <textarea 
+              {...register('content')}
+              placeholder="Enter the message for teachers..." 
+              rows={6} 
+              className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none" 
+            />
+            {errors.content && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.content.message}</p>}
+          </div>
         ) : (
-          <Form.Item
-            label={<span className="text-sm font-bold text-gray-700 flex items-center gap-2"><Edit3 size={14} className="text-indigo-500" /> Policy Description</span>}
-            name="description"
-            rules={[{ required: true, message: 'Please enter the policy description' }]}
-          >
-            <Input.TextArea placeholder="Enter the details of the policy..." rows={6} className="rounded-xl" />
-          </Form.Item>
+          <div>
+            <label className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-2">
+              <Edit3 size={14} className="text-indigo-500" /> Policy Description
+            </label>
+            <textarea 
+              {...register('description')}
+              placeholder="Enter the details of the policy..." 
+              rows={6} 
+              className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none" 
+            />
+            {errors.description && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.description.message}</p>}
+          </div>
         )}
 
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl mb-8">
           <Text className="text-sm font-bold text-gray-700 flex items-center gap-2">
             <Activity size={14} className="text-indigo-500" /> Visible & Active
           </Text>
-          <Form.Item name="active" valuePropName="checked" className="mb-0">
-            <Switch />
-          </Form.Item>
+          <Controller
+            name="active"
+            control={control}
+            render={({ field }) => (
+              <Switch checked={field.value} onChange={field.onChange} />
+            )}
+          />
         </div>
 
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-50">
@@ -150,10 +202,7 @@ export default function AddPolicyModal({ visible, onClose, onSave, loading, edit
             {isNotice ? 'Update Notice' : (editingPolicy ? 'Update Policy' : 'Create Policy')}
           </Button>
         </div>
-      </Form>
+      </form>
     </Modal>
   );
 }
-
-import { Typography } from 'antd';
-const { Text } = Typography;

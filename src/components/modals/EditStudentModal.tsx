@@ -6,7 +6,9 @@ import DatePickerField from '../ui/DatePickerField';
 import { StudentFormData, getStudentSchema } from '../../lib/schemas/StudentSchema';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Resolver } from 'react-hook-form';
 import { usePlans } from '../../features/admin/hooks/usePlans';
+import { useGetRanks } from '../../features/admin/hooks/useRank';
 
 interface EditStudentModalProps {
   isOpen: boolean;
@@ -23,9 +25,10 @@ export default function EditStudentModal({
 }: EditStudentModalProps) {
   const { language, t } = useLanguage();
   const { data: plansData } = usePlans();
+  const { data: ranksResponse } = useGetRanks();
 
   const { control, handleSubmit, register, reset, formState: { errors } } = useForm<StudentFormData>({
-    resolver: zodResolver(getStudentSchema(t)),
+    resolver: zodResolver(getStudentSchema(t)) as Resolver<StudentFormData>,
     defaultValues: studentData || undefined,
   });
 
@@ -40,8 +43,8 @@ export default function EditStudentModal({
 
   const handleEditSubmit = (data: StudentFormData) => {
     const cleanedData = { ...data };
-    if (!cleanedData.password) {
-      delete cleanedData.password;
+    if (!(cleanedData as Partial<StudentFormData>).password) {
+      delete (cleanedData as Partial<StudentFormData>).password;
     }
 
     onSubmit({ ...cleanedData, id: studentData!.id });
@@ -80,6 +83,12 @@ export default function EditStudentModal({
       label: p.name || (language === 'ar' ? p.name_ar : p.name_en),
     }))
   ];
+
+  const ranks = ranksResponse?.data.items || [];
+  const rankOptions = ranks.map((r: any) => ({
+    value: r.id,
+    label: r.name,
+  }));
 
   const statusOptions = [
     { value: 'approved', label: language === 'ar' ? 'نشط' : 'Active' },
@@ -129,7 +138,6 @@ export default function EditStudentModal({
                 </label>
                 <input
                   type="email"
-                  required
                   {...register('email')}
                   placeholder="ex :- student@example.com"
                   className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.email ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300`}
@@ -166,6 +174,7 @@ export default function EditStudentModal({
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.phone_code && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.phone_code.message}</p>}
                   </div>
                 )}
               />
@@ -186,6 +195,7 @@ export default function EditStudentModal({
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.country && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.country.message}</p>}
                   </div>
                 )}
               />
@@ -201,12 +211,30 @@ export default function EditStudentModal({
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.plan && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.plan.message}</p>}
                   </div>
                 )}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Controller
+                name="rankId"
+                control={control}
+                render={({ field }) => (
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">Rank</label>
+                    <CustomSelect
+                      value={field.value}
+                      options={rankOptions}
+                      placeholder="Select student rank"
+                      onChange={field.onChange}
+                      className="rounded-2xl border-none bg-gray-50"
+                    />
+                    {errors.rankId && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.rankId.message}</p>}
+                  </div>
+                )}
+              />
               <Controller
                 name="status"
                 control={control}
@@ -219,6 +247,7 @@ export default function EditStudentModal({
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.status && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.status.message}</p>}
                   </div>
                 )}
               />
@@ -236,6 +265,7 @@ export default function EditStudentModal({
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.birthDate && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.birthDate.message}</p>}
                   </div>
                 )}
               />
@@ -252,6 +282,7 @@ export default function EditStudentModal({
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.gender && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.gender.message}</p>}
                   </div>
                 )}
               />

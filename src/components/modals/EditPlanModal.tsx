@@ -1,24 +1,18 @@
-import { useState } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import CustomSelect from "../ui/CustomSelect";
+import { PlanFormData, getPlanSchema } from "../../lib/schemas/PlanSchema";
+import { Resolver, useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import { Currency } from "../../types/currency";
+
 interface EditPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  plan: {
-    id: string;
-    name: string;
-    nameEn: string;
-    description: string;
-    price: string;
-    currency: string;
-    duration: string;
-    sessionsCount: number;
-    features: string[];
-    isPopular: boolean;
-    status: "active" | "inactive";
-  };
-  onSave: (plan: any) => void;
+  plan: PlanFormData & { id: string };
+  onSave: (plan: PlanFormData & { id: string }) => void;
+  currencies: Currency[];
 }
 
 export default function EditPlanModal({
@@ -26,71 +20,47 @@ export default function EditPlanModal({
   onClose,
   plan,
   onSave,
+  currencies,
 }: EditPlanModalProps) {
   const { language, t } = useLanguage();
-  const [formData, setFormData] = useState({
-    name: plan.name,
-    nameEn: plan.nameEn,
-    description: plan.description,
-    price: plan.price,
-    currency: plan.currency,
-    duration: plan.duration,
-    sessionsCount: plan.sessionsCount,
-    features: [...plan.features],
-    isPopular: plan.isPopular,
-    status: plan.status,
+
+  const { register, handleSubmit, reset, setValue, watch, control, formState: { errors } } = useForm<PlanFormData>({
+    resolver: zodResolver(getPlanSchema(t)) as Resolver<PlanFormData>,
+    defaultValues: plan,
   });
 
-  if (!isOpen) return null;
+  const features = watch('features') || [''];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const filteredFeatures = formData.features.filter((f) => f.trim() !== "");
-    if (filteredFeatures.length === 0) {
-      alert(
-        language === "ar"
-          ? "يجب إضافة ميزة واحدة على الأقل"
-          : "Please add at least one feature",
-      );
-      return;
+  useEffect(() => {
+    if (isOpen && plan) {
+      reset(plan);
     }
-    onSave({
-      ...plan,
-      ...formData,
-      features: filteredFeatures,
-    });
+  }, [isOpen, plan, reset]);
 
+  const onSubmit = (data: PlanFormData) => {
+    onSave({
+      ...data,
+      id: plan.id
+    });
     onClose();
   };
 
   const addFeature = () => {
-    setFormData({ ...formData, features: [...formData.features, ""] });
+    setValue('features', [...features, '']);
   };
 
   const removeFeature = (index: number) => {
-    const newFeatures = formData.features.filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      features: newFeatures.length > 0 ? newFeatures : [""],
-    });
+    const updated = features.filter((_, i) => i !== index);
+    setValue('features', updated.length > 0 ? updated : ['']);
   };
 
   const updateFeature = (index: number, value: string) => {
-    const newFeatures = [...formData.features];
-    newFeatures[index] = value;
-    setFormData({ ...formData, features: newFeatures });
+    const updated = [...features];
+    updated[index] = value;
+    setValue('features', updated);
   };
 
-  const currencies = [
-    { code: "EGP", nameAr: "جنيه مصري", nameEn: "Egyptian Pound" },
-    { code: "USD", nameAr: "دولار أمريكي", nameEn: "US Dollar" },
-    { code: "EUR", nameAr: "يورو", nameEn: "Euro" },
-    { code: "GBP", nameAr: "جنيه إسترليني", nameEn: "British Pound" },
-    { code: "SAR", nameAr: "ريال سعودي", nameEn: "Saudi Riyal" },
-    { code: "AED", nameAr: "درهم إماراتي", nameEn: "UAE Dirham" },
-    { code: "KWD", nameAr: "دينار كويتي", nameEn: "Kuwaiti Dinar" },
-    { code: "QAR", nameAr: "ريال قطري", nameEn: "Qatari Riyal" },
-  ];
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
@@ -111,41 +81,23 @@ export default function EditPlanModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <form id="edit-plan-form" onSubmit={handleSubmit} className="p-8">
+          <form id="edit-plan-form" onSubmit={handleSubmit(onSubmit)} className="p-8">
             <div className="space-y-8 text-start" dir={language === "ar" ? "rtl" : "ltr"}>
               
               {/* Identity Section */}
               <div className="space-y-5">
                 <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-4">Plan Identity</h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
-                      Name (Arabic)
-                    </label>
-                    <input 
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
-                      placeholder="اسم الخطة بالعربي"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
-                      Name (English)
-                    </label>
-                    <input 
-                      type="text"
-                      value={formData.nameEn}
-                      onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
-                      className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
-                      placeholder="Plan Name in English"
-                      required
-                    />
-                  </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
+                    Name
+                  </label>
+                  <input 
+                    {...register('name')}
+                    className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
+                    placeholder="اسم الخطة بالعربي"
+                  />
+                  {errors.name && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.name.message}</p>}
                 </div>
 
                 <div>
@@ -153,13 +105,12 @@ export default function EditPlanModal({
                     Description
                   </label>
                   <textarea 
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    {...register('description')}
                     rows={3} 
                     className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all resize-none" 
                     placeholder="Short description of this plan..."
-                    required
                   />
+                  {errors.description && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.description.message}</p>}
                 </div>
               </div>
 
@@ -174,25 +125,28 @@ export default function EditPlanModal({
                     </label>
                     <input 
                       type="number"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      {...register('price', { valueAsNumber: true })}
                       className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
-                      min="0"
-                      required
                     />
+                    {errors.price && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.price.message}</p>}
                   </div>
 
                   <div>
                     <label className="flex items-center gap-2 text-xs font-black text-slate-500 mb-2 uppercase tracking-wider">
                       Currency
                     </label>
-                    <CustomSelect
-                      value={formData.currency}
-                      onChange={(value) => setFormData({ ...formData, currency: value as string })}
-                      options={currencies.map((curr) => ({
-                        value: curr.code,
-                        label: `${curr.code} - ${language === "ar" ? curr.nameAr : curr.nameEn}`,
-                      }))}
+                    <Controller
+                      name="currencyId"
+                      control={control}
+                      render={({ field }) => (
+                        <CustomSelect
+                          {...field}
+                          options={currencies.map((curr) => ({
+                            value: curr.id,
+                            label: `${curr.code} - ${language === "ar" ? curr.name_ar : curr.name_en}`,
+                          }))}
+                        />
+                      )}
                     />
                   </div>
                 </div>
@@ -204,12 +158,10 @@ export default function EditPlanModal({
                     </label>
                     <input 
                       type="number"
-                      value={formData.duration}
-                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                      {...register('duration', { valueAsNumber: true })}
                       className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
-                      min="1"
-                      required
                     />
+                    {errors.duration && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.duration.message}</p>}
                   </div>
 
                   <div>
@@ -218,12 +170,10 @@ export default function EditPlanModal({
                     </label>
                     <input 
                       type="number"
-                      value={formData.sessionsCount}
-                      onChange={(e) => setFormData({ ...formData, sessionsCount: parseInt(e.target.value) || 0 })}
+                      {...register('sessionsCount', { valueAsNumber: true })}
                       className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
-                      min="0"
-                      required
                     />
+                    {errors.sessionsCount && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.sessionsCount.message}</p>}
                   </div>
                 </div>
               </div>
@@ -243,7 +193,7 @@ export default function EditPlanModal({
                 </div>
 
                 <div className="space-y-3">
-                  {formData.features.map((feature, index) => (
+                  {features.map((feature, index) => (
                     <div key={index} className="group flex items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-transparent focus-within:border-indigo-100 focus-within:bg-white transition-all">
                       <div className="flex-1">
                         <input
@@ -257,7 +207,7 @@ export default function EditPlanModal({
                         type="button"
                         onClick={() => removeFeature(index)}
                         className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                        disabled={formData.features.length === 1}
+                        disabled={features.length === 1}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -273,24 +223,23 @@ export default function EditPlanModal({
                   <div className="bg-slate-50 rounded-2xl px-6 py-4 flex items-center justify-between">
                     <div>
                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Visibility</p>
-                      <p className="text-xs font-bold text-slate-400 mt-0.5">Show "Popular" badge</p>
+                      <p className="text-xs font-bold text-slate-400 mt-0.5">Plan Status</p>
                     </div>
-                    <input 
-                      type="checkbox" 
-                      checked={formData.isPopular}
-                      onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })}
-                      className="w-6 h-6 text-indigo-600 border-slate-200 rounded-lg focus:ring-indigo-500 transition-all cursor-pointer"
-                    />
                   </div>
 
                   <div>
-                    <CustomSelect
-                      value={formData.status}
-                      onChange={(value) => setFormData({ ...formData, status: value as any })}
-                      options={[
-                        { value: "active", label: t('active') },
-                        { value: "inactive", label: t('inactive') },
-                      ]}
+                    <Controller
+                      name="status"
+                      control={control}
+                      render={({ field }) => (
+                        <CustomSelect
+                          {...field}
+                          options={[
+                            { value: "active", label: t('active') },
+                            { value: "inactive", label: t('inactive') },
+                          ]}
+                        />
+                      )}
                     />
                   </div>
                 </div>
@@ -321,4 +270,3 @@ export default function EditPlanModal({
     </div>
   );
 }
-

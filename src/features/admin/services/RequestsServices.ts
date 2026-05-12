@@ -2,9 +2,9 @@ import api from "../../../lib/axios";
 import { GetRequestsResponse } from "../../../types/requests";
 
 export const getAllRequests = async (): Promise<GetRequestsResponse> => {
-    const response = await api.get<GetRequestsResponse>("/requests/all");
-    return response.data;   
-    console.log(response.data); 
+    const response = await api.get<GetRequestsResponse>("/requests");
+    return response.data;
+    console.log(response.data);
 };
 
 export const updateRequestStatus = async (

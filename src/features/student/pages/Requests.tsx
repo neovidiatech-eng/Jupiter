@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Clock, FileText, CheckCircle, XCircle } from 'lucide-react';
 import { useSettings } from '../../../contexts/SettingsContext';
+import { useForm } from 'react-hook-form';
+import { Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getUnifiedRequestSchema, UnifiedRequestFormData } from '../../../lib/schemas/UnifiedRequestSchema';
 
 interface StudentRequest {
   id: string;
@@ -13,7 +17,7 @@ interface StudentRequest {
 }
 
 export default function StudentRequests() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const { settings } = useSettings();
   const isRtl = i18n.language.split('-')[0] === 'ar';
 
@@ -44,23 +48,28 @@ export default function StudentRequests() {
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newRequestType, setNewRequestType] = useState(isRtl ? 'تأجيل حصة' : 'Postpone Session');
-  const [newRequestReason, setNewRequestReason] = useState('');
 
-  const handleCreateRequest = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newRequestReason.trim()) return;
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<UnifiedRequestFormData>({
+    resolver: zodResolver(getUnifiedRequestSchema(t)) as Resolver<UnifiedRequestFormData>,
+    defaultValues: {
+      type: isRtl ? 'تأجيل حصة' : 'Postpone Session',
+      priority: 'medium',
+      title: 'Student Request',
+      reason: ''
+    }
+  });
 
+  const onFormSubmit = (data: UnifiedRequestFormData) => {
     const newReq: StudentRequest = {
       id: `REQ-00${requests.length + 4}`,
-      type: newRequestType,
+      type: data.type,
       date: new Date().toISOString().split('T')[0],
       status: 'pending',
-      reason: newRequestReason
+      reason: data.reason
     };
 
     setRequests([newReq, ...requests]);
-    setNewRequestReason('');
+    reset();
     setIsModalOpen(false);
   };
 
@@ -158,30 +167,29 @@ export default function StudentRequests() {
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center" style={{ backgroundColor: settings.primaryColor }}>
               <h2 className="text-lg font-bold text-white">{isRtl ? 'تقديم طلب جديد' : 'Submit New Request'}</h2>
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => { setIsModalOpen(false); reset(); }}
                 className="p-1 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-colors"
               >
                 <XCircle className="w-6 h-6" />
               </button>
             </div>
             
-            <form onSubmit={handleCreateRequest} className="p-6">
+            <form onSubmit={handleSubmit(onFormSubmit)} className="p-6 text-start">
               <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
                     {isRtl ? 'نوع الطلب' : 'Request Type'}
                   </label>
                   <select 
-                    value={newRequestType}
-                    onChange={(e) => setNewRequestType(e.target.value)}
+                    {...register('type')}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-all"
-                    required
                   >
                     <option value={isRtl ? 'تأجيل حصة' : 'Postpone Session'}>{isRtl ? 'تأجيل حصة' : 'Postpone Session'}</option>
                     <option value={isRtl ? 'طلب إجازة' : 'Leave Request'}>{isRtl ? 'طلب إجازة' : 'Leave Request'}</option>
                     <option value={isRtl ? 'تغيير موعد' : 'Change Schedule'}>{isRtl ? 'تغيير موعد' : 'Change Schedule'}</option>
                     <option value={isRtl ? 'طلب آخر' : 'Other'}>{isRtl ? 'طلب آخر' : 'Other'}</option>
                   </select>
+                  {errors.type && <p className="text-red-500 text-xs mt-1 font-bold">{errors.type.message}</p>}
                 </div>
                 
                 <div>
@@ -189,20 +197,19 @@ export default function StudentRequests() {
                     {isRtl ? 'التفاصيل / السبب' : 'Details / Reason'}
                   </label>
                   <textarea 
-                    value={newRequestReason}
-                    onChange={(e) => setNewRequestReason(e.target.value)}
+                    {...register('reason')}
                     rows={4}
                     placeholder={isRtl ? 'اكتب تفاصيل طلبك هنا...' : 'Write your request details here...'}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent transition-all resize-none"
-                    required
                   />
+                  {errors.reason && <p className="text-red-500 text-xs mt-1 font-bold">{errors.reason.message}</p>}
                 </div>
               </div>
               
               <div className="mt-8 flex gap-3">
                 <button 
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => { setIsModalOpen(false); reset(); }}
                   className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
                 >
                   {isRtl ? 'إلغاء' : 'Cancel'}

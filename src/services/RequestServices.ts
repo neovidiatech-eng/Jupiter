@@ -1,6 +1,6 @@
 import api from "../lib/axios";
-import { 
-    RequestDashboardResponse, 
+import {
+    RequestDashboardResponse,
     CreateUnifiedRequestInput,
     CreateRequestType,
     GetRequestsResponse
@@ -8,31 +8,13 @@ import {
 
 // Unified Dashboard
 export const getRequestDashboard = async (): Promise<RequestDashboardResponse> => {
-    const res = await api.get<RequestDashboardResponse>('/requests/dashboard');
+    const res = await api.get<RequestDashboardResponse>('/requests/my');
     return res.data;
 };
 
-// Unified Create (Multipart)
 export const createUnifiedRequest = async (data: CreateUnifiedRequestInput): Promise<any> => {
-    const formData = new FormData();
-    formData.append('type', data.type);
-    formData.append('priority', data.priority);
-    formData.append('title', data.title);
-    formData.append('reason', data.reason);
-    
-    if (data.sessionId) formData.append('sessionId', data.sessionId);
-
-    if (data.attachments) {
-        data.attachments.forEach((file) => {
-            formData.append('attachments', file);
-        });
-    }
-
-    const res = await api.post('/requests', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
+    const { attachments, ...payload } = data;
+    const res = await api.post('/requests', payload);
     return res.data;
 };
 
@@ -44,6 +26,6 @@ export const createRequest = async (data: CreateRequestType | any): Promise<any>
 };
 
 export const getMyRequests = async (): Promise<GetRequestsResponse> => {
-    const res = await api.get<GetRequestsResponse>('/requests/my-requests');
+    const res = await api.get<GetRequestsResponse>('/requests/my');
     return res.data;
 };

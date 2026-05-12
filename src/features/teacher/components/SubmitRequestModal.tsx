@@ -1,7 +1,10 @@
-import { useState } from 'react';
-import { Modal, Form, Input, Select, Upload, Button } from 'antd';
-import { Upload as UploadIcon, AlertCircle, Layout, Send } from 'lucide-react';
+import { Modal, Button } from 'antd';
+import { Layout, Send } from 'lucide-react';
 import { useCreateRequest } from '../../../hooks/useRequests';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getUnifiedRequestSchema, UnifiedRequestFormData } from '../../../lib/schemas/UnifiedRequestSchema';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface SubmitRequestModalProps {
   visible: boolean;
@@ -9,20 +12,23 @@ interface SubmitRequestModalProps {
 }
 
 export default function SubmitRequestModal({ visible, onClose }: SubmitRequestModalProps) {
-  const [form] = Form.useForm();
+  const { t } = useLanguage();
   const { mutate: createRequest, isPending } = useCreateRequest();
-  const [fileList, setFileList] = useState<any[]>([]);
+  
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<UnifiedRequestFormData>({
+    resolver: zodResolver(getUnifiedRequestSchema(t)) as any,
+    defaultValues: {
+      priority: 'medium',
+      type: 'others',
+      title: '',
+      reason: ''
+    }
+  });
 
-  const handleSubmit = (values: any) => {
-    const input = {
-      ...values,
-      attachments: fileList.map(f => f.originFileObj).filter(Boolean),
-    };
-
-    createRequest(input, {
+  const onSubmit = (values: UnifiedRequestFormData) => {
+    createRequest(values, {
       onSuccess: () => {
-        form.resetFields();
-        setFileList([]);
+        reset();
         onClose();
       },
     });
@@ -64,70 +70,55 @@ export default function SubmitRequestModal({ visible, onClose }: SubmitRequestMo
       width={600}
       className="premium-modal"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        className="mt-6"
-        initialValues={{ priority: 'medium' }}
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4 text-start">
         <div className="grid grid-cols-2 gap-4">
-          <Form.Item
-            label={<span className="text-sm font-bold text-gray-700">Request Type</span>}
-            name="type"
-            rules={[{ required: true, message: 'Please select type' }]}
-          >
-            <Select options={typeOptions} placeholder="Select type" className="h-11 rounded-xl" />
-          </Form.Item>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Request Type</label>
+            <select
+              {...register('type')}
+              className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+            >
+              {typeOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            {errors.type && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.type.message}</p>}
+          </div>
 
-          <Form.Item
-            label={<span className="text-sm font-bold text-gray-700">Priority Level</span>}
-            name="priority"
-            rules={[{ required: true }]}
-          >
-            <Select options={priorityOptions} placeholder="Select priority" className="h-11 rounded-xl" />
-          </Form.Item>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Priority Level</label>
+            <select
+              {...register('priority')}
+              className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+            >
+              {priorityOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            {errors.priority && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.priority.message}</p>}
+          </div>
         </div>
 
-        <Form.Item
-          label={<span className="text-sm font-bold text-gray-700">Request Title</span>}
-          name="title"
-          rules={[{ required: true, message: 'Please enter a title' }]}
-        >
-          <Input placeholder="e.g. Vacation Request for next week" className="h-11 rounded-xl" />
-        </Form.Item>
-
-        <Form.Item
-          label={<span className="text-sm font-bold text-gray-700">Reason / Details</span>}
-          name="reason"
-          rules={[{ required: true, message: 'Please provide details' }]}
-        >
-          <Input.TextArea 
-            placeholder="Explain the reason for your request..." 
-            rows={4} 
-            className="rounded-xl p-4" 
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Request Title</label>
+          <input
+            {...register('title')}
+            placeholder="e.g. Vacation Request for next week"
+            className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           />
-        </Form.Item>
+          {errors.title && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.title.message}</p>}
+        </div>
 
-        <Form.Item label={<span className="text-sm font-bold text-gray-700">Attachments (Optional)</span>}>
-          <Upload
-            listType="picture-card"
-            fileList={fileList}
-            onChange={({ fileList }) => setFileList(fileList)}
-            beforeUpload={() => false}
-            multiple
-          >
-            {fileList.length >= 5 ? null : (
-              <div className="flex flex-col items-center justify-center text-gray-400">
-                <UploadIcon size={20} />
-                <span className="text-[10px] mt-1 font-bold">Upload</span>
-              </div>
-            )}
-          </Upload>
-          <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1 font-medium">
-            <AlertCircle size={12} /> Images and documents supported (Max 5 files)
-          </p>
-        </Form.Item>
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Reason / Details</label>
+          <textarea
+            {...register('reason')}
+            placeholder="Explain the reason for your request..."
+            rows={4}
+            className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none"
+          />
+          {errors.reason && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.reason.message}</p>}
+        </div>
 
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-50 mt-8">
           <Button onClick={onClose} className="h-11 px-6 rounded-xl font-bold text-gray-600">
@@ -143,7 +134,7 @@ export default function SubmitRequestModal({ visible, onClose }: SubmitRequestMo
             Submit Request
           </Button>
         </div>
-      </Form>
+      </form>
     </Modal>
   );
 }

@@ -1,9 +1,13 @@
-import { Modal, Form, Input, Select, Button, Upload } from 'antd';
+import { Modal, Button, Upload, Select } from 'antd';
 import { useCreateCourse, useUpdateCourse } from '../../../hooks/useCourses';
 import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, AlignLeft, Trophy, Image, Upload as UploadIcon } from 'lucide-react';
 import { useGetRanks } from '../hooks/useRank';
 import { useEffect, useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getCourseSchema, CourseFormData } from '../../../lib/schemas/CourseSchema';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 interface AddCourseModalProps {
     visible: boolean;
@@ -12,7 +16,7 @@ interface AddCourseModalProps {
 }
 
 export default function AddCourseModal({ visible, onClose, course }: AddCourseModalProps) {
-    const [form] = Form.useForm();
+    const { t } = useLanguage();
     const [fileList, setFileList] = useState<any[]>([]);
     const queryClient = useQueryClient();
     const { mutate: createCourse, isPending: isCreating } = useCreateCourse();
@@ -21,30 +25,45 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
 
     const isEditMode = !!course;
 
+    const { register, handleSubmit, reset, control, formState: { errors } } = useForm<CourseFormData>({
+        resolver: zodResolver(getCourseSchema(t)),
+        defaultValues: {
+            title: '',
+            description: '',
+            rankId: '',
+        }
+    });
+
     useEffect(() => {
-        if (visible && course) {
-            form.setFieldsValue({
-                title: course.title,
-                description: course.description,
-                rankId: course.rankId,
-            });
-            if (course.image) {
-                setFileList([{
-                    uid: '-1',
-                    name: course.image,
-                    status: 'done',
-                    url: `https://agro-plus.net/uploads/${course.image}`,
-                }]);
+        if (visible) {
+            if (course) {
+                reset({
+                    title: course.title,
+                    description: course.description,
+                    rankId: course.rankId,
+                });
+                if (course.image) {
+                    setFileList([{
+                        uid: '-1',
+                        name: course.image,
+                        status: 'done',
+                        url: `https://agro-plus.net/uploads/${course.image}`,
+                    }]);
+                } else {
+                    setFileList([]);
+                }
             } else {
+                reset({
+                    title: '',
+                    description: '',
+                    rankId: '',
+                });
                 setFileList([]);
             }
-        } else if (visible && !course) {
-            form.resetFields();
-            setFileList([]);
         }
-    }, [visible, course, form]);
+    }, [visible, course, reset]);
 
-    const handleSubmit = (values: any) => {
+    const onSubmit = (values: CourseFormData) => {
         const formData = new FormData();
         formData.append('title', values.title);
         formData.append('description', values.description);
@@ -66,7 +85,7 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
                 onSuccess: () => {
                     queryClient.invalidateQueries({ queryKey: ['courses'] });
                     onClose();
-                    form.resetFields();
+                    reset();
                     setFileList([]);
                 }
             });
@@ -99,53 +118,64 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
             width={520}
             className="premium-modal"
         >
-            <Form
-                form={form}
-                layout="vertical"
-                onFinish={handleSubmit}
-                requiredMark={false}
-                className="mt-6"
-            >
-                <Form.Item
-                    label={<span className="text-gray-700 font-bold flex items-center gap-2"><BookOpen size={14} className="text-indigo-500" /> Course Title</span>}
-                    name="title"
-                    rules={[{ required: true, message: 'Please enter course title' }]}
-                >
-                    <Input placeholder="e.g. Backend Development Basics" className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
-                </Form.Item>
-
-                <Form.Item
-                    label={<span className="text-gray-700 font-bold flex items-center gap-2"><AlignLeft size={14} className="text-indigo-500" /> Description</span>}
-                    name="description"
-                    rules={[{ required: true, message: 'Please enter description' }]}
-                >
-                    <Input.TextArea placeholder="Enter a comprehensive description of the course content..." rows={4} className="rounded-xl border-gray-200 focus:border-indigo-500 transition-all" />
-                </Form.Item>
-
-                <Form.Item
-                    label={<span className="text-gray-700 font-bold flex items-center gap-2"><Trophy size={14} className="text-indigo-500" /> Academic Rank</span>}
-                    name="rankId"
-                    rules={[{ required: true, message: 'Please select an academic rank' }]}
-                >
-                    <Select
-                        placeholder="Select appropriate rank"
-                        loading={ranksLoading}
-                        className="h-12 rounded-xl"
-                        options={ranksData?.data?.items?.map((rank: any) => ({
-                            label: (
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: rank.color }}></div>
-                                    <span>{rank.name}</span>
-                                </div>
-                            ),
-                            value: rank.id
-                        }))}
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4 text-start">
+                <div>
+                    <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                        <BookOpen size={14} className="text-indigo-500" /> Course Title
+                    </label>
+                    <input 
+                        {...register('title')}
+                        placeholder="e.g. Backend Development Basics" 
+                        className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" 
                     />
-                </Form.Item>
+                    {errors.title && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.title.message}</p>}
+                </div>
 
-                <Form.Item
-                    label={<span className="text-gray-700 font-bold flex items-center gap-2"><Image size={14} className="text-indigo-500" /> Course Image</span>}
-                >
+                <div>
+                    <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                        <AlignLeft size={14} className="text-indigo-500" /> Description
+                    </label>
+                    <textarea 
+                        {...register('description')}
+                        placeholder="Enter a comprehensive description of the course content..." 
+                        rows={4} 
+                        className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none" 
+                    />
+                    {errors.description && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.description.message}</p>}
+                </div>
+
+                <div>
+                    <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                        <Trophy size={14} className="text-indigo-500" /> Academic Rank
+                    </label>
+                    <Controller
+                        name="rankId"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                {...field}
+                                placeholder="Select appropriate rank"
+                                loading={ranksLoading}
+                                className="w-full h-12 rounded-xl"
+                                options={ranksData?.data?.items?.map((rank: any) => ({
+                                    label: (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: rank.color }}></div>
+                                            <span>{rank.name}</span>
+                                        </div>
+                                    ),
+                                    value: rank.id
+                                }))}
+                            />
+                        )}
+                    />
+                    {errors.rankId && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.rankId.message}</p>}
+                </div>
+
+                <div>
+                    <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                        <Image size={14} className="text-indigo-500" /> Course Image
+                    </label>
                     <Upload.Dragger
                         listType="picture"
                         fileList={fileList}
@@ -164,7 +194,7 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
                             </div>
                         ) : null}
                     </Upload.Dragger>
-                </Form.Item>
+                </div>
 
                 <div className="flex items-center justify-end gap-3 mt-10 pt-6 border-t border-gray-50">
                     <Button 
@@ -182,7 +212,7 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
                         {isEditMode ? 'Update Course' : 'Create Course'}
                     </Button>
                 </div>
-            </Form>
+            </form>
         </Modal>
     );
 }

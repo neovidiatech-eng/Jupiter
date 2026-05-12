@@ -6,7 +6,6 @@ import ReportDetailsModal from "../components/ReportDetailsModal";
 import { useForm } from "react-hook-form";
 import { CreateTeacherReport } from "../../../types/reports";
 import { reportSchema } from "../../../lib/schemas/ReportSchema";
-import { Modal } from "antd";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function ReportsPage() {
@@ -110,7 +109,7 @@ export default function ReportsPage() {
                   />
                   <input
                     type="date"
-                    {...register("weekStarting", { required: true })}
+                    {...register("weekStarting")}
                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600"
                   />
                 </div>
@@ -127,7 +126,7 @@ export default function ReportsPage() {
                   />
                   <input
                     type="date"
-                    {...register("weekEnding", { required: true })}
+                    {...register("weekEnding")}
                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600"
                   />
                 </div>
@@ -146,7 +145,7 @@ export default function ReportsPage() {
                 <input
                   type="number"
                   placeholder="12"
-                  {...register("totalClasses", { required: true, valueAsNumber: true })}
+                  {...register("totalClasses", { valueAsNumber: true })}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none transition-all font-medium text-slate-600"
                 />
                 {errors.totalClasses && <p className="text-red-500 text-xs mt-1">{errors.totalClasses.message}</p>}
@@ -158,7 +157,7 @@ export default function ReportsPage() {
                 <input
                   type="number"
                   placeholder="18"
-                  {...register("studentsTaught", { required: true, valueAsNumber: true })}
+                  {...register("studentsTaught", { valueAsNumber: true })}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none transition-all font-medium text-slate-600"
                 />
                 {errors.studentsTaught && <p className="text-red-500 text-xs mt-1">{errors.studentsTaught.message}</p>}
@@ -170,7 +169,7 @@ export default function ReportsPage() {
                 <input
                   type="number"
                   placeholder="55"
-                  {...register("avgSessionDuration", { required: true, valueAsNumber: true })}
+                  {...register("avgSessionDuration", { valueAsNumber: true })}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none transition-all font-medium text-slate-600"
                 />
                 {errors.avgSessionDuration && <p className="text-red-500 text-xs mt-1">{errors.avgSessionDuration.message}</p>}
@@ -182,7 +181,7 @@ export default function ReportsPage() {
                 <input
                   type="number"
                   placeholder="8"
-                  {...register("materialsUploaded", { required: true, valueAsNumber: true })}
+                  {...register("materialsUploaded", { valueAsNumber: true })}
                   className="w-full px-5 py-3.5 bg-slate-50 border border-gray-100 rounded-xl focus:outline-none transition-all font-medium text-slate-600"
                 />
                 {errors.materialsUploaded && <p className="text-red-500 text-xs mt-1">{errors.materialsUploaded.message}</p>}
@@ -196,7 +195,7 @@ export default function ReportsPage() {
                 </label>
                 <textarea
                   rows={4}
-                  {...register("teachingSummary", { required: true })}
+                  {...register("teachingSummary")}
                   placeholder="Provide a summary of topics covered, teaching methods used, and overall progress..."
                   className="w-full p-6 bg-slate-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600 resize-none"
                 />
@@ -208,7 +207,7 @@ export default function ReportsPage() {
                 </label>
                 <textarea
                   rows={4}
-                  {...register("studentProgress", { required: true })}
+                  {...register("studentProgress")}
                   placeholder="Highlight notable student achievements, improvements, or areas needing attention..."
                   className="w-full p-6 bg-slate-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600 resize-none"
                 />
@@ -220,7 +219,7 @@ export default function ReportsPage() {
                 </label>
                 <textarea
                   rows={4}
-                  {...register("challenges", { required: true })}
+                  {...register("challenges")}
                   placeholder="Describe any challenges encountered during the week..."
                   className="w-full p-6 bg-slate-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-medium text-slate-600 resize-none"
                 />

@@ -186,9 +186,7 @@ export default function Roles() {
                                     <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                                         {t("roleName")}
                                     </th>
-                                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
-                                        {t("createdAt")}
-                                    </th>
+                                
                                     <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">
                                         {t("actions")}
                                     </th>
@@ -220,16 +218,7 @@ export default function Roles() {
                                                 </div>
                                             </td>
 
-                                            {/* CREATED AT */}
-                                            <td className="px-6 py-4">
-                                                <span className="text-sm text-gray-600">
-                                                    {new Date(role.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
-                                                        year: 'numeric',
-                                                        month: 'short',
-                                                        day: 'numeric'
-                                                    })}
-                                                </span>
-                                            </td>
+                                  
 
                                             {/* ACTIONS */}
                                             <td className="px-6 py-4">

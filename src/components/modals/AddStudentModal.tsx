@@ -21,11 +21,11 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
   const { data: plansData } = usePlans();
   const { data: ranksResponse } = useGetRanks();
   const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<StudentFormData>({
-    resolver: zodResolver(getStudentSchema(t)),
+    resolver: zodResolver(getStudentSchema(t)) as any,
     defaultValues: {
       phone_code: '+20',
       status: 'approved',
-      gender: '',
+      gender: 'male',
       country: 'مصر',
     }
   });
@@ -55,7 +55,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
 
   const plans = plansData || [];
   const planOptions = [
-    { value: '', label: t('Free Plan') },
+    { value: '', label:'' },
     ...plans.map((p: any) => ({
       value: p.id,
       label: p.name,
@@ -138,7 +138,6 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                 </label>
                 <input
                   type="email"
-                  required
                   {...register('email')}
                   placeholder="ex :- student@example.com"
                   className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.email ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300`}
@@ -175,6 +174,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.phone_code && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.phone_code.message}</p>}
                   </div>
                 )}
               />
@@ -192,6 +192,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.birthDate && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.birthDate.message}</p>}
                   </div>
                 )}
               />
@@ -208,6 +209,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.gender && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.gender.message}</p>}
                   </div>
                 )}
               />
@@ -227,6 +229,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.country && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.country.message}</p>}
                   </div>
                 )}
               />
@@ -242,6 +245,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.plan && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.plan.message}</p>}
                   </div>
                 )}
               />
@@ -262,6 +266,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                     onChange={field.onChange}
                     className="rounded-2xl border-none bg-gray-50"
                   />
+                  {errors.rankId && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.rankId.message}</p>}
                 </div>
               )}
             />
@@ -298,6 +303,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                       onChange={field.onChange}
                       className="rounded-2xl border-none bg-gray-50"
                     />
+                    {errors.status && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.status.message}</p>}
                   </div>
                 )}
               />

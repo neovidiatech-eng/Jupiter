@@ -104,6 +104,22 @@ export interface ScheduleSubject {
     updatedAt: string;
 }
 
+export interface ScheduleLogs {
+    id: string;
+    scheduleId: string;
+    joinTime_student: string | null;
+    leaveTime_student: string | null;
+    joinTime_teacher: string | null;
+    leaveTime_teacher: string | null;
+    duration_student: number | null;
+    duration_teacher: number | null;
+    isTeacherLate: boolean;
+    isTeacherCompleted: boolean;
+    isStudentAttended: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface Schedule {
     id: string;
     teacherId: string;
@@ -122,9 +138,11 @@ export interface Schedule {
     is_recurring: boolean;
     day_of_week: string | null;
     parent_recurring_id: string | null;
+    order?: number;
     student: Student;
     teacher: Teacher;
     subject?: ScheduleSubject;
+    scheduleLogs?: ScheduleLogs;
 }
 
 export interface Pagination {

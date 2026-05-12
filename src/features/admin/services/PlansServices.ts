@@ -27,13 +27,13 @@ export const deletePlans = async (id: string) => {
 };
 
 export interface UpdatePlanPayload {
-  name_ar?: string;
-  name_en?: string;
+  name?: string;
+  description?: string;
   price?: number;
   duration?: number;
   sessionsCount?: number;
   active?: boolean;
-  bestSeller?: boolean;
+  currencyId?: string;
   features?: string[];
 }
 
@@ -46,6 +46,17 @@ export const updatePlan = async (id: string, data: UpdatePlanPayload) => {
     return res.data;
   } catch (error) {
     console.error("Update plan failed:", error);
+    throw error;
+  }
+};
+
+// create plan
+export const createPlan = async (data: UpdatePlanPayload) => {
+  try {
+    const res = await api.post("/subscription/plans", data);
+    return res.data;
+  } catch (error) {
+    console.error("Create plan failed:", error);
     throw error;
   }
 };

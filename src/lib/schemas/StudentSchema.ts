@@ -3,17 +3,17 @@ import { z } from 'zod';
 type TFunc = (key: string, options?: any) => string;
 
 export const getStudentSchema = (t: TFunc) => z.object({
-  name: z.string().min(3, t("validation.min", { count: 3 })),
+  name: z.string().min(3, t("validation.min", { count: 3 })).max(32, t("validation.max", { count: 32 })),
   email: z.string().email(t("validation.email")),
   phone_code: z.string().min(1, t("validation.required")),
-  phone: z.string().min(1, t("validation.required")),
-  gender: z.string().min(1, t("validation.required")),
-  birthDate: z.string().optional().or(z.literal('')),
-  plan: z.string().optional().or(z.literal('')),
+  phone: z.string().min(11, t("validation.min", { count: 11})),
+  gender: z.enum(['male', 'female']),
+  birthDate: z.string(t("validation.required")),
+  plan: z.string(t("validation.required")),
   country: z.string().min(1, t("validation.required")),
   status: z.enum(['approved', 'pending', 'rejected']),
-  rankId: z.string().optional().or(z.literal('')),
-  password: z.string().min(6, t("validation.min", { count: 6 })).optional().or(z.literal('')),
+  rankId: z.string(t("validation.required")),
+  password: z.string().min(6, t("validation.min", { count: 6 })),
 }).superRefine((data, ctx) => {
   const { phone_code, phone } = data;
 
