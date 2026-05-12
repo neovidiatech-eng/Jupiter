@@ -28,6 +28,19 @@ export const updateRole = async ({
     return response.data;
 };
 
+export const addPermissionsToRole = async ({
+    roleId,
+    permissionIds,
+}: {
+    roleId: string;
+    permissionIds: string[];
+}): Promise<any> => {
+    const response = await api.patch(`/system/permissions/add-permissions-to-role/${roleId}`, {
+        permissionIds,
+    });
+    return response.data;
+};
+
 export const deleteRole = async ({
     id,
 }: {

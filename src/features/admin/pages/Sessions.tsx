@@ -101,7 +101,6 @@ export default function Sessions() {
           startDate: formData.monthYear ? `${formData.monthYear}-01` : new Date().toISOString().split('T')[0],
           endDate: formData.monthYear ? `${formData.monthYear}-28` : new Date().toISOString().split('T')[0],
           notification_Time: formData.notification_Time || '10',
-          type: formData.type,
           language: formData.language,
         });
       }

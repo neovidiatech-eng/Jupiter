@@ -3,6 +3,8 @@ export interface Role {
     name: string;
     createdAt: string;
     updatedAt: string;
+    permissionIds?: string[];
+    permissions?: any[];
 }
 
 export interface RolesResponse {

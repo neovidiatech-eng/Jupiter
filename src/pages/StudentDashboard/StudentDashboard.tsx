@@ -14,6 +14,7 @@ import StudentDashboardLayout from "./StudentDashboardLayout";
 import { studentDashboardRoutes } from "./studentDashboardRoutes";
 import { useDashboardData } from "../../features/student/hooks/useDashboardData";
 import { useCreateConversation } from "../../hooks/useMessages";
+import { useJoinSession } from "../../features/student/hooks/useSessions";
 
 import { useLanguage } from "../../contexts/LanguageContext";
 import TeacherFeedback from "../../features/student/components/Feedback";
@@ -22,12 +23,13 @@ export default function StudentDashboard() {
   const { language } = useLanguage();
   const navigate = useNavigate();
 
-  const { data: dashboardResponse, isLoading: isDashboardLoading } = useDashboardData();
+  const { data: dashboardResponse, isLoading: isDashboardLoading, refetch } = useDashboardData();
   const dashboardData = dashboardResponse?.data;
   const metadata = dashboardData?.metadata;
   const nextSession = dashboardData?.nextSchedule;
 
   const { mutate: startChat, isPending } = useCreateConversation();
+  const { mutate: joinSession, isPending: isJoining } = useJoinSession();
 
 
   const [timeLeft, setTimeLeft] = useState(0);
@@ -37,19 +39,31 @@ export default function StudentDashboard() {
       setTimeLeft(0);
       return;
     }
-    const targetDate = new Date(nextSession.start_time);
+    const startTime = new Date(nextSession.start_time).getTime();
+    const endTime = new Date(nextSession.end_time).getTime();
 
     const updateTimer = () => {
       const now = new Date().getTime();
-      const dist = targetDate.getTime() - now;
-      setTimeLeft(Math.max(0, dist));
-    };
 
+      if (now < startTime) {
+        // Counting down to start
+        setTimeLeft(startTime - now);
+      } else if (now < endTime) {
+        // Session is ongoing, counting down to end
+        setTimeLeft(endTime - now);
+      } else {
+        // Session ended
+        if (timeLeft > 0) {
+          setTimeLeft(0);
+          refetch(); // Fetch next session if available
+        }
+      }
+    };
 
     updateTimer();
     const timer = setInterval(updateTimer, 1000);
     return () => clearInterval(timer);
-  }, [nextSession]);
+  }, [nextSession, refetch]);
 
   const countdown = useMemo(() => {
     const totalSeconds = Math.floor(timeLeft / 1000);
@@ -68,7 +82,22 @@ export default function StudentDashboard() {
   }, [timeLeft]);
 
   const JOIN_THRESHOLD_SECONDS = 2 * 60;
-  const isSessionReady = nextSession && countdown.totalSeconds <= JOIN_THRESHOLD_SECONDS;
+
+  const isSessionOngoing = useMemo(() => {
+    if (!nextSession) return false;
+    const now = new Date().getTime();
+    const startTime = new Date(nextSession.start_time).getTime();
+    const endTime = new Date(nextSession.end_time).getTime();
+    return now >= startTime && now < endTime;
+  }, [nextSession, timeLeft]);
+
+  const isSessionReady = useMemo(() => {
+    if (!nextSession) return false;
+    const now = new Date().getTime();
+    const startTime = new Date(nextSession.start_time).getTime();
+    const endTime = new Date(nextSession.end_time).getTime();
+    return (now >= startTime - (JOIN_THRESHOLD_SECONDS * 1000)) && now < endTime;
+  }, [nextSession, timeLeft]);
 
   const renderStudentHome = () => (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -81,10 +110,12 @@ export default function StudentDashboard() {
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           <div className="space-y-6 flex-1">
             <div className="space-y-2">
-              <p className="text-blue-100 font-bold tracking-widest uppercase text-xs">
-                {language === "ar" ? "تبدأ الحصة القادمة خلال" : "Next Session Starts In"}
+              <p className={`font-bold tracking-widest uppercase text-xs ${isSessionOngoing ? "text-red-400" : "text-blue-100"}`}>
+                {isSessionOngoing
+                  ? (language === "ar" ? "الوقت المتبقي لنهاية الحصة" : "Time remaining in session")
+                  : (language === "ar" ? "تبدأ الحصة القادمة خلال" : "Next Session Starts In")}
               </p>
-              <h2 className="text-4xl md:text-5xl font-black tracking-tighter flex items-baseline gap-2">
+              <h2 className={`text-4xl md:text-5xl font-black tracking-tighter flex items-baseline gap-2 ${isSessionOngoing ? "text-red-500" : "text-white"}`}>
                 {countdown.days !== "00" && (
                   <span className="flex items-baseline gap-1">
                     {countdown.days}
@@ -128,14 +159,22 @@ export default function StudentDashboard() {
 
             <div className="flex flex-wrap gap-4 pt-6">
               <button
-                disabled={!isSessionReady}
+                onClick={() => nextSession && joinSession(nextSession.id)}
+                disabled={!isSessionReady || isJoining}
                 className={`px-8 py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${isSessionReady
                   ? "bg-white text-blue-600 hover:bg-blue-50 hover:-translate-y-1"
                   : "bg-white/20 text-white/50 cursor-not-allowed"
                   }`}
               >
-                {isSessionReady ? "Join Now" : "Wait for Session"}
+                {isJoining
+                  ? (language === "ar" ? "جاري الانضمام..." : "Joining...")
+                  : (isSessionOngoing
+                    ? (language === "ar" ? "انضم للحصة الآن" : "Join Ongoing Session")
+                    : (isSessionReady
+                      ? (language === "ar" ? "انضم الآن" : "Join Now")
+                      : (language === "ar" ? "انتظر الحصة" : "Wait for Session")))}
               </button>
+
               <button
                 onClick={() => navigate('/student-dashboard/reschedule')}
                 className="flex items-center gap-2 bg-white/10 border border-white/20 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-bold hover:bg-white/20 transition-all active:scale-95"
@@ -249,10 +288,19 @@ export default function StudentDashboard() {
         </div>
 
         <div className="lg:col-span-1 h-full">
-          <TeacherFeedback
-            rating={Number(dashboardData?.metadata?.user?.reviewsReceived?.[0]?.rating || 0)}
-            message={dashboardData?.metadata?.user?.reviewsReceived?.[0]?.comment || ""}
-          />
+          {(dashboardData?.metadata?.user?.reviewsReceived?.length ?? 0) > 0 ? (
+            <TeacherFeedback
+              rating={Number(dashboardData?.metadata?.user?.reviewsReceived?.[0]?.rating || 0)}
+              message={dashboardData?.metadata?.user?.reviewsReceived?.[0]?.comment || ""}
+            />
+          ) : (
+            <div className="bg-white rounded-[32px] border border-slate-100 p-8 flex flex-col items-center justify-center h-full shadow-sm">
+               <MessageSquare className="w-12 h-12 text-slate-200 mb-4" />
+               <h2 className="text-xl font-bold text-slate-400 text-center">
+                 {language === "ar" ? "لا يوجد تقييمات حتى الآن" : "No reviews yet"}
+               </h2>
+            </div>
+          )}
         </div>
       </div>
 

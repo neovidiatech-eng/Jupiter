@@ -49,7 +49,6 @@ export interface CreateRecurringSchedulePayload {
     startDate: string;
     endDate: string;
     notification_Time: string;
-    type: ScheduleType;
     language: string;
 }
 

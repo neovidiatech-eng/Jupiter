@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Trash2, Plus, Pencil, Search, ShieldCheck, Home } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Pagination from "../../../components/ui/Pagination";
-import { useDeleteRole, useAddRole, useSearchRoles, useUpdateRole } from "../hooks/useRoles";
+import { useDeleteRole, useAddRole, useSearchRoles, useUpdateRole, useAddPermissionsToRole } from "../hooks/useRoles";
 import AddRoleModal from "../../../components/modals/AddRoleModal";
 import { Role } from "../../../types/roles";
 import { RoleFormData } from "../../../lib/schemas/RoleSchema";
@@ -20,6 +20,7 @@ export default function Roles() {
     const { data: roles, isLoading } = useSearchRoles(debouncedSearch);
     const { mutate: addRole, isPending: isAdding } = useAddRole();
     const { mutate: updateRole, isPending: isUpdating } = useUpdateRole();
+    const { mutate: addPermissions, isPending: isAddingPermissions } = useAddPermissionsToRole();
     const { mutate: deleteRole } = useDeleteRole();
     const { confirm, ConfirmDialog } = useConfirm();
 
@@ -56,19 +57,38 @@ export default function Roles() {
     };
 
     const handleEditClick = (role: Role) => {
-        setSelectedRole(role);
+        setSelectedRole({
+            ...role,
+            permissionIds: role.permissionIds || role.permissions?.map((p: any) => p.id) || []
+        });
         setIsModalOpen(true);
     };
 
     const handleSubmitRole = (data: RoleFormData) => {
         if (selectedRole) {
+            const addedPermissions = data.permissionIds.filter(
+                (id: string) => !selectedRole.permissionIds.includes(id)
+            );
+
             updateRole({
                 id: selectedRole.id,
                 role: { name: data.name },
             }, {
                 onSuccess: () => {
-                    setIsModalOpen(false);
-                    setSelectedRole(null);
+                    if (addedPermissions.length > 0) {
+                        addPermissions({
+                            roleId: selectedRole.id,
+                            permissionIds: addedPermissions,
+                        }, {
+                            onSuccess: () => {
+                                setIsModalOpen(false);
+                                setSelectedRole(null);
+                            }
+                        });
+                    } else {
+                        setIsModalOpen(false);
+                        setSelectedRole(null);
+                    }
                 }
             });
         } else {
@@ -268,7 +288,7 @@ export default function Roles() {
                 }}
                 onSubmit={handleSubmitRole}
                 initialData={selectedRole}
-                isLoading={isAdding || isUpdating}
+                isLoading={isAdding || isUpdating || isAddingPermissions}
             />
             {ConfirmDialog}
         </div>

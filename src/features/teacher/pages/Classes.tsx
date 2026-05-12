@@ -259,13 +259,15 @@ const ClassesPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 md:p-8 lg:p-12 max-w-[1600px] mx-auto animate-fade-in w-full overflow-x-hidden">
       {/* Main Header */}
-      <header className="mb-10 pl-1">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-2 font-['Outfit']">
-          Classes
-        </h1>
-        <p className="text-sm sm:text-base text-slate-500 font-medium">
-          Manage and track all your teaching sessions
-        </p>
+      <header className="mb-10 pl-1 flex justify-between items-end">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-2 font-['Outfit']">
+            Classes
+          </h1>
+          <p className="text-sm sm:text-base text-slate-500 font-medium">
+            Manage and track all your teaching sessions
+          </p>
+        </div>
       </header>
 
       {/* Filters Bar */}

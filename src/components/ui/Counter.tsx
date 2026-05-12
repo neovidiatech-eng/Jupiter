@@ -28,65 +28,76 @@ export default function MiniHeaderTimer() {
   const nextSession = useMemo<Schedule | null>(() => {
     if (!data?.data) return null;
 
-    // data.data could be an array or an object with schedule categories
     const sessions: Schedule[] = Array.isArray(data.data)
       ? data.data
       : [
-          ...((data.data as any).upcomingSchedule || []),
           ...((data.data as any).toDaySchedule || []),
+          ...((data.data as any).upcomingSchedule || []),
           ...((data.data as any).previousSchedule || []),
         ];
 
     if (!sessions.length) return null;
 
-    const now = new Date();
-
-    const upcomingSessions = sessions
-      .filter(
-        (session: Schedule) =>
-          new Date(session.start_time).getTime() > now.getTime()
-      )
-      .sort(
-        (a: Schedule, b: Schedule) =>
-          new Date(a.start_time).getTime() -
-          new Date(b.start_time).getTime()
-      );
-
-    return upcomingSessions[0] || null;
+    const now = new Date().getTime();
+    
+    // Sort by start time
+    const sorted = [...sessions].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    
+    // Find the first session that hasn't ended yet
+    return sorted.find(s => new Date(s.end_time).getTime() > now) || null;
   }, [data, refreshTrigger]);
 
+
   useEffect(() => {
-    if (!nextSession) return;
+    if (!nextSession) {
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      return;
+    }
+    const startTime = new Date(nextSession.start_time).getTime();
+    const endTime = new Date(nextSession.end_time).getTime();
 
-    const interval = setInterval(() => {
+    const updateTimer = () => {
       const now = new Date().getTime();
-      const sessionTime = new Date(nextSession.start_time).getTime();
-      const distance = sessionTime - now;
-
-      if (distance <= 0) {
-        setRefreshTrigger(prev => prev + 1);
-        return;
+      let diff = 0;
+      
+      if (now < startTime) {
+        diff = startTime - now;
+      } else if (now < endTime) {
+        diff = endTime - now;
+      } else {
+        setRefreshTrigger(p => p + 1);
+        diff = 0;
       }
 
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      setTimeLeft({ days: d, hours: h, minutes: m, seconds: s });
+    };
 
-      setTimeLeft({ days, hours, minutes, seconds });
-    }, 1000);
-
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, [nextSession]);
 
-  const totalSecondsLeft = useMemo(() => {
-    if (!nextSession) return 0;
+  const isSessionOngoing = useMemo(() => {
+    if (!nextSession) return false;
     const now = new Date().getTime();
-    const sessionTime = new Date(nextSession.start_time).getTime();
-    return Math.max(0, Math.floor((sessionTime - now) / 1000));
-  }, [nextSession, timeLeft.seconds]);
+    const startTime = new Date(nextSession.start_time).getTime();
+    const endTime = new Date(nextSession.end_time).getTime();
+    return now >= startTime && now < endTime;
+  }, [nextSession, timeLeft]);
 
-  const isReady = totalSecondsLeft > 0 && totalSecondsLeft <= 120; // 2 minutes
+  const isReady = useMemo(() => {
+    if (!nextSession) return false;
+    const now = new Date().getTime();
+    const startTime = new Date(nextSession.start_time).getTime();
+    const endTime = new Date(nextSession.end_time).getTime();
+    const JOIN_THRESHOLD_MS = 2 * 60 * 1000;
+    return now >= (startTime - JOIN_THRESHOLD_MS) && now < endTime;
+  }, [nextSession, timeLeft]);
 
   const handleJoinSession = async () => {
     if (!nextSession?.id || !nextSession?.link) return;
@@ -98,32 +109,47 @@ export default function MiniHeaderTimer() {
     }
   };
 
-  if (!nextSession || isLoading) return null;
+  if (isLoading) return null;
 
   return (
     <div className="flex items-center gap-4">
       {/* Container Box */}
-      <div className="flex items-center gap-6 bg-[#F3F4F6] border border-gray-100 rounded-[14px] px-5 py-2">
+      <div className={`flex items-center gap-6 border rounded-[14px] px-5 py-2 transition-all duration-300 ${isSessionOngoing ? "bg-red-50 border-red-100" : "bg-[#F3F4F6] border-gray-100"}`}>
         {/* Next Session Label */}
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
-          {language === "ar" ? "الحصة القادمة:" : "Next Session:"}
+        <span className={`text-[10px] font-bold uppercase tracking-tight ${isSessionOngoing ? "text-red-400" : "text-gray-400"}`}>
+          {isSessionOngoing 
+            ? (language === "ar" ? "الوقت المتبقي:" : "Time left:")
+            : (language === "ar" ? "الحصة القادمة:" : "Next Session:")}
         </span>
 
         {/* Timer Units */}
         <div className="flex items-center gap-3">
-          <TimeBlock 
-            value={timeLeft.days} 
-            label={language === "ar" ? "أيام" : "Days"} 
-          />
-          <span className="text-gray-300 font-bold -mt-3">:</span>
+          {timeLeft.days > 0 && (
+            <>
+              <TimeBlock 
+                value={timeLeft.days} 
+                label={language === "ar" ? "أيام" : "Days"} 
+                isOngoing={isSessionOngoing}
+              />
+              <span className={`font-bold -mt-3 ${isSessionOngoing ? "text-red-200" : "text-gray-300"}`}>:</span>
+            </>
+          )}
           <TimeBlock 
             value={timeLeft.hours} 
             label={language === "ar" ? "ساعات" : "Hours"} 
+            isOngoing={isSessionOngoing}
           />
-          <span className="text-gray-300 font-bold -mt-3">:</span>
+          <span className={`font-bold -mt-3 ${isSessionOngoing ? "text-red-200" : "text-gray-300"}`}>:</span>
           <TimeBlock 
             value={timeLeft.minutes} 
             label={language === "ar" ? "دقائق" : "Min"} 
+            isOngoing={isSessionOngoing}
+          />
+          <span className={`font-bold -mt-3 ${isSessionOngoing ? "text-red-200" : "text-gray-300"}`}>:</span>
+          <TimeBlock 
+            value={timeLeft.seconds} 
+            label={language === "ar" ? "ثواني" : "Sec"} 
+            isOngoing={isSessionOngoing}
           />
         </div>
       </div>
@@ -139,19 +165,23 @@ export default function MiniHeaderTimer() {
         }`}
       >
         <Video size={18} className={isReady ? "text-white" : "text-gray-300"} />
-        <span>{language === "ar" ? "انضم للحصة" : "Join Session"}</span>
+        <span>
+          {isSessionOngoing 
+            ? (language === "ar" ? "دخول الحصة" : "Join Ongoing") 
+            : (language === "ar" ? "انضم للحصة" : "Join Session")}
+        </span>
       </button>
     </div>
   );
 }
 
-function TimeBlock({ value, label }: { value: number; label: string }) {
+function TimeBlock({ value, label, isOngoing }: { value: number; label: string; isOngoing?: boolean }) {
   return (
     <div className="flex flex-col items-center min-w-[28px]">
-      <span className="text-[15px] font-black text-gray-800 tabular-nums leading-none">
+      <span className={`text-[15px] font-black tabular-nums leading-none ${isOngoing ? "text-red-600" : "text-gray-800"}`}>
         {String(value).padStart(2, "0")}
       </span>
-      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter mt-1">
+      <span className={`text-[8px] font-bold uppercase tracking-tighter mt-1 ${isOngoing ? "text-red-400" : "text-gray-400"}`}>
         {label}
       </span>
     </div>
