@@ -1,27 +1,43 @@
 import React, { useState } from "react";
 import { Video, Eye, Award, Crown, Gem, Shield } from "lucide-react";
 import { useCourses } from "../../../hooks/useCourses";
+import { useRanks } from "../../../hooks/useRanks";
 import { useNavigate } from "react-router-dom";
 
 const LMSContent: React.FC = () => {
   const navigate = useNavigate();
   const [selectedRank, setSelectedRank] = useState("All Ranks");
-  const { data: coursesData, isLoading } = useCourses();
+  const { data: coursesData, isLoading: coursesLoading } = useCourses();
+  const { data: ranksData, isLoading: ranksLoading } = useRanks();
 
-  const ranks = [
-    { label: "All Ranks", icon: Award, color: "#2563eb" },
-    { label: "SILVER", icon: Award, color: "#C0C0C0" },
-    { label: "GOLD", icon: Crown, color: "#FFD700" },
-    { label: "PLATINUM", icon: Gem, color: "#d3b373" },
-    { label: "TITAN", icon: Shield, color: "#000080" },
-  ];
+  const rankIcons: Record<string, any> = {
+    SILVER: Award,
+    GOLD: Crown,
+    PLATINUM: Gem,
+    TITAN: Shield,
+  };
+
+  const ranks = React.useMemo(() => {
+    const fetchedRanks =
+      ranksData?.items?.map((rank: any) => ({
+        label: rank.name,
+        icon: rankIcons[rank.name.toUpperCase()] || Award,
+        color: rank.color || "#2563eb",
+      })) || [];
+
+    return [
+      { label: "All Ranks", icon: Award, color: "#2563eb" },
+      ...fetchedRanks,
+    ];
+  }, [ranksData]);
+
   const courses = coursesData?.items || [];
 
   const handleViewLectures = (courseId: string) => {
     navigate(`/teacher-dashboard/courses/${courseId}/lectures`);
   };
 
-  if (isLoading) {
+  if (coursesLoading || ranksLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -57,12 +73,13 @@ const LMSContent: React.FC = () => {
             <button
               key={rank.label}
               onClick={() => setSelectedRank(rank.label)}
-              className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 md:px-12 py-3.5 rounded-xl text-[10px] sm:text-sm md:text-lg font-bold transition-all ${rank.label === selectedRank
-                ? "bg-[#2563eb] text-white shadow-xl shadow-blue-500/25"
-                : "bg-white text-[#2563eb] border border-gray-100 hover:bg-blue-50/50 shadow-sm"
-                } ${centerClasses}`}
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 md:px-12 py-3.5 rounded-xl text-[10px] sm:text-sm md:text-lg font-bold transition-all ${
+                rank.label === selectedRank
+                  ? "bg-[#2563eb] text-white shadow-xl shadow-blue-500/25"
+                  : "bg-white text-[#2563eb] border border-gray-100 hover:bg-blue-50/50 shadow-sm"
+              } ${centerClasses}`}
             >
-              <Icon size={18} />
+              <Icon size={25} className="flex-shrink-0" />
               <span className="ml-2">{rank.label}</span>
             </button>
           );
@@ -74,7 +91,8 @@ const LMSContent: React.FC = () => {
         {courses
           .filter(
             (item) =>
-              selectedRank === "All Ranks" || item.rank?.name?.toUpperCase() === selectedRank,
+              selectedRank === "All Ranks" ||
+              item.rank?.name?.toLowerCase() === selectedRank.toLowerCase(),
           )
           .map((item) => {
             return (
@@ -96,9 +114,7 @@ const LMSContent: React.FC = () => {
                   </h3>
 
                   <div className="flex items-center gap-3 mb-6">
-                    <span
-                      className="px-4 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-600"
-                    >
+                    <span className="px-4 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-600">
                       Course
                     </span>
                   </div>
