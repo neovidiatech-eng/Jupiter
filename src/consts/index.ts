@@ -1,1 +1,1 @@
-export const baseURL = "https://agro-plus.net";
+export const baseURL = "https://api.jupiter-egy.com";
