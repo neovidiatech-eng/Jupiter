@@ -1,3 +1,5 @@
+import { Course } from "./courses";
+
 export type ScheduleType = 'full' | 'half';
 
 export interface CreateSchedulePayload {
@@ -146,6 +148,8 @@ export interface Schedule {
     teacher: Teacher;
     subject?: ScheduleSubject;
     scheduleLogs?: ScheduleLogs;
+      course: Course;
+
 }
 
 export interface Pagination {

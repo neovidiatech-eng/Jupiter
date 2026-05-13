@@ -1,4 +1,4 @@
-import { X, Calendar, Clock, User, GraduationCap, Video, FileText, Bell, ExternalLink, Repeat } from 'lucide-react';
+import { X, Calendar, Clock, User, GraduationCap, Video, FileText, Bell, ExternalLink, Repeat, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Schedule } from '../../types/scheduales';
 
@@ -131,9 +131,9 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t('subjectLabel')}</p>
-                  <p className="text-sm font-bold text-gray-900">{session.subject?.[language === 'ar' ? 'name_ar' : 'name_en'] || session.description || '—'}</p>
+                  <p className="text-sm font-bold text-gray-900">{session.course.title ||""}</p>
                 </div>
-              </div> */}
+              </div>  */}
 
               <div className="flex items-start gap-4 group">
                 <div className="p-2.5 rounded-xl bg-amber-50 text-amber-500 group-hover:scale-110 transition-transform">
@@ -281,104 +281,179 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
 
           {/* Right Column - Recurring Sessions / Other Sessions */}
           <div className="w-full lg:w-[42%] bg-[#fcfdfe] border-l border-gray-100/80 flex flex-col overflow-hidden">
-            
-            {/* Recurring Sessions Header */}
-            {(session.is_recurring || session.parent_recurring_id) && groupedSessions && groupedSessions.length > 1 ? (
-              <>
-                <div className="p-6 border-b border-gray-100/50 flex items-center justify-between bg-white/50 backdrop-blur-sm shrink-0">
-                  <div className="flex items-center gap-2">
-                    <Repeat className="w-4 h-4 text-indigo-500" />
-                    <h3 className="font-bold text-gray-900 text-sm">{t('recurringSessions')}</h3>
+
+  {/* Recurring Sessions Header */}
+  {(session.is_recurring || session.parent_recurring_id) && groupedSessions && groupedSessions.length > 1 ? (
+    <>
+      <div className="p-6 border-b border-gray-100/50 flex items-center justify-between bg-white/50 backdrop-blur-sm shrink-0">
+        <div className="flex items-center gap-2">
+          <Repeat className="w-4 h-4 text-indigo-500" />
+          <h3 className="font-bold text-gray-900 text-sm">{t('recurringSessions')}</h3>
+        </div>
+        <span className="px-3 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-bold rounded-full uppercase tracking-wider shadow-sm">
+          {groupedSessions.length} {t('sessions')}
+        </span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
+        {groupedSessions.map((s, index) => {
+          const { date, time } = formatDateTime(s.start_time);
+          const { time: endT } = formatDateTime(s.end_time);
+          const isCurrent = s.id === session.id;
+
+          // ✅ lecture mapping by order
+          const lectures = session.course?.lectures || [];
+          const sortedLectures = [...lectures].sort((a, b) => a.order - b.order);
+          const lecture = sortedLectures[index] || null;
+
+          return (
+            <div
+              key={s.id}
+              className={`bg-white border rounded-2xl p-4 transition-all ${
+                isCurrent
+                  ? 'border-indigo-200 ring-2 ring-indigo-500/10 shadow-sm'
+                  : 'border-gray-100 hover:border-gray-200'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+
+                <div className="flex-1">
+
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                      {t(s.day_of_week?.toLowerCase() || '') || s.day_of_week || '—'}
+                    </span>
+
+                    {isCurrent && (
+                      <span className="text-[8px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                        CURRENT
+                      </span>
+                    )}
                   </div>
-                  <span className="px-3 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-bold rounded-full uppercase tracking-wider shadow-sm">
-                    {groupedSessions.length} {t('sessions')}
+
+                  <p className="text-xs font-bold text-gray-800">{date}</p>
+
+                  <p className="text-[10px] font-bold text-gray-400 mt-0.5" dir="ltr">
+                    {time} - {endT}
+                  </p>
+
+                  {/* ⭐ Lecture per session */}
+                  {lecture && (
+                    <div className="mt-2 p-2 bg-indigo-50/40 rounded-lg border border-indigo-100">
+                      <p className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">
+                        Lecture {lecture.order}
+                      </p>
+
+                      <p className="text-xs font-bold text-gray-800 mt-0.5">
+                        {lecture.title}
+                      </p>
+
+                      <p className="text-[10px] text-gray-500 mt-0.5">
+                        {lecture.content}
+                      </p>
+
+                      {lecture.videoUrl && (
+                        <a
+                          href={lecture.videoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-indigo-500 hover:text-indigo-700 transition-colors inline-block mt-1"
+                        >
+                          Watch Video
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                </div>
+
+                <div className="flex flex-col items-end gap-2">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-widest ${getStatusStyle(s.status)}`}
+                  >
+                    {t(s.status?.toLowerCase() || '')}
                   </span>
+
+                  {s.link && (
+                    <a
+                      href={s.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-500 hover:text-indigo-700 transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
                 </div>
-                <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
-                  {groupedSessions.map(s => {
-                    const { date, time } = formatDateTime(s.start_time);
-                    const { time: endT } = formatDateTime(s.end_time);
-                    const isCurrent = s.id === session.id;
-                    return (
-                      <div
-                        key={s.id}
-                        className={`bg-white border rounded-2xl p-4 transition-all ${isCurrent ? 'border-indigo-200 ring-2 ring-indigo-500/10 shadow-sm' : 'border-gray-100 hover:border-gray-200'}`}
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{t(s.day_of_week?.toLowerCase() || '') || s.day_of_week || '—'}</span>
-                              {isCurrent && <span className="text-[8px] font-black text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">CURRENT</span>}
-                            </div>
-                            <p className="text-xs font-bold text-gray-800">{date}</p>
-                            <p className="text-[10px] font-bold text-gray-400 mt-0.5" dir="ltr">{time} - {endT}</p>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-widest ${getStatusStyle(s.status)}`}>
-                              {t(s.status?.toLowerCase() || '')}
-                            </span>
-                            {s.link && (
-                              <a href={s.link} target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:text-indigo-700 transition-colors">
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : allSessions.length > 1 ? (
-              <>
-                <div className="p-6 border-b border-gray-100/50 flex items-center justify-between bg-white/50 backdrop-blur-sm shrink-0">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-indigo-500" />
-                    <h3 className="font-bold text-gray-900 text-sm">{t('otherTeacherSessions')}</h3>
-                  </div>
-                  <span className="px-3 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-bold rounded-full uppercase tracking-wider shadow-sm">
-                    {allSessions.length} {t('sessions')}
-                  </span>
-                </div>
-                <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
-                  {allSessions
-                    .filter(s => s.id !== session.id)
-                    .map((s) => {
-                      const { date, time } = formatDateTime(s.start_time);
-                      const dur = calculateDuration(s.start_time, s.end_time);
-                      return (
-                        <div key={s.id} className="bg-white border border-gray-100 rounded-2xl p-4 hover:border-gray-200 transition-all">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex-1">
-                              <p className="text-xs font-bold text-gray-900">{s.title}</p>
-                              <p className="text-[10px] font-bold text-gray-400 mt-0.5">{s.student?.user?.name}</p>
-                              <div className="flex items-center gap-3 mt-1.5">
-                                <span className="text-[10px] font-bold text-gray-400">{date}</span>
-                                <span className="text-[10px] font-bold text-gray-300">•</span>
-                                <span className="text-[10px] font-bold text-gray-400" dir="ltr">{time}</span>
-                                <span className="text-[10px] font-bold text-gray-300">•</span>
-                                <span className="text-[10px] font-bold text-gray-400">{dur}m</span>
-                              </div>
-                            </div>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-widest ${getStatusStyle(s.status)}`}>
-                              {t(s.status?.toLowerCase() || '')}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
-                  <Calendar className="w-8 h-8 text-gray-300" />
-                </div>
-                <p className="text-sm font-bold text-gray-400 mb-1">{language === 'ar' ? 'لا توجد جلسات أخرى' : 'No other sessions'}</p>
-                <p className="text-xs text-gray-300">{language === 'ar' ? 'هذه جلسة مستقلة' : 'This is a standalone session'}</p>
+
               </div>
-            )}
-          </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  ) : allSessions.length > 1 ? (
+    <>
+      <div className="p-6 border-b border-gray-100/50 flex items-center justify-between bg-white/50 backdrop-blur-sm shrink-0">
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-indigo-500" />
+          <h3 className="font-bold text-gray-900 text-sm">{t('otherTeacherSessions')}</h3>
+        </div>
+        <span className="px-3 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-bold rounded-full uppercase tracking-wider shadow-sm">
+          {allSessions.length} {t('sessions')}
+        </span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar">
+        {allSessions
+          .filter(s => s.id !== session.id)
+          .map((s) => {
+            const { date, time } = formatDateTime(s.start_time);
+            const dur = calculateDuration(s.start_time, s.end_time);
+
+            return (
+              <div key={s.id} className="bg-white border border-gray-100 rounded-2xl p-4 hover:border-gray-200 transition-all">
+                <div className="flex items-center justify-between gap-3">
+
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-gray-900">{s.title}</p>
+                    <p className="text-[10px] font-bold text-gray-400 mt-0.5">
+                      {s.student?.user?.name}
+                    </p>
+
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <span className="text-[10px] font-bold text-gray-400">{date}</span>
+                      <span className="text-[10px] font-bold text-gray-300">•</span>
+                      <span className="text-[10px] font-bold text-gray-400" dir="ltr">{time}</span>
+                      <span className="text-[10px] font-bold text-gray-300">•</span>
+                      <span className="text-[10px] font-bold text-gray-400">{dur}m</span>
+                    </div>
+                  </div>
+
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-widest ${getStatusStyle(s.status)}`}>
+                    {t(s.status?.toLowerCase() || '')}
+                  </span>
+
+                </div>
+              </div>
+            );
+          })}
+      </div>
+    </>
+  ) : (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
+        <Calendar className="w-8 h-8 text-gray-300" />
+      </div>
+      <p className="text-sm font-bold text-gray-400 mb-1">
+        {language === 'ar' ? 'لا توجد جلسات أخرى' : 'No other sessions'}
+      </p>
+      <p className="text-xs text-gray-300">
+        {language === 'ar' ? 'هذه جلسة مستقلة' : 'This is a standalone session'}
+      </p>
+    </div>
+  )}
+</div>
         </div>
 
         {/* Footer */}

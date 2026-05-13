@@ -7,7 +7,7 @@ import { message } from "antd";
 class ErrorService {
   private static lastMessage: string = "";
   private static lastTimestamp: number = 0;
-  private static COOLDOWN = 500; // ms
+  private static COOLDOWN = 3000; // ms - prevents duplicate toasts from interceptor + hook onError
 
   /**
    * Checks if a message should be displayed based on deduplication rules.

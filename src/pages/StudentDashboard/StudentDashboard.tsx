@@ -6,7 +6,10 @@ import {
   MessageSquare,
   ChevronRight,
   Star,
+  Plus,
+  ClipboardList,
 } from "lucide-react";
+import { useGetAssignments } from "../../hooks/useAssignment";
 // Student Dashboard Page
 import { useState, useEffect, useMemo } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
@@ -18,6 +21,8 @@ import { useJoinSession } from "../../features/student/hooks/useSessions";
 
 import { useLanguage } from "../../contexts/LanguageContext";
 import TeacherFeedback from "../../features/student/components/Feedback";
+import SubmitAssignmentModal from "../../components/modals/SubmitAssignmentModal";
+import { HomeworkItem } from "../../types/assignment";
 
 export default function StudentDashboard() {
   const { language } = useLanguage();
@@ -30,6 +35,18 @@ export default function StudentDashboard() {
 
   const { mutate: startChat, isPending } = useCreateConversation();
   const { mutate: joinSession, isPending: isJoining } = useJoinSession();
+
+  const { data: assignmentsResponse } = useGetAssignments();
+  const latestAssignments = (assignmentsResponse?.data?.items || []).slice(0, 3);
+
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<HomeworkItem | null>(null);
+
+  const handleSubmitClick = (e: React.MouseEvent, assignment: HomeworkItem) => {
+    e.stopPropagation();
+    setSelectedAssignment(assignment);
+    setIsSubmitModalOpen(true);
+  };
 
 
   const [timeLeft, setTimeLeft] = useState(0);
@@ -230,7 +247,7 @@ export default function StudentDashboard() {
 
       {/* Main Content Area: Subscription & Feedback Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-8">
-        <div className="lg:col-span-2 h-full">
+        <div className="lg:col-span-1 h-full">
           {/* Your Subscription Card */}
           <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group h-full flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4 mt-10">
@@ -283,6 +300,64 @@ export default function StudentDashboard() {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-1 h-full">
+          <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all h-full flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                  <ClipboardList className="w-5 h-5 text-indigo-500" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800">
+                  {language === "ar" ? "آخر الواجبات" : "Latest Assignments"}
+                </h3>
+              </div>
+            </div>
+
+            <div className="space-y-4 flex-1">
+              {latestAssignments.length > 0 ? (
+                latestAssignments.map((assignment) => (
+                  <div 
+                    key={assignment.id} 
+                    className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 border border-slate-50 hover:border-indigo-100 hover:bg-white transition-all group cursor-pointer"
+                  >
+                    <div className="flex-1 flex flex-col gap-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-700 truncate">
+                          {assignment.title}
+                        </span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider border shrink-0 ${
+                          assignment.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                          assignment.status === 'submitted' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                        }`}>
+                          {language === 'ar' ? 
+                            (assignment.status === 'completed' ? 'مكتمل' : assignment.status === 'submitted' ? 'تم التسليم' : 'قيد الانتظار') : 
+                            assignment.status}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-bold truncate">
+                        {assignment.description}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={(e) => handleSubmitClick(e, assignment)}
+                      className={`p-2 rounded-xl bg-white text-slate-400 group-hover:text-indigo-500 group-hover:bg-indigo-50 transition-all shadow-sm shrink-0 ${language === 'ar' ? 'mr-3' : 'ml-3'}`}
+                    >
+                      <Plus  className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                  <BookOpen className="w-10 h-10 mb-2 opacity-20" />
+                  <p className="text-xs font-bold">
+                    {language === "ar" ? "لا توجد واجبات حالياً" : "No assignments found"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -414,9 +489,15 @@ export default function StudentDashboard() {
             })}
           </Routes>
         )}
-
       </StudentDashboardLayout>
-
+      {isSubmitModalOpen && selectedAssignment && (
+        <SubmitAssignmentModal 
+          isOpen={isSubmitModalOpen}
+          onClose={() => setIsSubmitModalOpen(false)}
+          assignmentId={selectedAssignment.id}
+          assignmentTitle={selectedAssignment.title}
+        />
+      )}
     </>
   );
 }

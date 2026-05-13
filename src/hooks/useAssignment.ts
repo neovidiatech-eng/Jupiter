@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getAssignments, deleteAssignment, createAssignment, updateAssignment } from "../services/AssignmentServices"
+import { getAssignments, deleteAssignment, createAssignment, updateAssignment, assignAnswerToAssignment } from "../services/AssignmentServices"
 import ErrorService from "../utils/ErrorService"
 import { Assignment } from "../types/assignment"
 
@@ -59,6 +59,17 @@ export const useUpdateAssignment = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["assignments"] });
             ErrorService.success("Assignment updated successfully");
+        }
+    });
+};
+
+export const useSubmitAssignment = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string, data: FormData }) => assignAnswerToAssignment(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["assignments"] });
+            ErrorService.success("Assignment submitted successfully");
         }
     });
 };

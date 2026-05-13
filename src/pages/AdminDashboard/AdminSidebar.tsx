@@ -22,7 +22,8 @@ import {
   ChevronDown,
   ChevronRight,
   Box,
-  Users
+  Users,
+  FolderOpen
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -211,19 +212,19 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
 
 
 
-{/* 
+ 
               <NavLink
-                to="/dashboard/library"
+                to="/dashboard/assignments"
                 onClick={onClose}
                 className={({ isActive }) => `
                   w-full flex items-center gap-4 ${isCollapsed ? 'justify-center px-2' : 'px-5'} py-3.5 rounded-xl font-bold transition-all
                   ${isActive ? 'bg-[#f0f4ff] text-[#2563eb]' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
                 `}
-                title={isCollapsed ? "Library" : ''}
+                title={isCollapsed ? "Assignments" : ''}
               >
                 <FolderOpen className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
-                {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Library</span>}
-              </NavLink> */}
+                {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Assignments</span>}
+              </NavLink>
                <NavLink
                 to="/dashboard/roles"
                 onClick={onClose}

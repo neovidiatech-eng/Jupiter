@@ -108,3 +108,87 @@ export interface MultipleSessionsInput {
     meetingLink?: string;
   }>;
 }
+
+export interface GetSessionById {
+  id: string;
+  teacherId: string;
+  studentId: string;
+  courseId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  notes: string | null;
+  description: string;
+  videoUrl: string | null;
+  slidesUrl: string | null;
+  link: string;
+  title: string;
+  platform: string;
+  type: string;
+  language: string;
+  end_time: string;
+  start_time: string;
+  day_of_week: string;
+  is_recurring: boolean;
+  parent_recurring_id: string | null;
+  rescheduledFromId: string | null;
+  rescheduledToId: string | null;
+  lecturesId: string;
+  order: number;
+  student: {
+    id: string;
+    user_id: string;
+    birth_date: string;
+    active: boolean;
+    planId: string;
+    country: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+    sessions: number;
+    sessions_attended: number;
+    sessions_remaining: number;
+    avgRating: number;
+    totalReviews: number;
+    rankId: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+      code_country: string;
+    };
+  };
+  teacher: {
+    id: string;
+    user_id: string;
+    currencyId: string;
+    hour_price: number;
+    active: boolean;
+    roleId: string | null;
+    createdAt: string;
+    updatedAt: string;
+    avgRating: number;
+    totalReviews: number;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+      code_country: string;
+    };
+  };
+  course: {
+    id: string;
+    title: string;
+    lectures: {
+      title: string;
+      content: string;
+      videoUrl: string;
+      pdfUrl: string;
+      date: string;
+      order: number;
+    }[];
+  };
+  scheduleLogs: any;
+}

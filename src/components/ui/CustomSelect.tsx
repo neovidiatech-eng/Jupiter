@@ -38,7 +38,7 @@ const CustomSelect = forwardRef<any, CustomSelectProps>(({
         showSearch
         className={`w-full h-[46px] ${className} bg-slate-50 rounded-lg border-0`}
         optionFilterProp="children"
-        
+        getPopupContainer={(trigger) => trigger.parentElement || document.body}
         placeholder="اختر من القائمة"
         {...props} 
       >

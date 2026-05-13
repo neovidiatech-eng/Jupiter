@@ -9,6 +9,7 @@ import {
   Users
 } from 'lucide-react';
 import { RouteConfig } from '../../components/constants/dashboardRoutes';
+import Assignments from '../../features/teacher/pages/Assignments';
 
 // Lazy Loading Page Components
 const ClassesPage = lazy(() => import('../../features/teacher/pages/Classes'));
@@ -42,6 +43,13 @@ export const teacherDashboardRoutes: RouteConfig[] = [
     path: 'courses/:courseId/lectures',
     element: <TeacherLectures />,
     hidden: true,
+  },
+  {
+    id :'assignments',
+    label:"Assignments",
+    icon: BookOpen,
+    path :"assignments",
+    element:<Assignments/>
   },
   {
     id: 'requests',

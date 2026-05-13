@@ -457,7 +457,7 @@ export default function Students() {
               gender: selectedStudent.gender || 'male',
               plan: selectedStudent.planId || '',
               rankId: selectedStudent.rankId || '',
-              password:'',
+              password:selectedStudent.user.password || '',
               birthDate: selectedStudent.birth_date ? selectedStudent.birth_date.split('T')[0] : '',
             }
             : null
@@ -481,9 +481,6 @@ export default function Students() {
               payload.planId = null;
             }
 
-            if (updatedData.password) {
-              payload.password = updatedData.password;
-            }
             await updateStudent({ id: updatedData.id, data: payload });
             setIsEditModalOpen(false);
           } catch (error) {
