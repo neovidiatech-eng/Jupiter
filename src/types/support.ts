@@ -60,3 +60,22 @@ export interface UpdateSupportCategoryInput {
     title?: string;
     active?: boolean;
 }
+
+export interface PopularSupportCategory {
+    _count: {
+        id: number;
+        active: number;
+    };
+    _sum: {
+        readingCount: number | null;
+    };
+    categoryId: string;
+    popular: SupportItem[];
+    category: SupportCategory;
+}
+
+export interface PopularSupportResponse {
+    message: string;
+    status: number;
+    data: PopularSupportCategory[];
+}

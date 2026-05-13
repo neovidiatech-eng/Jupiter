@@ -4,9 +4,10 @@ import en_US from 'antd/locale/en_US';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
 import { useTranslation } from 'react-i18next';
+import { useEffect, useRef, useState } from 'react';
 
 interface DatePickerFieldProps {
-  value?: string;        // YYYY-MM-DD or YYYY-MM string
+  value?: string;
   onChange?: (value: string) => void;
   label?: string;
   error?: string;
@@ -28,6 +29,13 @@ export default function DatePickerField({
 }: DatePickerFieldProps) {
   const { i18n } = useTranslation();
   const language = i18n.language.split('-')[0];
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [placement, setPlacement] = useState<
+    'bottomLeft' | 'topLeft'
+  >('bottomLeft');
+
   const dayjsValue = value ? dayjs(value) : null;
 
   const formatMap: Record<string, string> = {
@@ -46,14 +54,43 @@ export default function DatePickerField({
     quarter: 'YYYY-Q',
   };
 
+  const handlePlacement = () => {
+    if (!containerRef.current) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // ارتفاع تقريبي للكالندر
+    const calendarHeight = 350;
+
+    if (spaceBelow < calendarHeight && spaceAbove > calendarHeight) {
+      setPlacement('topLeft');
+    } else {
+      setPlacement('bottomLeft');
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('resize', handlePlacement);
+
+    return () => {
+      window.removeEventListener('resize', handlePlacement);
+    };
+  }, []);
+
   return (
-    <div className={`relative ${className}`}>
+    <div ref={containerRef} className={`relative ${className}`}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
           {label}
         </label>
       )}
-      <ConfigProvider locale={language === 'ar' ? ar_EG : en_US} direction={language === 'ar' ? 'rtl' : 'ltr'}
+
+      <ConfigProvider
+        locale={language === 'ar' ? ar_EG : en_US}
+        direction={language === 'ar' ? 'rtl' : 'ltr'}
         theme={{
           components: {
             DatePicker: {
@@ -66,19 +103,31 @@ export default function DatePickerField({
         <DatePicker
           picker={picker}
           value={dayjsValue}
-          onChange={(date) => onChange?.(date ? date.format(outputFormatMap[picker]) : '')}
+          onOpenChange={(open) => {
+            if (open) handlePlacement();
+          }}
+          onChange={(date) =>
+            onChange?.(
+              date ? date.format(outputFormatMap[picker]) : ''
+            )
+          }
           placeholder={placeholder}
           format={formatMap[picker]}
           style={{ width: '100%' }}
           disabled={disabled}
           size="large"
-          placement="bottomLeft"
-          getPopupContainer={(trigger) => trigger.parentElement!}
+          placement={placement}
+          getPopupContainer={() => document.body}
+          popupStyle={{ zIndex: 9999 }}
           status={error ? 'error' : undefined}
         />
       </ConfigProvider>
-      {error && <p className="text-red-500 text-xs mt-1 text-start">{error}</p>}
+
+      {error && (
+        <p className="text-red-500 text-xs mt-1 text-start">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
-

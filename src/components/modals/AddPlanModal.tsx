@@ -28,7 +28,7 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData, cur
       duration: 1,
       sessionsCount: 0,
       sessionTime: 60,
-      type: 'full',
+      type: 'quarterly',
       features: [''],
       status: 'active',
     },
@@ -64,7 +64,7 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData, cur
           duration: 1,
           sessionsCount: 0,
           sessionTime: 60,
-          type: 'full',
+          type: 'quarterly',
           features: [''],
           status: 'active',
         });
@@ -116,7 +116,7 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData, cur
                   <input 
                     {...register('name')} 
                     className="w-full px-5 py-3.5 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all" 
-                    placeholder="اسم الخطة بالعربي"
+                    placeholder="Plan Name"
                   />
                   {errors.name && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.name.message}</p>}
                 </div>
@@ -222,12 +222,14 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData, cur
                         <CustomSelect
                           {...field}
                           options={[
-                            { value: 'full', label: 'Full' },
-                            { value: 'half', label: 'Half' }
+                            { value: 'quarterly',    label: language === 'ar' ? 'ربع سنوي'   : 'Quarterly'    },
+                            { value: 'halfAnnually', label: language === 'ar' ? 'نصف سنوي'   : 'Half-Annually' },
+                            { value: 'annually',     label: language === 'ar' ? 'سنوي'       : 'Annually'     },
                           ]}
                         />
                       )}
                     />
+                    {errors.type && <p className="text-red-500 text-[10px] font-black mt-2 ml-1 uppercase">{errors.type.message}</p>}
                   </div>
                 </div>
               </div>

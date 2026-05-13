@@ -35,6 +35,7 @@ export interface UpdatePlanPayload {
   active?: boolean;
   currencyId?: string;
   features?: string[];
+  type?: string;
 }
 
 // update plan

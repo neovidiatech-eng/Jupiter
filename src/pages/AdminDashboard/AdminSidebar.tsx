@@ -6,7 +6,6 @@ import {
   UserPlus,
   PlayCircle,
   BookOpen,
-  FolderOpen,
   Settings,
   HelpCircle,
   User,
@@ -84,12 +83,13 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
 
         <div className={`p-6 mb-2 flex items-center gap-3 transition-all ${isCollapsed ? 'px-4 justify-center' : ''}`}>
           <div className="w-10 h-10 rounded-xl bg-[#2a286b] flex items-center justify-center shrink-0 shadow-sm relative">
-            <div className="absolute w-3 h-3 border-2 border-white rounded-[4px] top-2 left-2"></div>
-            <div className="absolute w-3 h-3 border-2 border-white rounded-[4px] bottom-2 right-2"></div>
+            {/* <div className="absolute w-3 h-3 border-2 border-white rounded-[4px] top-2 left-2"></div>
+            <div className="absolute w-3 h-3 border-2 border-white rounded-[4px] bottom-2 right-2"></div> */}
+              <img src="/logo.png" alt="logo" className="w-[60px] h-[50px]" />
           </div>
           <div className={`text-left transition-all duration-300 ${isCollapsed ? 'opacity-0 invisible w-0' : 'opacity-100'}`}>
-            <h2 className="text-xl font-black text-gray-900 tracking-tight whitespace-nowrap">EduAdmin Pro</h2>
-          </div>
+            <h2 className="text-xl font-black text-gray-900 tracking-tight whitespace-nowrap">Jupiter</h2>
+          </div> 
         </div>
 
         {/* Menu Items */}
@@ -211,7 +211,7 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
 
 
 
-
+{/* 
               <NavLink
                 to="/dashboard/library"
                 onClick={onClose}
@@ -223,7 +223,7 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setIsCollap
               >
                 <FolderOpen className={`w-5 h-5 flex-shrink-0 transition-all ${isCollapsed ? 'mx-auto' : ''}`} />
                 {!isCollapsed && <span className={`text-sm flex-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>Library</span>}
-              </NavLink>
+              </NavLink> */}
                <NavLink
                 to="/dashboard/roles"
                 onClick={onClose}

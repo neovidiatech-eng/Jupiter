@@ -54,4 +54,4 @@ export interface CreateExpenseDto {
   date: string;
 }
 
-export interface UpdateExpenseDto extends Partial<CreateExpenseDto> {}
+export interface UpdateExpenseDto extends Partial<CreateExpenseDto> { }

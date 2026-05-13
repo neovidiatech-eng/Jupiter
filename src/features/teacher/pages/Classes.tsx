@@ -1,9 +1,9 @@
 import React from "react";
-import { Search, Monitor , Pencil, LogOut } from "lucide-react";
+import { Search, Monitor, Pencil, LogOut } from "lucide-react";
 import { Table, Tag, Space, Button, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import {  useJoinSession, useUserSessions, useEndSession } from "../../../hooks/useSessions";
-import { Schedule, Student, ScheduleSubject } from "../../../types/scheduales";
+import { useJoinSession, useUserSessions, useEndSession } from "../../../hooks/useSessions";
+import { Schedule, Student } from "../../../types/scheduales";
 import AddRequestModal from "../components/AddRequestModal";
 import FeedbackModal from "../components/FeedbackModal";
 
@@ -24,24 +24,24 @@ const ClassesPage: React.FC = () => {
   const [currentTab, setCurrentTab] = React.useState<"History" | "Today" | "Upcoming">("Today");
 
   const { data: userSessions, isLoading } = useUserSessions(search);
-  const {mutateAsync: joinSession} = useJoinSession()
-  const {mutateAsync: endSession} = useEndSession()
+  const { mutateAsync: joinSession } = useJoinSession()
+  const { mutateAsync: endSession } = useEndSession()
   const sessions = React.useMemo(() => {
     if (!userSessions?.data) return [];
-    
+
     let data: Schedule[] = [];
     if (currentTab === "Upcoming") data = userSessions.data.upcomingSchedule || [];
     else if (currentTab === "Today") data = userSessions.data.toDaySchedule || [];
     else if (currentTab === "History") data = userSessions.data.previousSchedule || [];
 
-    return [...data].sort((a, b) => 
+    return [...data].sort((a, b) =>
       new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
     );
   }, [userSessions, currentTab]);
 
   const handleJoinSession = async (id: string, link: string) => {
- try {
-    await joinSession(id);
+    try {
+      await joinSession(id);
       window.open(link, "_blank", "noopener,noreferrer");
     } catch (error) {
       // Error is handled by the global axios interceptor in axios.ts
@@ -66,21 +66,22 @@ const ClassesPage: React.FC = () => {
   };
 
 
-  
+
 
   const columns: ColumnsType<Schedule> = [
 
-    {
-      title: "Order",
-      key: "order",
-      width: 120,
-      align: 'center',
-      render: (_1, _2, index) => (
-        <span className="font-bold text-slate-400">
-          {String(index + 1)}
-        </span>
-      ),
-    },
+{
+  title: "Order",
+  dataIndex: "order",
+  key: "order",
+  width: 120,
+  align: "center",
+  render: (_: any, record: Schedule) => (
+    <span className="font-bold text-black">
+      {record.order ?? "-"}
+    </span>
+  ),
+},
     {
       title: "STUDENT",
       dataIndex: "student",
@@ -101,6 +102,7 @@ const ClassesPage: React.FC = () => {
         <span className="font-semibold text-slate-600">{text}</span>
       ),
     },
+
     {
       title: "TYPE",
       dataIndex: "type",
@@ -117,12 +119,12 @@ const ClassesPage: React.FC = () => {
     },
     {
       title: "Language",
-      dataIndex: "subject",
-      key: "subject",
+      dataIndex: "language",
+      key: "language",
       width: 150,
-      render: (subject: ScheduleSubject) => (
+      render: (language: string) => (
         <span className="px-3 py-1 bg-slate-50 border border-gray-100 rounded-lg text-[11px] font-bold text-slate-500">
-          {subject?.name || "N/A"}
+          {language ? language.toUpperCase() : "N/A"}
         </span>
       ),
     },
@@ -154,57 +156,61 @@ const ClassesPage: React.FC = () => {
       ),
     },
 
-{
-  title: "Materials",
-  key: "materials",
-  width: 140,
-  render: () => (
-    <Space size="middle">
-      <Tooltip
-        placement="top"
-        color="white"
-        overlayInnerStyle={{ padding: '2px' }}
-        title={
-          <div className="flex items-center gap-1 bg-slate-50/50 p-1 rounded-lg">
+    {
+      title: "Materials",
+      key: "materials",
+      width: 140,
+      render: (_: any, record: Schedule) => (
+        <Space size="middle">
+          <Tooltip
+            placement="top"
+            color="white"
+            overlayInnerStyle={{ padding: '2px' }}
+            title={
+              <div className="flex items-center gap-1 bg-slate-50/50 p-1 rounded-lg">
+                {record.videoUrl && (
+                  <a
+                    href={record.videoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1.5 bg-white text-blue-600 rounded-md text-[10px] font-bold shadow-sm hover:text-blue-700 transition-all whitespace-nowrap"
+                  >
+                    VIDEO
+                  </a>
+                )}
+                <a
+                  href="https://lecture-url.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-white/50 rounded-md text-[10px] font-bold transition-all whitespace-nowrap"
+                >
+                  PDF
+                </a>
+                {record.slidesUrl && (
+                  <a
+                    href={record.slidesUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-white/50 rounded-md text-[10px] font-bold transition-all whitespace-nowrap"
+                  >
+                    SLIDES
+                  </a>
+                )}
+              </div>
+            }
+          >
             <a
-              href="https://video-url.com"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 bg-white text-blue-600 rounded-md text-[10px] font-bold shadow-sm hover:text-blue-700 transition-all whitespace-nowrap"
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              className="flex items-center gap-2 px-3 py-1.5 border border-blue-100 bg-blue-50/30 rounded-full text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition-all"
             >
-              VIDEO
+              <Monitor size={12} />
+              Materials
             </a>
-            <a
-              href="https://lecture-url.com"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-white/50 rounded-md text-[10px] font-bold transition-all whitespace-nowrap"
-            >
-              PDF
-            </a>
-            <a
-              href="https://slides-url.com"
-              target="_blank"
-              rel="noreferrer"
-              className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-white/50 rounded-md text-[10px] font-bold transition-all whitespace-nowrap"
-            >
-              SLIDES
-            </a>
-          </div>
-        }
-      >
-        <a
-          href="#"
-          onClick={(e) => e.preventDefault()}
-          className="flex items-center gap-2 px-3 py-1.5 border border-blue-100 bg-blue-50/30 rounded-full text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition-all"
-        >
-          <Monitor size={12} />
-          Materials
-        </a>
-      </Tooltip>
-    </Space>
-  ),
-},
+          </Tooltip>
+        </Space>
+      ),
+    },
     {
       title: "Actions",
       key: "actions",
@@ -298,7 +304,7 @@ const ClassesPage: React.FC = () => {
             ))}
           </div>
 
-        
+
         </div>
       </div>
 
@@ -325,7 +331,7 @@ const ClassesPage: React.FC = () => {
         sessionTitle={requestModal.title}
       />
 
-      <FeedbackModal 
+      <FeedbackModal
         visible={feedbackModal.visible}
         onClose={() => setFeedbackModal({ ...feedbackModal, visible: false })}
         sessionId={feedbackModal.id}

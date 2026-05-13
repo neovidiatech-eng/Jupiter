@@ -101,19 +101,20 @@ export default function Header({
             }}
           >
             <div className="flex flex-row items-center gap-2">
-              <div className={`flex items-center justify-center rounded-[10px] w-8 h-8 md:w-[39px] md:h-[39px] ${isStudent ? 'bg-[#2049BF]' : 'bg-indigo-600'}`}>
+              {/* <div className={`flex items-center justify-center rounded-[10px] w-8 h-8 md:w-[39px] md:h-[39px] ${isStudent ? 'bg-[#2049BF]' : 'bg-indigo-600'}`}>
                 <span className="text-white text-lg md:text-xl font-bold">J</span>
               </div>
-              <span className="text-black text-lg md:text-xl font-bold hidden xs:block">Jupiter</span>
+              <span className="text-black text-lg md:text-xl font-bold hidden xs:block">Jupiter</span> */}
+              <img src="/logo.png" alt="logo" className="w-[50px] h-[50px]" />
             </div>
           </div>
         </div>
 
         {isTeacherOrStudent && (
-  <div className="flex-1 flex justify-center px-4">
-    <MiniHeaderTimer />
-  </div>
-)}
+          <div className="flex-1 flex justify-center px-4">
+            <MiniHeaderTimer />
+          </div>
+        )}
 
         {/* 2. Right Side: Profile / Actions */}
         <div className="flex items-center gap-2 md:gap-6 shrink-0">

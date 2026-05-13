@@ -139,6 +139,9 @@ export interface Schedule {
     day_of_week: string | null;
     parent_recurring_id: string | null;
     order?: number;
+    language?: string;
+    videoUrl?: string;
+    slidesUrl?: string;
     student: Student;
     teacher: Teacher;
     subject?: ScheduleSubject;

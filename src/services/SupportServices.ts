@@ -6,7 +6,8 @@ import {
     UpdateSupportItemInput, 
     CreateSupportCategoryInput, 
     UpdateSupportCategoryInput,
-    SupportItem
+    SupportItem,
+    PopularSupportResponse
 } from "../types/support"
 
 // Support Items
@@ -55,7 +56,7 @@ export const deleteSupportCategory = async (id: string): Promise<void> => {
 }
 
 // Teacher Specific
-export const getSupportForTeacher = async (): Promise<SupportResponse> => {
+export const getSupportForTeacher = async (): Promise<PopularSupportResponse> => {
     const res = await api.get('/support/teacher')
     return res.data
 }

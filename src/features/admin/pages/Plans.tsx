@@ -18,7 +18,7 @@ interface Plan {
   duration: number;
   sessionsCount: number;
   sessionTime: number;
-  type: "full" | "half";
+  type: "quarterly" | "halfAnnually" | "annually";
   features: string[];
   status: "active" | "inactive";
 }
@@ -87,6 +87,8 @@ export default function Plans() {
             active: planData.status === "active",
             currencyId: planData.currencyId,
             features: planData.features,
+            type: planData.type,
+
           }
         });
       } else {
@@ -99,6 +101,8 @@ export default function Plans() {
           active: planData.status === "active",
           currencyId: planData.currencyId,
           features: planData.features,
+            type: planData.type,
+
         });
       }
       setIsModalOpen(false);
@@ -168,10 +172,8 @@ export default function Plans() {
                       <h3 className="text-2xl font-black text-gray-900 leading-tight">
                         {plan.name}
                       </h3>
-                      <span className={`inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                        plan.status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400"
-                      }`}>
-                        {text[plan.status][language]}
+                      <span className="inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600">
+                        {plan.type}
                       </span>
                     </div>
                     <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">

@@ -456,6 +456,8 @@ export default function Students() {
               status: (selectedStudent.status || 'pending') as any,
               gender: selectedStudent.gender || 'male',
               plan: selectedStudent.planId || '',
+              rankId: selectedStudent.rankId || '',
+              password:'',
               birthDate: selectedStudent.birth_date ? selectedStudent.birth_date.split('T')[0] : '',
             }
             : null

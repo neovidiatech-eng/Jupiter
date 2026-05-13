@@ -36,7 +36,6 @@ export interface Student {
   planId: string | null;
   country: string;
   status: StudentStatus;
-
   avgRating?: number;
   totalReviews?: number;
   rankId?: string | null;
@@ -45,6 +44,22 @@ export interface Student {
   user: UserDetails;
   plan: Plan | null;
 }
+
+export type EditStudentForm = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  phone_code: string;
+  gender: 'male' | 'female';
+  birthDate: string;
+  planId: string | null;
+  country: string;
+  status: StudentStatus;
+  rankId: string ;
+  password?: string;
+};
+
 
 export interface StudentsFetchResponse {
   message: string;

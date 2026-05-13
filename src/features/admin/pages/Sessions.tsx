@@ -301,6 +301,16 @@ export default function Sessions() {
         </div>
       ),
     },
+{
+  title:"Lesson",
+  render:(_:unknown, record:GroupedSchedule)=>{
+    return(
+      <span className="text-sm font-bold text-gray-800">{record.title || "Unknown"}</span>
+    );
+  }
+},
+
+    
     {
       title: "Date & Time",
       render: (_: unknown, record: GroupedSchedule) => {
