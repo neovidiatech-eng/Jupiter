@@ -2,7 +2,7 @@ import { X, Users, Eye, EyeOff, Lock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
-import { TeacherFormData, getTeacherSchema } from '../../lib/schemas/TeacherSchema';
+import { UpdateTeacherFormData, getUpdateTeacherSchema } from '../../lib/schemas/TeacherSchema';
 import { Controller, Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Teacher } from '../../types/teachers';
@@ -11,7 +11,7 @@ import { useCurrency } from '../../features/admin/hooks/useCurrency';
 interface EditTeacherModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (teacherData: TeacherFormData) => void;
+  onSubmit: (teacherData: UpdateTeacherFormData) => void;
   teacher: Teacher | null;
 }
 
@@ -20,8 +20,8 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
   const [showPassword, setShowPassword] = useState(false);
   const { data: currenciesData } = useCurrency();
 
-  const { register, handleSubmit, control, reset, formState: { errors }, } = useForm<TeacherFormData>({
-    resolver: zodResolver(getTeacherSchema(t)) as Resolver<TeacherFormData>,
+  const { register, handleSubmit, control, reset, formState: { errors }, } = useForm<UpdateTeacherFormData>({
+    resolver: zodResolver(getUpdateTeacherSchema(t)) as Resolver<UpdateTeacherFormData>,
   });
 
   const currencyOptions = useMemo(() => {
@@ -50,7 +50,7 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
     }
   }, [teacher, reset]);
 
-  const handleOnSubmit = (data: TeacherFormData) => {
+  const handleOnSubmit = (data: UpdateTeacherFormData) => {
     onSubmit(data);
     onClose();
   };

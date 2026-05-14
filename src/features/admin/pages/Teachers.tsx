@@ -5,7 +5,7 @@ import Pagination from '../../../components/ui/Pagination';
 import { useTranslation } from 'react-i18next';
 import { useTeacher, useDeleteTeacher, useCreateTeacher, useUpdateTeacher } from '../hooks/useTeacher';
 import { CreateTeacherInput, Teacher } from '../../../types/teachers';
-import { TeacherFormData } from '../../../lib/schemas/TeacherSchema';
+import { TeacherFormData, UpdateTeacherFormData } from '../../../lib/schemas/TeacherSchema';
 import { useCurrency } from '../hooks/useCurrency';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { TableSkeleton } from '../../../components/ui/CustomSkeleton';
@@ -110,7 +110,7 @@ export default function Teachers() {
     } catch (error) { console.error(error); }
   };
 
-  const handleUpdateTeacher = async (formData: TeacherFormData) => {
+  const handleUpdateTeacher = async (formData: UpdateTeacherFormData) => {
     if (!selectedTeacher) return;
     try {
       const apiData = mapFormToApi(formData);
@@ -124,7 +124,7 @@ export default function Teachers() {
     if (confirmed) await deleteTeacherMutation.mutateAsync(teacherId);
   };
 
-  const mapFormToApi = (formData: TeacherFormData): CreateTeacherInput => ({
+  const mapFormToApi = (formData: TeacherFormData | UpdateTeacherFormData): CreateTeacherInput => ({
     name: formData.name,
     email: formData.email,
     phone: formData.phone,

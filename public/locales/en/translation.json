@@ -24,7 +24,8 @@
     "min": "Must be at least {{count}} characters",
     "max": "Must be at most {{count}} characters",
     "passwordMatch": "Passwords do not match",
-    "invalidPhone": "Invalid phone number for the selected country"
+    "invalidPhone": "Invalid phone number for the selected country",
+    "passwordComplexity": "Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character"
   },
   "login": "Login",
   "academyName": "Academy",

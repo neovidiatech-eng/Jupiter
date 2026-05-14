@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Users, Eye, EyeOff, Lock } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import CustomSelect from '../ui/CustomSelect';
-import { TeacherFormData, getTeacherSchema } from '../../lib/schemas/TeacherSchema';
+import { TeacherFormData, getCreateTeacherSchema } from '../../lib/schemas/TeacherSchema';
 import { Controller, Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCurrency } from '../../features/admin/hooks/useCurrency';
@@ -20,7 +20,7 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
   const { data: currenciesData } = useCurrency();
 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<TeacherFormData>({
-    resolver: zodResolver(getTeacherSchema(t)) as Resolver<TeacherFormData>,
+    resolver: zodResolver(getCreateTeacherSchema(t)) as Resolver<TeacherFormData>,
     defaultValues: {
       name: '',
       email: '',
