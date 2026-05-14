@@ -235,11 +235,11 @@ export default function Reports() {
   ];
 
   return (
-    <div className="space-y-6 max-w-[1200px] mx-auto p-4 md:p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-6 max-w-[1200px] mx-auto p-4 md:p-6 custom-scrollbar" dir={language === 'ar' ? 'rtl' : 'ltr'}>
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">{t('teacherReports') || 'Teacher Weekly Reports'}</h1>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Teacher Weekly Reports</h1>
           <p className="text-gray-500 text-sm font-medium mt-1">{t('manageReportsDescription') || 'Review and analyze teacher performance reports'}</p>
         </div>
         <button
@@ -286,7 +286,7 @@ export default function Reports() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto custom-scrollbar">
           {isLoading ? (
             <div className="p-8"><TableSkeleton rows={5} columns={5} /></div>
           ) : (
@@ -345,6 +345,22 @@ export default function Reports() {
         }
         .ant-rate-star:not(:last-child) {
           margin-inline-end: 2px !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 6px;
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f8fafc;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+          transition: all 0.3s;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
         }
       `}} />
     </div>
