@@ -146,7 +146,6 @@ export default function Header({
 
               <div
                 className="flex items-center gap-2 cursor-pointer md:pl-4 md:border-l border-gray-100 group"
-                onClick={() => navigate("/dashboard/profile")}
               >
                 <div className="hidden md:block text-right">
                   <p className="text-xs font-bold text-gray-900 leading-none group-hover:text-indigo-600 transition-colors">{userInfo.name}</p>

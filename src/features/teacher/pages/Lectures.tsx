@@ -11,6 +11,7 @@ import {
 import { Button, Empty } from 'antd';
 import { useCourseById } from '../../../hooks/useCourses';
 import { Lecture } from '../../../types/lectures';
+import ReactPlayer from 'react-player';
 
 export default function TeacherLectures() {
   const { courseId } = useParams();
@@ -135,18 +136,23 @@ export default function TeacherLectures() {
                     </div>
                     {activeLecture.videoUrl ? (
                       <div className="relative aspect-video rounded-2xl bg-gray-900 overflow-hidden shadow-lg group">
-                        {activeLecture.videoUrl.includes('youtube') || activeLecture.videoUrl.includes('vimeo') ? (
+                        {activeLecture.videoUrl.includes('drive.google.com') ? (
                           <iframe
-                            src={activeLecture.videoUrl}
-                            className="w-full h-full border-0"
+                            src={activeLecture.videoUrl.replace('/view', '/preview')}
+                            width="100%"
+                            height="100%"
+                            className="w-full h-full border-0 absolute top-0 left-0"
                             allowFullScreen
-                            title="Video player"
+                            title="Google Drive Video"
                           />
                         ) : (
-                          <video
-                            src={activeLecture.videoUrl}
+                          /* @ts-ignore */
+                          <ReactPlayer
+                            url={activeLecture.videoUrl}
+                            width="100%"
+                            height="100%"
+                            className="absolute top-0 left-0"
                             controls
-                            className="w-full h-full object-contain"
                           />
                         )}
                       </div>

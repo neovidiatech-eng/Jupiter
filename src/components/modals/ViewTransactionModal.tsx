@@ -6,11 +6,9 @@ interface ViewTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   transaction: Transaction;
-  currencies: { code: string; symbol: string; rate: number }[];
-  selectedCurrency: string;
 }
 
-export default function ViewTransactionModal({ isOpen, onClose, transaction, currencies, selectedCurrency }: ViewTransactionModalProps) {
+export default function ViewTransactionModal({ isOpen, onClose, transaction }: ViewTransactionModalProps) {
   const { language } = useLanguage();
 
   const text = {
@@ -32,17 +30,9 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction, cur
     subscription: { ar: 'اشتراك', en: 'Subscription' },
   };
 
-  const getExchangeRate = (fromCurrency: string, toCurrency: string): number => {
-    const from = currencies.find(c => c.code === fromCurrency);
-    const to = currencies.find(c => c.code === toCurrency);
-    if (!from || !to) return 1;
-    return from.rate / to.rate;
-  };
-
-  const transactionCurrency = 'SAR'; // Default from backend
-  const convertedAmount = transaction.amount * getExchangeRate(transactionCurrency, selectedCurrency);
-  const currentSymbol = currencies.find(c => c.code === selectedCurrency)?.symbol || selectedCurrency;
-  const originalSymbol = currencies.find(c => c.code === transactionCurrency)?.symbol || transactionCurrency;
+  const transactionCurrency = transaction.currencyCode || 'SAR';
+  const amountToConvert = transaction.originalAmount || transaction.amount;
+  const originalSymbol = transactionCurrency; // Use code as symbol if we don't have a map
 
   if (!isOpen) return null;
 
@@ -53,6 +43,7 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction, cur
       case 'credit': return text.credit[language];
       case 'debit': return text.debit[language];
       case 'subscription': return text.subscription[language];
+      case 'expense': return text.expense[language];
       default: return type;
     }
   };
@@ -89,13 +80,9 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction, cur
           <div className={`rounded-xl p-5 text-center ${isIncome ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
             <p className="text-sm text-gray-600 mb-2">{text.amount[language]}</p>
             <p className={`text-5xl font-bold ${isIncome ? 'text-green-600' : 'text-orange-600'}`}>
-              {transaction.amount.toFixed(2)} <span className="text-2xl">{originalSymbol}</span>
+              {(transaction.originalAmount || transaction.amount).toFixed(2)} <span className="text-2xl">{originalSymbol}</span>
             </p>
-            {transactionCurrency !== selectedCurrency && (
-              <p className="text-sm text-gray-500 mt-2">
-                {text.convertedAmount[language]}: <span className="font-semibold">{convertedAmount.toFixed(2)} {currentSymbol}</span>
-              </p>
-            )}
+
             <span className={`inline-flex mt-3 px-3 py-1 rounded-full text-sm font-medium ${
               transaction.status === 'completed' ? 'bg-green-100 text-green-700' : 
               transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
@@ -144,5 +131,6 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction, cur
         </div>
       </div>
     </div>
+
   );
 }

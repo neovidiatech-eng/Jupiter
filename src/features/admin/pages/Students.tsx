@@ -154,7 +154,21 @@ export default function Students() {
         </div>
       ),
     },
+     {
+      title: t('User Name'),
+      render: (_: any, record: Student) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-xs">
+            {record.user.username ? record.user.username.charAt(0).toUpperCase() : '?'}
+          </div>
+          <div>
+            <div className="text-sm font-medium text-gray-900">{record.user.username}</div>
+          </div>
+        </div>
+      ),
+    },
     {
+
       title: t('phone'),
       render: (_: any, record: Student) => (
         <WhatsAppPhone

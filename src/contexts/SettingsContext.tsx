@@ -34,7 +34,7 @@ export interface PlatformSettings {
 }
 
 const defaultSettings: PlatformSettings = {
-  name: 'Neovidia',
+  name: 'Jupiter Egypt',
   description: 'منصة تعليمية متكاملة لإدارة الكورسات والطلاب',
   logoUrl: '',
   faviconUrl: '',
@@ -43,7 +43,7 @@ const defaultSettings: PlatformSettings = {
   accentColor: '#06b6d4',
   fontFamily: 'Almarai',
   seo: {
-    metaTitle: 'Neovidia',
+    metaTitle: 'Jupiter Egypt',
     metaDescription: 'منصة تعليمية متكاملة لإدارة الكورسات والطلاب والمعلمين',
     keywords: 'أكاديمية, تعليم, كورسات, طلاب, معلمين',
     ogImage: '',

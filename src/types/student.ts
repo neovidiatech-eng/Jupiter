@@ -5,6 +5,7 @@ export interface UserDetails {
   id: string;
   email: string;
   name: string;
+  username:string;
   phone: string;
   code_country: string;
   status: string;

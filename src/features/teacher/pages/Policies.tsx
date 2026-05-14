@@ -40,7 +40,7 @@ export default function PoliciesPage() {
           return (
             <div key={policy.id || i} className="bg-white p-8 rounded-3xl border border-gray-100/50 shadow-sm hover:shadow-md transition-all group">
               <div className="flex gap-6">
-                <div 
+                <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
                   style={{ backgroundColor: `${policy.color}15`, color: policy.color }}
                 >
@@ -48,7 +48,7 @@ export default function PoliciesPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-slate-800 mb-2">{policy.title}</h3>
-                  <p className="text-slate-500 text-sm font-medium mb-4 leading-relaxed">
+                  <p className="text-slate-500 text-sm font-medium mb-4 leading-relaxed break-words break-all">
                     {policy.description}
                   </p>
                   <p className="text-slate-300 text-[11px] font-bold uppercase tracking-wider">
@@ -64,8 +64,8 @@ export default function PoliciesPage() {
       {/* Important Notice Banner */}
       {notice && (
         <div className="bg-[#E3EAF9] border border-[#E3EAF9] rounded-3xl p-8 sm:p-10">
-          <h4 className="text-blue-700 font-bold text-lg mb-2">{ 'Important Notice'}</h4>
-          <p className="text-blue-600/70 text-sm font-medium leading-relaxed">
+          <h4 className="text-blue-700 font-bold text-lg mb-2">{'Important Notice'}</h4>
+          <p className="text-blue-600/70 text-sm font-medium leading-relaxed break-words break-all">
             {notice.content}
           </p>
         </div>

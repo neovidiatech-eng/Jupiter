@@ -320,8 +320,8 @@ export default function StudentDashboard() {
             <div className="space-y-4 flex-1">
               {latestAssignments.length > 0 ? (
                 latestAssignments.map((assignment) => (
-                  <div 
-                    key={assignment.id} 
+                  <div
+                    key={assignment.id}
                     className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 border border-slate-50 hover:border-indigo-100 hover:bg-white transition-all group cursor-pointer"
                   >
                     <div className="flex-1 flex flex-col gap-1 min-w-0">
@@ -329,12 +329,11 @@ export default function StudentDashboard() {
                         <span className="text-sm font-bold text-slate-700 truncate">
                           {assignment.title}
                         </span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider border shrink-0 ${
-                          assignment.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                          assignment.status === 'submitted' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'
-                        }`}>
-                          {language === 'ar' ? 
-                            (assignment.status === 'completed' ? 'مكتمل' : assignment.status === 'submitted' ? 'تم التسليم' : 'قيد الانتظار') : 
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider border shrink-0 ${assignment.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                            assignment.status === 'submitted' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                          }`}>
+                          {language === 'ar' ?
+                            (assignment.status === 'completed' ? 'مكتمل' : assignment.status === 'submitted' ? 'تم التسليم' : 'قيد الانتظار') :
                             assignment.status}
                         </span>
                       </div>
@@ -342,11 +341,11 @@ export default function StudentDashboard() {
                         {assignment.description}
                       </span>
                     </div>
-                    <button 
+                    <button
                       onClick={(e) => handleSubmitClick(e, assignment)}
                       className={`p-2 rounded-xl bg-white text-slate-400 group-hover:text-indigo-500 group-hover:bg-indigo-50 transition-all shadow-sm shrink-0 ${language === 'ar' ? 'mr-3' : 'ml-3'}`}
                     >
-                      <Plus  className="w-4 h-4" />
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
                 ))
@@ -370,10 +369,10 @@ export default function StudentDashboard() {
             />
           ) : (
             <div className="bg-white rounded-[32px] border border-slate-100 p-8 flex flex-col items-center justify-center h-full shadow-sm">
-               <MessageSquare className="w-12 h-12 text-slate-200 mb-4" />
-               <h2 className="text-xl font-bold text-slate-400 text-center">
-                 {language === "ar" ? "لا يوجد تقييمات حتى الآن" : "No reviews yet"}
-               </h2>
+              <MessageSquare className="w-12 h-12 text-slate-200 mb-4" />
+              <h2 className="text-xl font-bold text-slate-400 text-center">
+                {language === "ar" ? "لا يوجد تقييمات حتى الآن" : "No reviews yet"}
+              </h2>
             </div>
           )}
         </div>
@@ -433,12 +432,12 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              <div className="pt-2 flex items-center gap-4">
+              {/* <div className="pt-2 flex items-center gap-4">
                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full bg-blue-500 w-2/3 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
                 </div>
                 <span className="text-xs font-black text-slate-800">65%</span>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -491,7 +490,7 @@ export default function StudentDashboard() {
         )}
       </StudentDashboardLayout>
       {isSubmitModalOpen && selectedAssignment && (
-        <SubmitAssignmentModal 
+        <SubmitAssignmentModal
           isOpen={isSubmitModalOpen}
           onClose={() => setIsSubmitModalOpen(false)}
           assignmentId={selectedAssignment.id}

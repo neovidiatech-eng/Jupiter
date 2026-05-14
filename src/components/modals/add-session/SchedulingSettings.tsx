@@ -1,5 +1,6 @@
 import { DayOfWeek } from '../../../types/scheduales';
-import { UseFormRegister, UseFormSetValue } from 'react-hook-form';
+import { UseFormRegister, UseFormSetValue, Control, Controller } from 'react-hook-form';
+import DatePickerField from '../../ui/DatePickerField';
 
 interface SchedulingSettingsProps {
   schedulingMode: 'single' | 'batch';
@@ -8,6 +9,7 @@ interface SchedulingSettingsProps {
   watchSelectedDays: DayOfWeek[];
   setValue: UseFormSetValue<any>;
   DAYS: DayOfWeek[];
+  control: Control<any>;
 }
 
 export default function SchedulingSettings({
@@ -17,6 +19,7 @@ export default function SchedulingSettings({
   watchSelectedDays,
   setValue,
   DAYS,
+  control,
 }: SchedulingSettingsProps) {
   return (
     <>
@@ -26,9 +29,8 @@ export default function SchedulingSettings({
           <button
             type="button"
             onClick={() => setSchedulingMode('single')}
-            className={`toggle-btn ${
-              schedulingMode === 'single' ? 'active-toggle' : ''
-            }`}
+            className={`toggle-btn ${schedulingMode === 'single' ? 'active-toggle' : ''
+              }`}
           >
             Single
           </button>
@@ -36,9 +38,8 @@ export default function SchedulingSettings({
           <button
             type="button"
             onClick={() => setSchedulingMode('batch')}
-            className={`toggle-btn ${
-              schedulingMode === 'batch' ? 'active-toggle' : ''
-            }`}
+            className={`toggle-btn ${schedulingMode === 'batch' ? 'active-toggle' : ''
+              }`}
           >
             Batch
           </button>
@@ -49,14 +50,17 @@ export default function SchedulingSettings({
       {schedulingMode === 'single' ? (
         <div className="card-box">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="label">Session Date</label>
-              <input
-                type="date"
-                {...register('sessionDate')}
-                className="input"
-              />
-            </div>
+            <Controller
+              name="sessionDate"
+              control={control}
+              render={({ field }) => (
+                <DatePickerField
+                  label="Session Date"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -82,9 +86,29 @@ export default function SchedulingSettings({
         </div>
       ) : (
         <div className="card-box">
-          <div className="mb-5">
-            <label className="label">Target Month</label>
-            <input type="month" {...register('monthYear')} className="input" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+            <Controller
+              name="batchStartDate"
+              control={control}
+              render={({ field }) => (
+                <DatePickerField
+                  label="Start Date"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+            <Controller
+              name="batchEndDate"
+              control={control}
+              render={({ field }) => (
+                <DatePickerField
+                  label="End Date"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
           </div>
 
           <div className="mb-5">
@@ -112,9 +136,8 @@ export default function SchedulingSettings({
                         setValue('selectedDays', [...watchSelectedDays, day]);
                       }
                     }}
-                    className={`day-btn ${
-                      selected ? 'bg-indigo-600 text-white' : 'bg-white'
-                    }`}
+                    className={`day-btn ${selected ? 'bg-indigo-600 text-white' : 'bg-white'
+                      }`}
                   >
                     {day.slice(0, 3)}
                   </button>

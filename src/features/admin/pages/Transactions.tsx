@@ -1,6 +1,5 @@
 
-import { useState, useMemo } from "react";
-import {
+import { useState, useMemo } from "react";import {
   TrendingUp,
   TrendingDown,
   DollarSign,
@@ -8,7 +7,6 @@ import {
   Eye,
   RefreshCw,
   Wallet,
-  Filter,
 } from "lucide-react";
 
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -16,19 +14,12 @@ import ViewTransactionModal from "../../../components/modals/ViewTransactionModa
 import { useTransactions } from "../hooks/useTransaction";
 import { Transaction, TransactionType } from "../../../types/transaction";
 
-const CURRENCIES = [
-  { code: "SAR", symbol: "ر.س", rate: 1 },
-  { code: "EGP", symbol: "ج.م", rate: 0.11 },
-  { code: "USD", symbol: "$", rate: 3.75 },
-];
-
 export default function Transactions() {
   const { language } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterType, setFilterType] = useState("all");
-  const [selectedCurrency, setSelectedCurrency] = useState("SAR");
+
+
 
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
@@ -37,7 +28,7 @@ export default function Transactions() {
 
   const { data: response, isLoading, error } = useTransactions();
 
-  const transactions = response?.data || [];
+  const transactions = response?.data?.transactions || [];
 
   const text = {
     title: { ar: "المعاملات المالية", en: "Financial Transactions" },
@@ -66,6 +57,7 @@ export default function Transactions() {
     credit: { ar: "إيداع", en: "Credit" },
     debit: { ar: "سحب", en: "Debit" },
     subscription: { ar: "اشتراك", en: "Subscription" },
+    expense: { ar: "مصروفات", en: "Expense" },
 
     allStatuses: { ar: "كل الحالات", en: "All Statuses" },
     allTypes: { ar: "كل الأنواع", en: "All Types" },
@@ -79,27 +71,6 @@ export default function Transactions() {
     error: { ar: "حدث خطأ أثناء تحميل البيانات", en: "Error loading data" },
   };
 
-  const getExchangeRate = (
-    fromCurrency: string,
-    toCurrency: string
-  ): number => {
-    const from = CURRENCIES.find((c) => c.code === fromCurrency);
-    const to = CURRENCIES.find((c) => c.code === toCurrency);
-
-    if (!from || !to) return 1;
-
-    return from.rate / to.rate;
-  };
-
-  const convertAmount = (amount: number, fromCurrency: string) => {
-    const rate = getExchangeRate(fromCurrency, selectedCurrency);
-    return amount * rate;
-  };
-
-  const getCurrencySymbol = (code: string) => {
-    return CURRENCIES.find((c) => c.code === code)?.symbol || code;
-  };
-
   const getTransactionLabel = (type: TransactionType) => {
     switch (type) {
       case "credit":
@@ -110,6 +81,9 @@ export default function Transactions() {
 
       case "subscription":
         return text.subscription[language];
+
+      case "expense":
+        return text.expense[language];
 
       default:
         return type;
@@ -122,26 +96,21 @@ export default function Transactions() {
         t.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.id.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus =
-        filterStatus === "all" || t.status === filterStatus;
-
-      const matchesType = filterType === "all" || t.type === filterType;
-
-      return matchesSearch && matchesStatus && matchesType;
+      return matchesSearch;
     });
-  }, [transactions, searchQuery, filterStatus, filterType]);
+  }, [transactions, searchQuery]);
 
   const stats = useMemo(() => {
     const incomeTypes: TransactionType[] = ["credit", "subscription"];
-    const expenseTypes: TransactionType[] = ["debit"];
+    const expenseTypes: TransactionType[] = ["debit", "expense"];
 
     const totalIncome = transactions
       .filter((t) => incomeTypes.includes(t.type))
-      .reduce((sum, t) => sum + convertAmount(t.amount, "SAR"), 0);
+      .reduce((sum, t) => sum + (t.originalAmount || t.amount), 0);
 
     const totalExpenses = transactions
       .filter((t) => expenseTypes.includes(t.type))
-      .reduce((sum, t) => sum + convertAmount(t.amount, "SAR"), 0);
+      .reduce((sum, t) => sum + (t.originalAmount || t.amount), 0);
 
     const netProfit = totalIncome - totalExpenses;
 
@@ -153,9 +122,9 @@ export default function Transactions() {
       completedCount: transactions.filter((t) => t.status === "completed")
         .length,
     };
-  }, [transactions, selectedCurrency]);
+  }, [transactions]);
 
-  const currentSymbol = getCurrencySymbol(selectedCurrency);
+  const statsCurrency = transactions[0]?.currencyCode || "";
 
   const profitPercentage =
     stats.totalIncome > 0
@@ -203,28 +172,10 @@ export default function Transactions() {
                   {filteredTransactions.length} Transactions
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Currency */}
-          <div className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 w-fit">
-            <DollarSign className="w-4 h-4 text-gray-500" />
-
-            <select
-              value={selectedCurrency}
-              onChange={(e) => setSelectedCurrency(e.target.value)}
-              className="bg-transparent outline-none text-sm font-medium text-gray-700"
-            >
-              {CURRENCIES.map((currency) => (
-                <option key={currency.code} value={currency.code}>
-                  {currency.symbol} {currency.code}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
       </div>
-
+    </div>
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {/* Income */}
@@ -239,8 +190,8 @@ export default function Transactions() {
                 {stats.totalIncome.toFixed(2)}
               </h2>
 
-              <span className="text-sm text-gray-400">
-                {currentSymbol}
+              <span className="text-sm text-gray-400 font-bold">
+                {statsCurrency}
               </span>
             </div>
 
@@ -262,8 +213,8 @@ export default function Transactions() {
                 {stats.totalExpenses.toFixed(2)}
               </h2>
 
-              <span className="text-sm text-gray-400">
-                {currentSymbol}
+              <span className="text-sm text-gray-400 font-bold">
+                {statsCurrency}
               </span>
             </div>
 
@@ -333,80 +284,20 @@ export default function Transactions() {
           </div>
         </div>
       </div>
-
-      {/* Filters */}
+      {/* Search */}
       <div className="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <div className="relative">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
 
-            <input
-              type="text"
-              placeholder={text.search[language]}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-14 rounded-2xl border border-gray-200 bg-gray-50 px-5 pr-12 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-            />
-          </div>
-
-          {/* Filters */}
-          <div className="flex gap-3 flex-wrap">
-            <div className="relative">
-              <Filter className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="h-14 rounded-2xl border border-gray-200 bg-gray-50 px-5 pr-10 outline-none appearance-none min-w-[170px]"
-              >
-                <option value="all">
-                  {text.allTypes[language]}
-                </option>
-
-                <option value="credit">
-                  {text.credit[language]}
-                </option>
-
-                <option value="debit">
-                  {text.debit[language]}
-                </option>
-
-                <option value="subscription">
-                  {text.subscription[language]}
-                </option>
-              </select>
-            </div>
-
-            <div className="relative">
-              <Filter className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="h-14 rounded-2xl border border-gray-200 bg-gray-50 px-5 pr-10 outline-none appearance-none min-w-[170px]"
-              >
-                <option value="all">
-                  {text.allStatuses[language]}
-                </option>
-
-                <option value="completed">
-                  {text.completed[language]}
-                </option>
-
-                <option value="pending">
-                  {text.pending[language]}
-                </option>
-
-                <option value="failed">
-                  {text.failed[language]}
-                </option>
-              </select>
-            </div>
-          </div>
+          <input
+            type="text"
+            placeholder={text.search[language]}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-14 rounded-2xl border border-gray-200 bg-gray-50 px-5 pr-12 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
         </div>
       </div>
-
       {/* Table */}
       <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-sm">
         {filteredTransactions.length === 0 ? (
@@ -489,14 +380,11 @@ export default function Transactions() {
                               : "text-orange-600"
                           }`}
                         >
-                          {convertAmount(
-                            transaction.amount,
-                            "SAR"
-                          ).toFixed(2)}
+                          {(transaction.originalAmount || transaction.amount).toFixed(2)}
                         </span>
 
-                        <span className="text-xs text-gray-400">
-                          {currentSymbol}
+                        <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                          {transaction.currencyCode}
                         </span>
                       </div>
                     </td>
@@ -554,11 +442,9 @@ export default function Transactions() {
             setShowViewModal(false);
             setSelectedTransaction(null);
           }}
-          transaction={selectedTransaction}
-          currencies={CURRENCIES}
-          selectedCurrency={selectedCurrency}
+          transaction={selectedTransaction as Transaction}
         />
       )}
     </div>
   );
-} 
+}

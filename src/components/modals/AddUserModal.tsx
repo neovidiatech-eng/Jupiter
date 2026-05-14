@@ -6,6 +6,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { UserFormData, getUserSchema } from '../../lib/schemas/UserSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRoles } from '../../features/admin/hooks/useRoles';
+
 // import { CustomCheckbox } from '../ui/CustomCheckbox';
 //import { usePermissions } from '../../hooks/usePermissions';
 
@@ -54,10 +55,10 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
   const dynamicRoles = rolesData?.data || [];
 
 
-  // const { data: permsData } = usePermissions();
-  //const permissionsList = permsData?.data || [];
+  // const { data: permsData, isLoading: isLoadingPerms } = usePermissions();
+  // const permissionsList = Array.isArray(permsData?.data) ? permsData.data : [];
 
-  // const dynamicPermissionGroups = permissionsList.reduce((acc: any, p) => {
+  // const dynamicPermissionGroups = permissionsList.reduce((acc: any, p: any) => {
   //   const parts = p.code.split('_');
   //   const groupKey = parts.length > 1 ? parts[0].toLowerCase() : 'other';
 
@@ -135,10 +136,17 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
         </div>
 
         {/* Body */}
-        <form id="add-user-form" onSubmit={handleSubmit(onFormSubmit)} className="flex-1  overflow-y-auto no-scrollbar p-6">
-          <div className="space-y-6">
-            {/* Name and Email */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form id="add-user-form" onSubmit={handleSubmit(onFormSubmit)} className="flex-1 overflow-y-auto no-scrollbar p-8">
+          <div className="space-y-10">
+            {/* Account Information Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-1 h-6 bg-blue-600 rounded-full" />
+                <h3 className="text-lg font-bold text-gray-900">{t('userManagement')}</h3>
+              </div>
+              
+              {/* Name and Email */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
                   {t('name')}
@@ -199,96 +207,98 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
               </div>
             </div>
 
-            {/* Role and Password */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-
-                <Controller
-                  name="role"
-                  control={control}
-                  render={({ field }) => (
-                    <CustomSelect
-                      label={t('role')}
-                      value={field.value}
-                      onChange={field.onChange}
-                      options={roleOptions}
-                      className="h-[48px]"
-                    />
-                  )}
-                />
-
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 text-start">
-                  {t('password')}
-                </label>
-                <div className="relative">
-                  <Lock className="absolute start-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    {...register('password')}
-                    className="w-full px-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-start transition-all"
-                    dir="ltr"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Controller
+                    name="role"
+                    control={control}
+                    render={({ field }) => (
+                      <CustomSelect
+                        label={t('role')}
+                        value={field.value}
+                        onChange={field.onChange}
+                        options={roleOptions}
+                        className="h-[52px]"
+                      />
+                    )}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute end-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
                 </div>
-                {errors.password && <p className="text-red-500 text-xs mt-1 text-start">{errors.password.message}</p>}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 text-start">
+                    {t('password')}
+                  </label>
+                  <div className="relative group">
+                    <Lock className="absolute start-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 w-5 h-5 pointer-events-none transition-colors" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      {...register('password')}
+                      className="w-full px-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-start transition-all"
+                      dir="ltr"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute end-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-red-500 text-xs mt-1 text-start">{errors.password.message}</p>}
+                </div>
               </div>
             </div>
 
-            {/* <div>
-              <div className="flex justify-between items-center mb-4">
-                <label className="block text-sm font-medium text-gray-700 text-start w-full">
-                  {t('userManagement')}
-                </label>
+            {/* Permissions Section */}
+            {/* <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-1 h-6 bg-purple-600 rounded-full" />
+                <h3 className="text-lg font-bold text-gray-900">{t('permissions')}</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {isLoadingPerms ? (
-                  <div className="col-span-3 text-center py-4">{t('loading')}...</div>
+                  <div className="col-span-3 text-center py-10">
+                    <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-2" />
+                    <p className="text-gray-400 font-medium">{t('loading')}...</p>
+                  </div>
                 ) : (
                   Object.entries(dynamicPermissionGroups).map(([key, group]: [string, any]) => (
-                    <div key={key} className="space-y-2">
-                      <h3 className="text-sm font-semibold text-gray-900 text-end">
+                    <div key={key} className="bg-gray-50/50 rounded-2xl border border-gray-100 p-5 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300">
+                      <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 border-b border-gray-100 pb-2 text-end">
                         {group.title}
-                      </h3>
-                      {group.permissions.map((permission: any) => (
-                        <label
-                          key={permission.id}
-                          className="flex items-center justify-end gap-2 cursor-pointer"
-                        >
-                          <span className="text-sm text-gray-700">
-                            {permission.label}
-                          </span>
-                          <Controller
-                            name="permissions"
-                            control={control}
-                            render={({ field }) => {
-                              const isChecked = field.value?.includes(permission.id) ?? false;
-                              return (
-                                <CustomCheckbox
-                                  checked={isChecked}
-                                  onChange={() => {
-                                    const next = isChecked
-                                      ? field.value.filter((id: string) => id !== permission.id)
-                                      : [...(field.value || []), permission.id];
-                                    field.onChange(next);
-                                  }}
-                                />
-                              );
-                            }}
-                          />
-                        </label>
-                      ))}
+                      </h4>
+                      <div className="space-y-3">
+                        {group.permissions.map((permission: any) => (
+                          <label
+                            key={permission.id}
+                            className="flex items-center justify-end gap-3 cursor-pointer group"
+                          >
+                            <span className="text-sm text-gray-600 group-hover:text-gray-900 font-medium transition-colors">
+                              {permission.label}
+                            </span>
+                            <Controller
+                              name="permissions"
+                              control={control}
+                              render={({ field }) => {
+                                const isChecked = field.value?.includes(permission.id) ?? false;
+                                return (
+                                  <CustomCheckbox
+                                    checked={isChecked}
+                                    onChange={() => {
+                                      const next = isChecked
+                                        ? (field.value || []).filter((id: string) => id !== permission.id)
+                                        : [...(field.value || []), permission.id];
+                                      field.onChange(next);
+                                    }}
+                                  />
+                                );
+                              }}
+                            />
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   ))
                 )}
-                {errors.permissions && <p className="text-red-500 text-sm mt-4 text-center w-full col-span-1 md:col-span-3">{errors.permissions.message}</p>}
               </div>
             </div> */}
           </div>

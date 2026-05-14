@@ -4,7 +4,7 @@ export interface SubscriptionUser {
   id: string;
   email: string;
   name: string;
-  phone: string; 
+  phone: string;
   code_country: string;
   status: string;
   createdAt: string;
@@ -14,6 +14,7 @@ export interface SubscriptionUser {
   googleId: string | null;
   provider: string;
   image: string | null;
+  age?: number | null;
 }
 export interface SubscriptionPlan {
   id: string;

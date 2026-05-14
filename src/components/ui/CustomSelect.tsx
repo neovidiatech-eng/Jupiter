@@ -9,20 +9,22 @@ export interface CustomSelectProps extends SelectProps {
   options: { value: string | number; label: React.ReactNode; searchText?: string }[];
 }
 
-const CustomSelect = forwardRef<any, CustomSelectProps>(({ 
-  label, 
-  error, 
-  options, 
-  className, 
-  ...props 
+const CustomSelect = forwardRef<any, CustomSelectProps>(({
+  label,
+  error,
+  options,
+  className,
+  ...props
 }, ref) => {
-  React.useEffect(() => {
-    if ((props.value === undefined || props.value === null || props.value === '') && options && options.length > 0 && props.onChange) {
-      if (props.value !== options[0].value) {
-        props.onChange(options[0].value as any, options[0] as any);
-      }
-    }
-  }, [options, props.value, props.onChange]);
+  // React.useEffect(() => {
+  //   if ((props.value === undefined || props.value === null || props.value === '') && options && options.length > 0 && props.onChange) {
+  //     if (props.value !== options[0].value) {
+  //       props.onChange(options[0].value as any, options[0] as any);
+  //     }
+  //   }
+  // }, [options, props.value, props.onChange]);
+
+
 
   return (
     <div className="w-full flex flex-col gap-1 text-start">
@@ -37,14 +39,14 @@ const CustomSelect = forwardRef<any, CustomSelectProps>(({
         ref={ref}
         showSearch
         className={`w-full h-[46px] ${className} bg-slate-50 rounded-lg border-0`}
-        optionFilterProp="children"
+        optionFilterProp="label"
         getPopupContainer={(trigger) => trigger.parentElement || document.body}
         placeholder="اختر من القائمة"
-        {...props} 
+        {...props}
       >
         {options.map((option) => (
-          <Select.Option 
-            key={option.value} 
+          <Select.Option
+            key={option.value}
             value={option.value}
             label={option.searchText || option.label}
           >

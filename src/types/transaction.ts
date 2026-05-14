@@ -1,6 +1,6 @@
 import { SubscriptionRequest } from "./subscription";
 
-export type TransactionType = 'credit' | 'subscription' | 'debit';
+export type TransactionType = 'credit' | 'subscription' | 'debit' | 'expense';
 export type TransactionStatus = 'completed' | 'pending' | 'failed';
 
 export interface Wallet {
@@ -19,20 +19,33 @@ export interface Transaction {
   walletId: string;
   type: TransactionType;
   amount: number;
+  originalAmount: number;
+  convertedAmount: number;
+  currencyCode: string;
+  exchangeRateUsed: number;
   status: TransactionStatus;
   reason: string;
   subscriptionId: string | null;
   expenseId: string | null;
   createdAt: string;
-  wallet: Wallet;
-  subscription: SubscriptionRequest; 
+  wallet?: Wallet;
+  subscription?: SubscriptionRequest; 
 }
 
 export interface WalletHistoryResponse {
   message: string;
   status: number;
   lang: 'ar' | 'en';
-  data: Transaction[];
+  data: {
+    transactions: Transaction[];
+    pagination: {
+      page: number;
+      limit: number;
+      totalItems: number;
+      totalPages: number;
+      hasNextPage: boolean;
+    };
+  };
 }
 
 export type WithdrawalStatus = 'pending' | 'approved' | 'rejected' | 'completed';

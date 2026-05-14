@@ -1,7 +1,5 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Download,
-  Bell,
   Users,
   BookOpen,
   Clock,
@@ -10,8 +8,129 @@ import {
   MoreHorizontal,
   ChevronDown,
 } from 'lucide-react';
+import { useAdminDashboard } from '../hooks/useAdminDashboard';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler,
+  Legend
+);
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const { data: dashboardResponse, isLoading, isError } = useAdminDashboard();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fc] p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fc] p-8 flex items-center justify-center">
+        <p className="text-red-500 font-medium">Failed to load dashboard data.</p>
+      </div>
+    );
+  }
+
+  const data = dashboardResponse?.data;
+
+  const chartData = {
+    labels: data?.sessionsPerDay?.map((d: any) => new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' })) || [],
+    datasets: [
+      {
+        fill: true,
+        label: 'Sessions',
+        data: data?.sessionsPerDay?.map((d: any) => d.count) || [],
+        borderColor: '#5e5ce6',
+        backgroundColor: 'rgba(94, 92, 230, 0.1)',
+        tension: 0.4,
+        borderWidth: 3,
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: '#5e5ce6',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        mode: 'index' as const,
+        intersect: false,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        titleColor: '#1f2937',
+        bodyColor: '#4b5563',
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+        padding: 10,
+        boxPadding: 4,
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+          drawBorder: false,
+        },
+        ticks: {
+          color: '#9ca3af',
+          font: {
+            size: 12,
+          }
+        }
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: '#f3f4f6',
+          drawBorder: false,
+        },
+        ticks: {
+          color: '#9ca3af',
+          stepSize: 1,
+        }
+      },
+    },
+    interaction: {
+      mode: 'nearest' as const,
+      axis: 'x' as const,
+      intersect: false,
+    },
+  };
+
+  const totalStudents = data?.activeUsers?.students || 0;
+  const totalInstructors = data?.activeUsers?.instructors || 0;
+  const maxUsers = Math.max(totalStudents, totalInstructors, 1);
+  const totalUsers = totalStudents + totalInstructors || 1;
+
   return (
     <div className="min-h-screen bg-[#f8f9fc] p-8 font-sans" dir="ltr">
       {/* Header Area */}
@@ -20,16 +139,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Good Morning, Sarah</h1>
           <p className="text-sm text-gray-500">Here's what's happening in the club kit today.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-            <Download className="w-4 h-4" />
-            Export Data
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#5e5ce6] text-white rounded-lg text-sm font-medium hover:bg-[#4b49b8] transition-colors shadow-sm">
-            <Bell className="w-4 h-4" />
-            Send Notification
-          </button>
-        </div>
+
       </div>
 
       {/* Stats Row */}
@@ -46,7 +156,7 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="text-[10px] text-gray-500 font-bold mb-1 tracking-wider uppercase">Total Students</p>
-            <h3 className="text-2xl font-bold text-gray-900">12,642</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{data?.stats?.totalStudents || 0}</h3>
           </div>
         </div>
 
@@ -62,7 +172,7 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="text-[10px] text-gray-500 font-bold mb-1 tracking-wider uppercase">Total Instructors</p>
-            <h3 className="text-2xl font-bold text-gray-900">436</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{data?.stats?.totalTeachers || 0}</h3>
           </div>
         </div>
 
@@ -83,7 +193,7 @@ export default function Dashboard() {
           </div>
           <div className="relative z-10">
             <p className="text-[10px] text-indigo-200 font-bold mb-1 tracking-wider uppercase">Pending Requests</p>
-            <h3 className="text-2xl font-bold">34</h3>
+            <h3 className="text-2xl font-bold">{data?.stats?.pendingRequests || 0}</h3>
           </div>
         </div>
 
@@ -101,7 +211,7 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="text-[10px] text-gray-500 font-bold mb-1 tracking-wider uppercase">Today's Sessions</p>
-            <h3 className="text-2xl font-bold text-gray-900">156</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{data?.stats?.todaySessions || 0}</h3>
           </div>
         </div>
       </div>
@@ -115,42 +225,11 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold text-gray-900">Sessions per Day</h3>
               <p className="text-sm text-gray-500">Weekly tracking of educational engagement</p>
             </div>
-            <button className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-              Last 7 Days
-              <ChevronDown className="w-4 h-4" />
-            </button>
+
           </div>
           
           <div className="h-64 w-full relative mt-4">
-            <svg viewBox="0 0 800 200" className="w-full h-full preserve-3d" preserveAspectRatio="none">
-              <line x1="0" y1="50" x2="800" y2="50" stroke="#f3f4f6" strokeWidth="1" />
-              <line x1="0" y1="100" x2="800" y2="100" stroke="#f3f4f6" strokeWidth="1" />
-              <line x1="0" y1="150" x2="800" y2="150" stroke="#f3f4f6" strokeWidth="1" />
-              <line x1="0" y1="200" x2="800" y2="200" stroke="#f3f4f6" strokeWidth="1" />
-              
-              <path 
-                d="M 0,150 C 100,150 150,50 250,80 C 350,110 400,180 500,160 C 600,140 650,40 750,20 L 800,20" 
-                fill="none" 
-                stroke="#5e5ce6" 
-                strokeWidth="4" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-              />
-              
-              <circle cx="250" cy="80" r="4" fill="#fff" stroke="#5e5ce6" strokeWidth="2" />
-              <circle cx="500" cy="160" r="4" fill="#fff" stroke="#5e5ce6" strokeWidth="2" />
-              <circle cx="750" cy="20" r="4" fill="#fff" stroke="#5e5ce6" strokeWidth="2" />
-            </svg>
-            
-            <div className="absolute bottom-0 w-full flex justify-between text-xs text-gray-400 -mb-6 px-2">
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span>Fri</span>
-              <span>Sat</span>
-              <span>Sun</span>
-            </div>
+            <Line data={chartData} options={chartOptions} />
           </div>
         </div>
 
@@ -164,29 +243,48 @@ export default function Dashboard() {
           </div>
           
           <div className="flex-1 flex flex-col justify-center">
-            <div className="flex justify-center items-end gap-6 h-32 mb-8">
-              <div className="w-12 bg-blue-500 rounded-t-sm h-full shadow-sm"></div>
-              <div className="w-12 bg-[#5e5ce6] rounded-t-sm h-3/4 shadow-sm"></div>
+            <div className="flex justify-center items-end gap-6 h-32 mb-8 mt-4">
+              <div className="relative group w-12 h-full flex items-end justify-center cursor-pointer">
+                <div 
+                  className="w-full bg-blue-500 rounded-t-lg shadow-sm transition-all duration-500 group-hover:bg-blue-400 group-hover:shadow-md"
+                  style={{ height: `${(totalStudents / maxUsers) * 100}%`, minHeight: '10%' }}
+                ></div>
+                <div className="absolute -top-10 bg-gray-900 text-white text-xs font-medium py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl z-10">
+                  {totalStudents.toLocaleString()} Students
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                </div>
+              </div>
+              
+              <div className="relative group w-12 h-full flex items-end justify-center cursor-pointer">
+                <div 
+                  className="w-full bg-[#5e5ce6] rounded-t-lg shadow-sm transition-all duration-500 group-hover:bg-[#4b49b8] group-hover:shadow-md"
+                  style={{ height: `${(totalInstructors / maxUsers) * 100}%`, minHeight: '10%' }}
+                ></div>
+                <div className="absolute -top-10 bg-gray-900 text-white text-xs font-medium py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-xl z-10">
+                  {totalInstructors.toLocaleString()} Instructors
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                </div>
+              </div>
             </div>
             
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-gray-600 font-medium">Students</span>
-                  <span className="font-bold text-gray-900">8,241</span>
+                  <span className="font-bold text-gray-900">{totalStudents}</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '80%' }}></div>
+                  <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000" style={{ width: `${(totalStudents / totalUsers) * 100}%` }}></div>
                 </div>
               </div>
               
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-gray-600 font-medium">Instructors</span>
-                  <span className="font-bold text-gray-900">302</span>
+                  <span className="font-bold text-gray-900">{totalInstructors}</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-[#5e5ce6] h-1.5 rounded-full" style={{ width: '40%' }}></div>
+                  <div className="bg-[#5e5ce6] h-1.5 rounded-full transition-all duration-1000" style={{ width: `${(totalInstructors / totalUsers) * 100}%` }}></div>
                 </div>
               </div>
             </div>
@@ -200,51 +298,35 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:col-span-2">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold text-gray-900">Activity Feed</h3>
-            <button className="text-sm text-[#5e5ce6] font-medium hover:text-[#4b49b8] transition-colors">View All</button>
           </div>
           
           <div className="space-y-6">
-            <div className="flex gap-4">
-              <img src="https://i.pravatar.cc/100?img=4" alt="Ahmed" className="w-10 h-10 rounded-full object-cover shadow-sm" />
-              <div className="flex-1">
-                <p className="text-sm text-gray-800">
-                  <span className="font-bold text-gray-900">Ahmed Al-Farid</span> requested a reschedule for <span className="text-[#5e5ce6] font-medium">Advanced Mathematics</span>.
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
-                  <span className="text-xs text-gray-500">2 mins ago</span>
+            {data?.activityFeed && data.activityFeed.length > 0 ? (
+              data.activityFeed.map((activity) => (
+                <div key={activity.id} className="flex gap-4">
+                  {activity.type === 'request' ? (
+                    <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(activity.user)}&background=random`} alt={activity.user} className="w-10 h-10 rounded-full object-cover shadow-sm" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-[#5e5ce6] shadow-sm shrink-0">
+                      <Users className="w-5 h-5" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-800">
+                      {activity.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`w-1.5 h-1.5 rounded-full ${activity.type === 'request' ? 'bg-orange-400' : 'bg-[#5e5ce6]'}`}></span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(activity.time).toLocaleDateString()} {new Date(activity.time).toLocaleTimeString()}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div className="flex gap-4">
-              <img src="https://i.pravatar.cc/100?img=5" alt="Sara" className="w-10 h-10 rounded-full object-cover shadow-sm" />
-              <div className="flex-1">
-                <p className="text-sm text-gray-800">
-                  Session completed with <span className="font-bold text-gray-900">Sara Roberts</span>.
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">"Great session today! We also engaged in the physics module."</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span className="text-xs text-gray-500">15 mins ago</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-[#5e5ce6] shadow-sm">
-                <Users className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-800">
-                  <span className="font-bold text-gray-900">New Instructor Onboarded:</span> Dr. Julian Moore joined the Chemistry department.
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#5e5ce6]"></span>
-                  <span className="text-xs text-gray-500">2 hours ago</span>
-                </div>
-              </div>
-            </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 italic">No recent activity.</p>
+            )}
           </div>
         </div>
 
@@ -263,7 +345,9 @@ export default function Dashboard() {
               <p className="text-sm text-indigo-100/80 mb-6 leading-relaxed">
                 The monthly performance audit for Q2 is now available for review and signature.
               </p>
-              <button className="px-5 py-2.5 bg-white text-[#2a286b] rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors">
+              <button className="px-5 py-2.5 bg-white text-[#2a286b] rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors"
+              onClick={() => navigate("/dashboard/reports")}
+              >
                 Review Now
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -275,28 +359,23 @@ export default function Dashboard() {
             <h3 className="text-lg font-bold text-gray-900 mb-4">Upcoming Sessions</h3>
             
             <div className="space-y-3 mb-4">
-              <div className="flex justify-between items-center p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 transition-colors group">
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900">AP Literature Review</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Today • 2:00 PM - 3:30 PM</p>
-                </div>
-                <button className="px-4 py-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-50 transition-colors group-hover:border-gray-300 shadow-sm">
-                  Join
-                </button>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 transition-colors group">
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900">Organic Chemistry Lab</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">Today • 4:15 PM - 5:45 PM</p>
-                </div>
-                <button className="px-4 py-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-50 transition-colors group-hover:border-gray-300 shadow-sm">
-                  Join
-                </button>
-              </div>
+              {data?.upcomingSessions && data.upcomingSessions.length > 0 ? (
+                data.upcomingSessions.map((session: any) => (
+                  <div key={session.id} className="flex justify-between items-center p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/50 transition-colors group">
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900">{session.title}</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">{new Date(session.time).toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 italic p-3">No upcoming sessions.</p>
+              )}
             </div>
             
-            <button className="w-full text-center text-sm text-gray-500 font-medium hover:text-gray-800 transition-colors mt-2">
+            <button className="w-full text-center text-sm text-gray-500 font-medium hover:text-gray-800 transition-colors mt-2"
+            onClick={() => navigate("/dashboard/teacher-availability")}
+            >
               See Full Calendar
             </button>
           </div>

@@ -11,18 +11,20 @@ import {
   MoreVertical,
   ArrowLeft,
   BookOpen,
-  Earth,
   Search,
   LayoutGrid,
   List as ListIcon,
 } from 'lucide-react';
-import { Button, Input, Tag, Card, Empty, Dropdown, Modal, Switch } from 'antd';
+import { Button, Input, Tag, Card, Empty, Dropdown, Modal } from 'antd';
 import { useCourseById, useCourses, useDeleteCourse } from '../../../hooks/useCourses';
 import { useDeleteLecture } from '../../../hooks/useLectures';
 import { useQueryClient } from '@tanstack/react-query';
 import AddCourseModal from './AddCourseModal';
 import AddLectureModal from './AddLectureModal';
 import { Lecture } from '../../../types/lectures';
+import ReactPlayer from 'react-player';
+
+const Player = ReactPlayer as any;
 
 // const DOT = () => (
 //   <div className='flex flex-col items-center justify-center'>
@@ -160,7 +162,7 @@ export default function Curriculum() {
               </div>
               <div className="max-h-[60vh] overflow-y-auto no-scrollbar">
                 {lectures.length > 0 ? (
-                  lectures.map((lecture: Lecture, index: number) => (
+                  lectures.map((lecture: Lecture) => (
                     <div
                       key={lecture.id}
                       className={`flex items-center justify-between p-4 cursor-pointer transition-all border-b border-gray-50 last:border-0 ${selectedLessonId === lecture.id ? 'bg-indigo-50/50' : 'hover:bg-gray-50'}`}
@@ -252,18 +254,22 @@ export default function Curriculum() {
                       </div>
                       {activeLecture.videoUrl ? (
                         <div className="relative aspect-video rounded-2xl bg-gray-900 overflow-hidden shadow-lg group">
-                          {activeLecture.videoUrl.includes('youtube') || activeLecture.videoUrl.includes('vimeo') ? (
+                          {activeLecture.videoUrl.includes('drive.google.com') ? (
                             <iframe
-                              src={activeLecture.videoUrl}
-                              className="w-full h-full border-0"
+                              src={activeLecture.videoUrl.replace('/view', '/preview')}
+                              width="100%"
+                              height="100%"
+                              className="w-full h-full border-0 absolute top-0 left-0"
                               allowFullScreen
-                              title="Video player"
+                              title="Google Drive Video"
                             />
                           ) : (
-                            <video
-                              src={activeLecture.videoUrl}
+                            <Player
+                              url={activeLecture.videoUrl}
+                              width="100%"
+                              height="100%"
+                              className="absolute top-0 left-0"
                               controls
-                              className="w-full h-full object-contain"
                             />
                           )}
                         </div>
@@ -318,7 +324,7 @@ export default function Curriculum() {
                 )}
               </div>
 
-              <div className="p-6 rounded-2xl bg-[#F4F7FF] border border-gray-100 flex items-center justify-between mt-auto mx-8 mb-8">
+              {/* <div className="p-6 rounded-2xl bg-[#F4F7FF] border border-gray-100 flex items-center justify-between mt-auto mx-8 mb-8">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#4648D4] border border-gray-100">
                     <Earth size={20} />
@@ -332,7 +338,7 @@ export default function Curriculum() {
                   <span className="text-[10px] font-bold text-[#4648D4] uppercase tracking-widest">Published</span>
                   <Switch defaultChecked />
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -407,7 +413,7 @@ export default function Curriculum() {
             <Card
               key={course.id}
               className={`group overflow-hidden rounded-3xl border border-gray-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-50/50 transition-all duration-300 cursor-pointer ${viewMode === 'list' ? 'p-2' : ''}`}
-              bodyStyle={{ padding: 0 }}
+              styles={{ body: { padding: 0 } }}
               onClick={() => handleCourseClick(course.id)}
             >
               {viewMode === 'grid' ? (
@@ -431,7 +437,7 @@ export default function Curriculum() {
                         {course.rank.name}
                       </Tag>
                       <Dropdown
-                        overlayClassName="custom-dropdown"
+                        classNames={{ root: "custom-dropdown" }}
                         menu={{
                           className: "bg-white text-black",
                           items: [

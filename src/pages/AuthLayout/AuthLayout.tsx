@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Rocket, ArrowLeft } from "lucide-react";
+import {  ArrowLeft } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 const AuthLayout = () => {
@@ -26,15 +26,13 @@ const AuthLayout = () => {
           <div className="flex items-center justify-center mb-6">
             <div className="bg-white rounded-3xl p-5 shadow-2xl shadow-primary/10 border border-white relative group">
               <div className="absolute inset-0 bg-primary/5 rounded-3xl scale-0 group-hover:scale-110 transition-transform duration-500" />
-              <Rocket className="w-14 h-14 text-primary relative z-10 animate-pulse" />
+              <img src="/logo.png" alt="Logo" className="w-14 h-14 text-primary relative z-10" />
             </div>
           </div>
-          <h1 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">
-            {t("academyName")}
+          <h1 className="text-2xl font-black text-gray-900 mb-2 tracking-tight">
+            {"Jupiter Egypt"}
           </h1>
-          <p className="text-gray-500 font-medium max-w-lg mx-auto leading-relaxed">
-            {t("academySubtitle")}
-          </p>
+          
         </div>
 
         {!isAuthTab && (

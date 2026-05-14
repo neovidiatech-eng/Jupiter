@@ -1,39 +1,64 @@
-import React from "react";
 import { createPortal } from "react-dom";
-import { Download, Play, X } from "lucide-react";
+import { X } from "lucide-react";
+import ReactPlayer from "react-player";
 
 interface VideoModalProps {
   isOpen: boolean;
   onClose: () => void;
   sessionName: string;
+  videoUrl: string;
 }
 
-export default function VideoModal({ isOpen, onClose, sessionName }: VideoModalProps) {
+export default function VideoModal({
+  isOpen,
+  onClose,
+  sessionName,
+  videoUrl,
+}: VideoModalProps) {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-200">
-        
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+
+      <div className="bg-white w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-          <h2 className="text-xl font-bold text-slate-800">{sessionName}</h2>
-          <button 
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h2 className="text-lg md:text-xl font-bold text-slate-800">
+            {sessionName}
+          </h2>
+
+          <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-2 rounded-full hover:bg-slate-100 transition"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Video Placeholder */}
-        <div className="p-6">
-          <div className="w-full aspect-video bg-[#0B1120] rounded-xl flex flex-col items-center justify-center text-slate-400 gap-4">
-            <Play size={64} className="text-slate-500 hover:text-white hover:scale-110 transition-all cursor-pointer" />
-            <span className="font-medium">Video Player Placeholder</span>
-          </div>
+        {/* Video */}
+        <div className="bg-black aspect-video relative">
+          {videoUrl.includes('drive.google.com') ? (
+            <iframe
+              src={videoUrl.replace('/view', '/preview')}
+              width="100%"
+              height="100%"
+              className="w-full h-full border-0 absolute top-0 left-0"
+              allowFullScreen
+              title="Google Drive Video"
+            />
+          ) : (
+            /* @ts-ignore */
+            <ReactPlayer
+              url={videoUrl}
+              width="100%"
+              height="100%"
+              className="absolute top-0 left-0"
+              controls
+              playing
+            />
+          )}
         </div>
-
       </div>
     </div>,
     document.body

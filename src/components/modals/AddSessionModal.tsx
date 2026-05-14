@@ -200,15 +200,16 @@ export default function AddSessionModal({
       available: boolean;
     }[] = [];
 
-    if (!watchSelectedDays.length) return sessions;
+    const startDateStr = watch('batchStartDate');
+    const endDateStr = watch('batchEndDate');
 
-    const [year, month] = watch('monthYear')
-      .split('-')
-      .map(Number);
+    if (!startDateStr || !endDateStr || !watchSelectedDays.length) return sessions;
 
-    const currentDate = new Date(year, month - 1, 1);
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+    const currentDate = new Date(startDate);
 
-    while (currentDate.getMonth() === month - 1) {
+    while (currentDate <= endDate) {
       const currentDay = currentDate.toLocaleDateString('en-US', {
         weekday: 'long',
       }) as DayOfWeek;
@@ -220,7 +221,7 @@ export default function AddSessionModal({
 
         sessions.push({
           date: `${y}-${m}-${d}`,
-          available: Math.random() > 0.2,
+          available: true,
         });
       }
 
@@ -231,7 +232,9 @@ export default function AddSessionModal({
   }, [
     schedulingMode,
     watchSelectedDays,
-    watch,
+    watch('batchStartDate'),
+    watch('batchEndDate'),
+    watch('sessionDate'),
   ]);
 
   const formatDateCard = (date: string) => {
@@ -492,6 +495,7 @@ export default function AddSessionModal({
               watchSelectedDays={watchSelectedDays}
               setValue={setValue}
               DAYS={DAYS}
+              control={control}
             />
 
             {/* Link + Video + Slides */}

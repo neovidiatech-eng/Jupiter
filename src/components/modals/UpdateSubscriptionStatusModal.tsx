@@ -28,8 +28,27 @@ export default function UpdateSubscriptionStatusModal({
 
   useEffect(() => {
     setStatus(initialStatus);
-    setSelectedRank("");
-  }, [initialStatus, isOpen]);
+    
+    if (!request) {
+      setSelectedRank("");
+      return;
+    }
+
+    // Auto-select rank based on age
+    if (request.user.age && ranksData?.data.items) {
+      const matchedRank = ranksData.data.items.find(rank => 
+        request.user.age! >= rank.ageRange.minAge && 
+        request.user.age! <= rank.ageRange.maxAge
+      );
+      if (matchedRank) {
+        setSelectedRank(matchedRank.id);
+      } else {
+        setSelectedRank("");
+      }
+    } else {
+      setSelectedRank("");
+    }
+  }, [initialStatus, isOpen, request, ranksData]);
 
   if (!isOpen || !request) return null;
 
@@ -73,7 +92,7 @@ export default function UpdateSubscriptionStatusModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 !mt-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
       {/* Backdrop */}
       <div
         className="absolute inset-0"
@@ -156,8 +175,7 @@ export default function UpdateSubscriptionStatusModal({
               </div>
             </div>
 
-            {status === "approved" && (
-              <div className="space-y-3 animate-in slide-in-from-top-4 duration-300">
+            <div className="space-y-3 animate-in slide-in-from-top-4 duration-300">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <Trophy size={14} className="text-amber-500" />
                   {text.rank[language]}
@@ -176,11 +194,10 @@ export default function UpdateSubscriptionStatusModal({
                     className="rounded-2xl border-2 border-slate-100 hover:border-slate-200 focus-within:border-blue-500 transition-all bg-slate-50/30"
                   />
                 )}
-                {status === "approved" && !selectedRank && (
+                {!selectedRank && (
                   <p className="text-[10px] text-amber-600 font-bold px-2">{text.requiredRank[language]}</p>
                 )}
               </div>
-            )}
           </div>
         </div>
 
@@ -188,7 +205,7 @@ export default function UpdateSubscriptionStatusModal({
         <div className="p-8 border-t border-slate-100 bg-slate-50/30 flex flex-col gap-3">
           <button
             onClick={handleConfirm}
-            disabled={isSubmitting || (status === "approved" && !selectedRank)}
+            disabled={isSubmitting || !selectedRank}
             className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:grayscale ${status === 'approved' ? 'bg-emerald-600 text-white shadow-emerald-200 hover:bg-emerald-700' : 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'}`}
           >
             {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : (status === 'approved' ? <CheckCircle size={18} /> : <XCircle size={18} />)}

@@ -36,6 +36,9 @@ export default function Users() {
   const [selectedUser, setSelectedUser] = useState<ModalUser | null>(null);
   const itemsPerPage = 7;
 
+
+
+
   // ── API hooks ──────────────────────────────────────────────────────────
   const { data: staffData, isLoading, isError } = useStaff(searchTerm);
   const addStaff = useAddStaff();
@@ -98,7 +101,7 @@ export default function Users() {
     });
     if (confirmed) {
       deleteStaff.mutate(userId, {
-        onSuccess: () => {},
+        onSuccess: () => { },
       });
     }
   };
@@ -138,9 +141,9 @@ export default function Users() {
       </div>
 
       {/* Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-        <div className="relative">
-          <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 sticky top-0 z-10">
+        <div className="relative group">
+          <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors w-5 h-5" />
           <input
             type="text"
             placeholder={t('search')}
@@ -149,102 +152,110 @@ export default function Users() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pr-12 pl-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-start"
+            className="w-full pr-12 pl-4 py-3.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-start placeholder:text-gray-400 font-medium"
           />
         </div>
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
         {isLoading ? (
           <TableSkeleton rows={itemsPerPage} columns={6} />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('name')}</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('email')}</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('phone')}</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('role')}</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('status')}</th>
-                  <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700">{t('actions')}</th>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('name')}</th>
+                  <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('email')}</th>
+                  <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('phone')}</th>
+                  <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('role')}</th>
+                  <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('status')}</th>
+                  <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('actions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-50">
                 {isError ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-red-500">
-                      {t('errorLoadingData')}
+                    <td colSpan={6} className="px-8 py-20 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-red-500 font-bold">{t('errorLoadingData')}</span>
+                      </div>
                     </td>
                   </tr>
                 ) : currentUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
-                      {t('noData')}
+                    <td colSpan={6} className="px-8 py-20 text-center">
+                      <div className="flex flex-col items-center gap-3 text-gray-400">
+                        <Search className="w-12 h-12 opacity-20" />
+                        <span className="font-medium">{t('noData')}</span>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   currentUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                            <span className="text-gray-600 text-sm font-medium">
+                    <tr key={user.id} className="group hover:bg-blue-50/30 transition-all duration-300">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-200">
+                            <span className="text-white text-sm font-bold tracking-wider">
                               {user.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div className="text-start">
-                            <div className="font-medium text-gray-900">{user.name}</div>
-                            <div className="text-xs text-gray-500">{user.email}</div>
+                            <div className="font-bold text-gray-900 group-hover:text-primary transition-colors">{user.name}</div>
+                            <div className="text-[11px] text-gray-400 font-medium">Employee</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-gray-600">{user.email}</span>
+                      <td className="px-8 py-5">
+                        <span className="text-sm text-gray-600 font-medium">{user.email}</span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-8 py-5">
                         <WhatsAppPhone
                           phone={`${user.countryCode} ${user.phone}`}
-                          className="text-gray-900"
+                          className="text-gray-900 font-semibold"
                         />
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-purple-600 font-medium">{user.role}</span>
+                      <td className="px-8 py-5">
+                        <span className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-600 text-[11px] font-bold uppercase tracking-wide border border-purple-100">
+                          {user.role}
+                        </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-8 py-5">
                         <span
-                          className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${user.status === 'active'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-purple-100 text-purple-700'
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${user.status === 'active'
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                            : 'bg-rose-50 text-rose-600 border border-rose-100'
                             }`}
                         >
+                          <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                           {user.status === 'active' ? t('active') : t('inactive')}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 justify-start">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-3 justify-start">
                           <button
                             onClick={() => handleViewUser(user)}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
+                            className="p-2.5 bg-gray-50 text-gray-400 hover:bg-white hover:text-gray-600 hover:shadow-md rounded-xl transition-all"
                             title={t('view')}
                           >
-                            <Eye className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                            <Eye className="w-4 h-4" />
                           </button>
-                          <button
+                          {/* <button
                             onClick={() => handleEditClick(user)}
-                            className="p-2 hover:bg-primary-light rounded-lg transition-colors group"
+                            className="p-2.5 bg-blue-50 text-blue-400 hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-200 rounded-xl transition-all"
                             title={t('edit')}
                           >
-                            <Pencil className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
-                          </button>
+                            <Pencil className="w-4 h-4" />
+                          </button> */}
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
+                            className="p-2.5 bg-red-50 text-red-400 hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-200 rounded-xl transition-all"
                             title={t('delete')}
                             disabled={deleteStaff.isPending}
                           >
-                            <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-600" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>

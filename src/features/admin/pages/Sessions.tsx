@@ -7,7 +7,7 @@ import AddSessionModal from '../../../components/modals/AddSessionModal';
 import ViewSessionModal from '../../../components/modals/ViewSessionModal';
 import EditSessionModal from '../../../components/modals/EditSessionModal';
 import ConfirmModal from '../../../components/modals/ConfirmModal';
-import { Schedule, UpdateSchedulePayload } from '../../../types/scheduales';
+import { DayOfWeek, Schedule, UpdateSchedulePayload } from '../../../types/scheduales';
 import { SessionFormData, MultipleSessionsPayload } from '../../../lib/schemas/SessionSchema';
 import { Table, Dropdown } from "antd";
 import { Link } from 'react-router-dom';
@@ -81,7 +81,7 @@ export default function Sessions() {
           notes: data.notes || '',
           start_time: new Date(`${data.sessionDate}T${data.startTime}`).toISOString(),
           type: data.type,
-          notification_Time: data.notification_Time,
+          notification_Time: data.notification_Time || '10',
           platform: data.platform,
           language: data.language,
           videoUrl: data.videoUrl,
@@ -89,7 +89,7 @@ export default function Sessions() {
         });
       } else {
         // Batch Session
-        const { formData, sessions } = data;
+        const { formData } = data;
         await createRecurringSchedule.mutateAsync({
           studentId: formData.studentId,
           teacherId: formData.teacherId,
@@ -98,10 +98,10 @@ export default function Sessions() {
           description: formData.description || '',
           link: formData.link || '',
           notes: formData.notes || '',
-          startTime: sessions[0]?.time || '00:00',
-          days: data.selectedDays,
-          startDate: formData.monthYear ? `${formData.monthYear}-01` : new Date().toISOString().split('T')[0],
-          endDate: formData.monthYear ? `${formData.monthYear}-28` : new Date().toISOString().split('T')[0],
+          startTime: formData.startTime || '00:00',
+          days: formData.selectedDays as DayOfWeek[],
+          startDate: formData.batchStartDate,
+          endDate: formData.batchEndDate,
           notification_Time: formData.notification_Time || '10',
           language: formData.language,
         });

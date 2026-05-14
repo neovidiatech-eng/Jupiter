@@ -12,4 +12,9 @@ export const getUserSchema = (t: TFunc) => z.object({
   permissions: z.array(z.string()).optional(),
 });
 
+export const getUpdateUserSchema = (t: TFunc) => getUserSchema(t).extend({
+  password: z.string().min(6, t("validation.min", { count: 6 })).or(z.literal('')),
+});
+
 export type UserFormData = z.infer<ReturnType<typeof getUserSchema>>;
+export type UpdateUserFormData = z.infer<ReturnType<typeof getUpdateUserSchema>>;
