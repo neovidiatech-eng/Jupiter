@@ -57,19 +57,18 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
       <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-100 animate-in zoom-in-95 duration-300" dir={language === "ar" ? "rtl" : "ltr"}>
-        
+
         {/* Header */}
         <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-20">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 rounded-[24px] bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-100">
-               <GraduationCap className="w-8 h-8" />
+              <GraduationCap className="w-8 h-8" />
             </div>
             <div>
               <h2 className="text-2xl font-black text-slate-900 leading-tight">{teacher.user?.name}</h2>
               <div className="flex items-center gap-3 mt-1">
-                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                  teacher.active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'
-                }`}>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${teacher.active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-400'
+                  }`}>
                   {teacher.active ? t('active') : t('inactive')}
                 </span>
                 <span className="w-1 h-1 rounded-full bg-slate-300" />
@@ -84,7 +83,7 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-12">
-          
+
           {/* Quick Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-slate-50 rounded-[32px] p-6 border border-slate-100">
@@ -148,7 +147,7 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
             </div>
 
             {/* Financials */}
-            <div className="space-y-6">
+            {/* <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('earningsDetails')}</h4>
               </div>
@@ -172,11 +171,11 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Recent Activity */}
-          <div className="space-y-6">
+          {/* <div className="space-y-6">
              <div className="flex items-center justify-between">
                 <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('recentSessions')}</h4>
               </div>
@@ -195,7 +194,7 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
                   </div>
                 ))}
               </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Footer */}

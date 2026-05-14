@@ -114,30 +114,30 @@ const CourseFormFields = ({
           className="border-2 border-dashed border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-blue-400 transition-colors"
         >
           {thumbnailPreview ? (
-            <div className="relative h-36">
+            <div className="relative h-20">
               <img src={thumbnailPreview} alt="thumbnail" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                 <p className="text-white text-sm font-medium">{t('changeImage')}</p>
               </div>
             </div>
           ) : (
-            <div className="h-28 flex flex-col items-center justify-center gap-2 text-gray-400">
-              <Upload className="w-6 h-6" />
-              <p className="text-sm">{t('clickToUploadImage')}</p>
+            <div className="h-20! flex flex-col items-center justify-center gap-2 text-gray-400">
+              <Upload className="w-5 h-5" />
+              <p className="text-xs">{t('clickToUploadImage')}</p>
             </div>
           )}
         </div>
         <input ref={thumbnailInputRef} type="file" accept="image/*" className="hidden" onChange={handleThumbnailChange} />
       </div>
 
-      <button
-        type="button"
-        onClick={() => attachInputRef.current?.click()}
-        className="w-full flex items-center justify-center gap-2 border border-dashed border-gray-300 hover:border-blue-400 text-gray-500 py-2.5 rounded-xl text-sm transition-colors"
-      >
-        <Upload className="w-4 h-4" /> {t('uploadAdditionalFiles')}
-      </button>
-      <input ref={attachInputRef} type="file" multiple className="hidden" onChange={handleAttachFiles} />
+    <button
+  type="button"
+  onClick={() => attachInputRef.current?.click()}
+  className="w-full flex items-center justify-center gap-2 border border-dashed border-gray-300 hover:border-blue-400 text-gray-500 py-1.5 rounded-lg text-sm transition-colors"
+>
+  <Upload className="w-4 h-4" /> {t('uploadAdditionalFiles')}
+</button>
+      <input ref={attachInputRef} type="file"  className="hidden" onChange={handleAttachFiles} />
     </div>
   );
 };

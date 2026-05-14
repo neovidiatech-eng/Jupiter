@@ -149,8 +149,8 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
               </div>
             </div>
 
-            {/* Status & Type */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
+            {/* Status */}
+            <div className="grid grid-cols-1 gap-5 mb-6">
               <div className="text-start">
                 <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
                   {t('status')}
@@ -163,20 +163,6 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
                     { value: 'completed', label: t('completed') },
                     { value: 'missed', label: t('missed') || 'Missed' },
                     { value: 'cancelled', label: t('cancelled') },
-                  ]}
-                  className="rounded-2xl border-none bg-gray-50"
-                />
-              </div>
-              <div className="text-start">
-                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  <Clock className="w-3.5 h-3.5" /> {t('type')}
-                </label>
-                <CustomSelect
-                  value={formData.type}
-                  onChange={(val) => handleChange('type', val as string)}
-                  options={[
-                    { value: 'full', label: language === 'ar' ? 'كاملة (60 د)' : 'Full (60m)' },
-                    { value: 'half', label: language === 'ar' ? 'نصف (30 د)' : 'Half (30m)' },
                   ]}
                   className="rounded-2xl border-none bg-gray-50"
                 />
@@ -287,10 +273,7 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
                       {t(formData.status)}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('type')}</span>
-                    <span className="text-xs font-bold text-gray-800">{formData.type === 'full' ? '60m' : '30m'}</span>
-                  </div>
+
                   {formData.start_time && (
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('startTime')}</span>

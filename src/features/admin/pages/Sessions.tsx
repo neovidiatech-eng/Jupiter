@@ -590,9 +590,7 @@ export default function Sessions() {
                       </div>
                     </div>
                   </div>
-                  <button className="px-4 py-1.5 bg-indigo-50 text-[#6366f1] rounded-full text-[11px] font-bold hover:bg-[#6366f1] hover:text-white transition-all shadow-sm active:scale-95">
-                    Assign
-                  </button>
+                 
                 </div>
               );
             })}

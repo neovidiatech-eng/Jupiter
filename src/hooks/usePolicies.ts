@@ -25,7 +25,6 @@ export const useCreatePolicy = () => {
             queryClient.invalidateQueries({ queryKey: ["policies"] });
             ErrorService.success("Policy created successfully");
         },
-        onError: () => ErrorService.error("Failed to create policy"),
     });
 };
 
@@ -37,7 +36,6 @@ export const useUpdatePolicy = () => {
             queryClient.invalidateQueries({ queryKey: ["policies"] });
             ErrorService.success("Policy updated successfully");
         },
-        onError: () => ErrorService.error("Failed to update policy"),
     });
 };
 
@@ -49,7 +47,6 @@ export const useDeletePolicy = () => {
             queryClient.invalidateQueries({ queryKey: ["policies"] });
             ErrorService.success("Policy deleted successfully");
         },
-        onError: () => ErrorService.error("Failed to delete policy"),
     });
 };
 
@@ -61,6 +58,5 @@ export const useCreateNotice = () => {
             queryClient.invalidateQueries({ queryKey: ["policies", "notice"] });
             ErrorService.success("Notice updated successfully");
         },
-        onError: () => ErrorService.error("Failed to update notice"),
     });
 };

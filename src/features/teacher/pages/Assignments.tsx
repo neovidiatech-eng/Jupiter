@@ -134,10 +134,10 @@ export default function Assignments() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-amber-50 text-amber-600 border-amber-100';
-      case 'submitted': return 'bg-blue-50 text-blue-600 border-blue-100';
-      case 'completed': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      default: return 'bg-gray-50 text-gray-600 border-gray-100';
+      case 'pending': return 'bg-amber-50 text-amber-600 border-amber-200/50 shadow-[0_2px_10px_-3px_rgba(245,158,11,0.2)]';
+      case 'submitted': return 'bg-blue-50 text-blue-600 border-blue-200/50 shadow-[0_2px_10px_-3px_rgba(59,130,246,0.2)]';
+      case 'completed': return 'bg-emerald-50 text-emerald-600 border-emerald-200/50 shadow-[0_2px_10px_-3px_rgba(16,185,129,0.2)]';
+      default: return 'bg-gray-50 text-gray-600 border-gray-200';
     }
   };
 
@@ -210,11 +210,11 @@ export default function Assignments() {
                 href={`${baseURL}/${file.path}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50/50 px-2 py-1 rounded-lg group"
+                className="flex items-center gap-1.5 text-[10px] font-black text-indigo-600 hover:text-white hover:bg-indigo-600 transition-all bg-indigo-50/50 px-2.5 py-1.5 rounded-xl group w-fit border border-indigo-100/30"
               >
                 <FileText className="w-3 h-3" />
-                <span className="max-w-[120px] truncate">{file.name}</span>
-                <Download className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="max-w-[100px] truncate uppercase tracking-tighter">{file.name}</span>
+                <Download className="w-3 h-3" />
               </a>
             ))
           ) : (
@@ -252,47 +252,48 @@ export default function Assignments() {
   ];
 
   return (
-    <div className="space-y-6 max-w-[1200px] mx-auto p-2" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-8 max-w-[1200px] mx-auto p-4 custom-scrollbar" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-gray-900 mb-1">{text.title[language]}</h1>
+          <p className="text-gray-500 text-sm font-medium">{text.subtitle[language]}</p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-8 py-3 bg-[#6366f1] hover:bg-[#4f46e5] text-white rounded-2xl transition-all font-black text-sm shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95"
+        >
+          <Plus className="w-5 h-5" />
+          {text.addAssignment[language]}
+        </button>
+      </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
           <div
             key={stat.id}
-            className={`${stat.bgColor} rounded-[24px] p-3 border border-gray-100 hover:shadow-md transition-all group`}
+            className={`${stat.bgColor} rounded-[32px] p-6 border border-white shadow-sm hover:shadow-md transition-all group relative overflow-hidden`}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${stat.iconBg} transition-colors group-hover:scale-110 duration-300`}>
-                <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
+            <div className="flex items-center justify-between mb-4 relative z-10">
+              <div className={`p-3.5 rounded-2xl ${stat.iconBg} transition-all group-hover:scale-110 group-hover:rotate-6 duration-300`}>
+                <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
               </div>
             </div>
-            <div className="text-start">
-              <p className="text-3xl font-black text-gray-900 mb-1">{stat.value}</p>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
+            <div className="text-start relative z-10">
+              <p className="text-3xl font-black text-gray-900 mb-1 tracking-tight">{stat.value}</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{stat.label}</p>
             </div>
+            {/* Subtle Decorative Circle */}
+            <div className={`absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-10 ${stat.iconBg} group-hover:scale-150 transition-transform duration-500`} />
           </div>
         ))}
       </div>
 
       {/* Table Card */}
-      <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between px-8 py-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">{text.title[language]}</h1>
-            <p className="text-gray-500 text-sm font-medium">{text.subtitle[language]}</p>
-          </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="mt-4 md:mt-0 flex items-center gap-2 px-6 py-2.5 bg-[#6366f1] hover:bg-[#4f46e5] text-white rounded-full transition-colors font-bold text-sm shadow-sm active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            {text.addAssignment[language]}
-          </button>
-        </div>
-
+      <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden">
         {/* Toolbar */}
-        <div className="px-8 pb-4 flex flex-col lg:flex-row items-center justify-between gap-4">
+        <div className="px-8 py-8 flex flex-col lg:flex-row items-center justify-between gap-4">
           <div className="relative flex-1 w-full max-w-md">
             <Search className={`absolute ${language === 'ar' ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4`} />
             <input
@@ -322,7 +323,7 @@ export default function Assignments() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto custom-scrollbar">
           {isLoading ? (
             <div className="p-8"><TableSkeleton rows={itemsPerPage} columns={7} /></div>
           ) : currentAssignments.length === 0 ? (
@@ -350,11 +351,11 @@ export default function Assignments() {
             <span className="text-xs text-gray-400 font-bold ml-2">
               {language === 'ar' ? 'عرض' : 'Showing'} {(currentPage - 1) * itemsPerPage + 1} {language === 'ar' ? 'إلى' : 'to'} {Math.min(currentPage * itemsPerPage, filteredAssignments.length)} {language === 'ar' ? 'من' : 'of'} {filteredAssignments.length}
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-30 transition-all active:scale-90 border border-transparent hover:border-gray-100"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -362,7 +363,7 @@ export default function Assignments() {
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all ${currentPage === i + 1 ? 'bg-[#6366f1] text-white shadow-sm scale-110' : 'text-gray-500 hover:bg-gray-50'}`}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl text-xs font-black transition-all ${currentPage === i + 1 ? 'bg-[#6366f1] text-white shadow-lg shadow-indigo-200 scale-110' : 'text-gray-500 hover:bg-gray-50 border border-transparent hover:border-gray-100'}`}
                 >
                   {i + 1}
                 </button>
@@ -370,7 +371,7 @@ export default function Assignments() {
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-50 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:opacity-30 transition-all active:scale-90 border border-transparent hover:border-gray-100"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -389,18 +390,37 @@ export default function Assignments() {
       <style dangerouslySetInnerHTML={{
         __html: `
         .ant-table-thead > tr > th {
-          background-color: white !important;
+          background-color: #fcfcfd !important;
           color: #9ca3af !important;
-          font-size: 11px !important;
-          font-weight: 700 !important;
+          font-size: 10px !important;
+          font-weight: 900 !important;
           text-transform: uppercase !important;
-          letter-spacing: 0.1em !important;
-          border-bottom: 1px solid #f9fafb !important;
-          padding: 16px 24px !important;
+          letter-spacing: 0.15em !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+          padding: 20px 24px !important;
         }
         .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f9fafb !important;
-          padding: 16px 24px !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+          padding: 20px 24px !important;
+          transition: all 0.2s !important;
+        }
+        .ant-table-tbody > tr:hover > td {
+          background-color: #f8fafc !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 6px;
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f8fafc;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
         }
       `}} />
 

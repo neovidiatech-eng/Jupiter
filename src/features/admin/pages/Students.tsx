@@ -247,7 +247,7 @@ export default function Students() {
 
 
   return (
-    <div className="space-y-6 max-w-[1200px] mx-auto p-2" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="space-y-6 max-w-[1200px] mx-auto p-2 custom-scrollbar" dir={language === 'ar' ? 'rtl' : 'ltr'}>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -324,7 +324,7 @@ export default function Students() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto custom-scrollbar">
           {isLoading ? (
             <div className="p-8"><TableSkeleton rows={itemsPerPage} columns={7} /></div>
           ) : (
@@ -490,6 +490,25 @@ export default function Students() {
         }}
       />
       {ConfirmDialog}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 6px;
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f8fafc;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+          transition: all 0.3s;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}} />
     </div>
   );
 }

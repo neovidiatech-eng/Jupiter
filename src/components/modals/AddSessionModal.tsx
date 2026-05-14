@@ -7,7 +7,6 @@ import {
   Calendar,
   MonitorPlay,
   AlertTriangle,
-  Clock,
   BookOpen,
   Layers,
 } from 'lucide-react';
@@ -432,7 +431,7 @@ export default function AddSessionModal({
               )}
             </div>
 
-            {/* Subject + Type */}
+            {/* Subject + Language */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
 
               {/* Subject */}
@@ -462,59 +461,27 @@ export default function AddSessionModal({
                 )}
               </div>
 
-              {/* Type + Language */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-                {/* Type */}
-                <div>
-                  <label className="label">
-                    <Clock className="w-3.5 h-3.5" />
-                    Session Type
-                  </label>
+              {/* Language */}
+              <div>
+                <label className="label">
+                  <Layers className="w-3.5 h-3.5" />
+                  Language
+                </label>
 
-                  <Controller
-                    name="type"
-                    control={control}
-                    render={({ field }) => (
-                      <CustomSelect
-                        options={[
-                          {
-                            value: 'full',
-                            label: 'Full (60m)',
-                          },
-                          {
-                            value: 'half',
-                            label: 'Half (30m)',
-                          },
-                        ]}
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-
-                {/* Language */}
-                <div>
-                  <label className="label">
-                    <Layers className="w-3.5 h-3.5" />
-                    Language
-                  </label>
-
-                  <Controller
-                    name="language"
-                    control={control}
-                    render={({ field }) => (
-                      <CustomSelect
-                        options={[
-                          { value: 'en', label: 'English' },
-                          { value: 'ar', label: 'Arabic' },
-                        ]}
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
+                <Controller
+                  name="language"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      options={[
+                        { value: 'en', label: 'English' },
+                        { value: 'ar', label: 'Arabic' },
+                      ]}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
             </div>
 

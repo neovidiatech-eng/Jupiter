@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { EndSession, getUserSessions, JoinSession, SendFeedBack } from "../services/SessionsServices"
 import { SendReviewSchedulePayload } from "../types/scheduales"
+import ErrorService from "../utils/ErrorService"
 
 export const useUserSessions = (search: string) => {
     return useQuery({
@@ -34,6 +35,7 @@ export const useEndSession = () => {
     return useMutation({
         mutationFn: (id: string) => EndSession(id),
         onSuccess: () => {
+            ErrorService.success("Session ended successfully")
             queryClient.invalidateQueries({ queryKey: ["user-sessions"] })
         },
     })

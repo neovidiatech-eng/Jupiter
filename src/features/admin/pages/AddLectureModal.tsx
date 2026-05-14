@@ -30,6 +30,7 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
             title: '',
             content: '',
             videoUrl: '',
+            pdfUrl: '',
             order: 1,
             courseId: courseId,
         }
@@ -42,6 +43,7 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                     title: lecture.title,
                     content: lecture.content,
                     videoUrl: lecture.videoUrl || '',
+                    pdfUrl: lecture.pdfUrl || '',
                     order: lecture.order,
                     courseId: courseId,
                 });
@@ -50,6 +52,7 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                     title: '',
                     content: '',
                     videoUrl: '',
+                    pdfUrl: '',
                     order: 1,
                     courseId: courseId,
                 });
@@ -59,7 +62,7 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
 
     const onSubmit = (values: LectureFormData) => {
         const payload = { ...values, courseId };
-        
+
         if (isEditMode && lecture) {
             updateLecture({ id: lecture.id, data: payload }, {
                 onSuccess: () => {
@@ -107,10 +110,10 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                     <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
                         <Type size={14} className="text-indigo-500" /> Lecture Title
                     </label>
-                    <input 
+                    <input
                         {...register('title')}
-                        placeholder="e.g. Introduction to React Hooks" 
-                        className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" 
+                        placeholder="e.g. Introduction to React Hooks"
+                        className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                     />
                     {errors.title && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.title.message}</p>}
                 </div>
@@ -119,13 +122,24 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                     <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
                         <AlignLeft size={14} className="text-indigo-500" /> Content / Description
                     </label>
-                    <textarea 
+                    <textarea
                         {...register('content')}
-                        placeholder="Enter lecture details or transcript..." 
-                        rows={4} 
-                        className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none" 
+                        placeholder="Enter lecture details or transcript..."
+                        rows={4}
+                        className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
                     />
                     {errors.content && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.content.message}</p>}
+                </div>
+                <div>
+                    <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                        <Type size={14} className="text-indigo-500" /> PDF URL
+                    </label>
+                    <input
+                        {...register('pdfUrl')}
+                        placeholder="e.g. https://example.com/pdf"
+                        className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    />
+                    {errors.pdfUrl && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.pdfUrl.message}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -133,10 +147,10 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                         <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
                             <Video size={14} className="text-indigo-500" /> Video URL
                         </label>
-                        <input 
+                        <input
                             {...register('videoUrl')}
-                            placeholder="YouTube, Vimeo, etc." 
-                            className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" 
+                            placeholder="YouTube, Vimeo, etc."
+                            className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                         />
                         {errors.videoUrl && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.videoUrl.message}</p>}
                     </div>
@@ -148,10 +162,10 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                             name="order"
                             control={control}
                             render={({ field }) => (
-                                <InputNumber 
+                                <InputNumber
                                     {...field}
-                                    min={1} 
-                                    className="w-full h-12 rounded-xl border-gray-200 flex items-center" 
+                                    min={1}
+                                    className="w-full h-12 rounded-xl border-gray-200 flex items-center"
                                 />
                             )}
                         />
@@ -160,8 +174,8 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                 </div>
 
                 <div className="flex items-center justify-end gap-3 mt-10 pt-6 border-t border-gray-50">
-                    <Button 
-                        onClick={onClose} 
+                    <Button
+                        onClick={onClose}
                         className="h-12 px-6 rounded-xl font-bold text-gray-600 border-gray-200 hover:bg-gray-50"
                     >
                         Cancel

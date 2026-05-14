@@ -105,7 +105,7 @@ export default function AddAssignmentModal({ isOpen, onClose, initialData }: Add
   ];
 
   return (
-     <div className="fixed inset-0 !mt-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 font-sans transition-all duration-300">
+    <div className="fixed inset-0 !mt-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 font-sans transition-all duration-300">
       <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-lg max-h-[92vh] overflow-hidden flex flex-col animate-in zoom-in-100 duration-300">
         {/* Header */}
         <div className="px-8 py-5 border-b border-gray-100 flex items-start justify-between bg-white">
@@ -218,7 +218,8 @@ export default function AddAssignmentModal({ isOpen, onClose, initialData }: Add
           </form>
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }

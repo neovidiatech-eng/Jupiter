@@ -1,9 +1,10 @@
-import { ArrowLeft, Check, Play, Download, Lock, Calendar } from "lucide-react";
+import { ArrowLeft, Check, Play , Lock , Calendar } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useState } from "react";
 import VideoModal from "../../../../components/modals/VideoModal";
 import { useQuery } from "@tanstack/react-query";
 import { getStudentProgress } from "../../../../services/CoursesServices";
+import { SiOpen3D } from "react-icons/si";
 
 export default function CurriculumDetails() {
   const navigate = useNavigate();
@@ -109,8 +110,7 @@ export default function CurriculumDetails() {
                         {(isCompleted || isPending) && lecture.videoUrl && (
                             <button 
                               onClick={() => {
-                                setSelectedVideoName(lecture.title || `Lecture ${lectureOrder}`);
-                                setIsVideoModalOpen(true);
+                                window.open(lecture.videoUrl, '_blank', 'noopener,noreferrer');
                               }}
                               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm shadow-blue-200"
                             >
@@ -120,9 +120,14 @@ export default function CurriculumDetails() {
                         )}
                         
                         {(isCompleted || isPending) && lecture.pdfUrl && (
-                            <button className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
-                              <Download size={16} />
-                              PDF
+                            <button 
+                              onClick={() => {
+                                window.open(lecture.pdfUrl, '_blank', 'noopener,noreferrer');
+                              }}
+                              className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                            >
+                              <SiOpen3D size={16} />
+                              View PDF
                             </button>
                         )}
 

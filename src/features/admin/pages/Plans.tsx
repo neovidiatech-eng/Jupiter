@@ -148,7 +148,7 @@ export default function Plans() {
 
       <div className="max-w-[1600px] mx-auto px-8">
         {plansLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map(i => (
               <div key={i} className="bg-white rounded-[32px] h-[500px] animate-pulse border border-gray-100" />
             ))}
@@ -223,7 +223,7 @@ export default function Plans() {
                   <div className="flex items-center gap-3 pt-6 border-t border-gray-50">
                     <button
                       onClick={() => { setSelectedPlan(plan); setShowViewModal(true); }}
-                      className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gray-900 hover:bg-black text-white rounded-2xl transition-all text-xs font-black uppercase tracking-widest"
+                      className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-primary hover:bg-primary/80 text-white rounded-2xl transition-all text-xs font-black uppercase tracking-widest"
                     >
                       <Eye className="w-4 h-4" />
                       {text.view[language]}

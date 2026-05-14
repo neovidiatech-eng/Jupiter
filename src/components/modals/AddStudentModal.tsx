@@ -20,7 +20,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
   const [showPassword, setShowPassword] = useState(false);
   const { data: plansData } = usePlans();
   const { data: ranksResponse } = useGetRanks();
-  const { register, handleSubmit, control, reset, setValue, formState: { errors } } = useForm<StudentFormData>({
+  const { register, handleSubmit, control, reset, setValue, watch, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(getStudentSchema(t)) as any,
     defaultValues: {
       phone_code: '+20',
@@ -44,6 +44,17 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
     }
   }, [ranks.length, setValue]);
 
+  const nameValue = watch('name');
+  
+  useEffect(() => {
+    if (nameValue) {
+      const formattedName = nameValue.toLowerCase().replace(/\s+/g, '.');
+      setValue('email', `${formattedName}@jupiter.com`, { shouldValidate: true });
+    } else {
+      setValue('email', '');
+    }
+  }, [nameValue, setValue]);
+
   if (!isOpen) return null;
 
   const countryCodes = [
@@ -55,7 +66,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
 
   const plans = plansData || [];
   const planOptions = [
-    { value: '', label:'' },
+    { value: '', label: '' },
     ...plans.map((p: any) => ({
       value: p.id,
       label: p.name,
@@ -134,15 +145,22 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
 
               <div className="text-start">
                 <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  {t('email')} *
+               {t('email')}
                 </label>
-                <input
-                  type="email"
-                  {...register('email')}
-                  placeholder="ex :- student@example.com"
-                  className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.email ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300`}
-                  dir="ltr"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    value={nameValue ? nameValue.toLowerCase().replace(/\s+/g, '.') : ''}
+                    disabled
+                    placeholder="ex :- student_name"
+                    className={`w-full px-4 py-3 bg-gray-100 border border-transparent focus:bg-white focus:border-indigo-100 rounded-2xl text-sm font-bold text-gray-500 outline-none ring-2 ${errors.email ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-indigo-500/10 transition-all placeholder:text-gray-300 pr-24 ltr:pr-24 rtl:pl-24 cursor-not-allowed`}
+                    dir="ltr"
+                  />
+                  <input type="hidden" {...register('email')} />
+                  <span className="absolute right-4 text-gray-400 font-medium text-sm pointer-events-none select-none ltr:right-4 rtl:left-4">
+                    @jupiter.com
+                  </span>
+                </div>
                 {errors.email && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.email.message}</p>}
               </div>
             </div>

@@ -45,7 +45,7 @@ function StatusUpdateModal({ isOpen, onClose, onConfirm, status, language, isPen
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+    <div className="fixed inset-0 !mt-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900">{text.title[language]}</h2>
@@ -191,9 +191,6 @@ export default function TransactionRequests() {
             ErrorService.success(language === 'ar' ? 'تم تحديث حالة الطلب بنجاح' : 'Request status updated successfully');
             setModalConfig(prev => ({ ...prev, isOpen: false }));
         },
-        onError: (error: any) => {
-            ErrorService.error(error.response?.data?.message || (language === 'ar' ? 'فشل تحديث حالة الطلب' : 'Failed to update request status'));
-        }
     });
   };
 

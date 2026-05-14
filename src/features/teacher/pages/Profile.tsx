@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../../contexts/SettingsContext';
-import { 
-   Mail, Phone, MapPin, 
+import {
+  Mail, Phone, MapPin,
   Clock, Wallet, X,
-  BookOpen, Users, Star , Send,
+  BookOpen, Users, Star, Send,
   TrendingUp, CreditCard, ChevronRight
 } from 'lucide-react';
 import ErrorService from '../../../utils/ErrorService';
@@ -14,7 +14,7 @@ import { useCreateTeacherWithdrawal, useTeacherWithdrawals } from '../hooks/useW
 // Internal Withdrawal Modal Component
 function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl, isLoading }: any) {
   const [amount, setAmount] = useState('');
-  
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,7 +33,7 @@ function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl, isLoadin
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 !mt-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4 animate-in fade-in duration-300">
       <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl max-w-md w-full p-6 sm:p-8 animate-in slide-in-from-bottom sm:zoom-in-95 duration-300 border border-gray-100">
         <div className="flex justify-between items-center mb-6 sm:mb-8">
           <div className="flex items-center gap-3">
@@ -54,8 +54,8 @@ function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl, isLoadin
             </label>
             <div className="relative group">
               <span className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 font-bold text-gray-400">$</span>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
@@ -69,7 +69,7 @@ function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl, isLoadin
             </div>
           </div>
 
-          <button 
+          <button
             type="submit"
             disabled={isLoading}
             className="w-full py-3.5 sm:py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-[0.98] shadow-lg shadow-indigo-200"
@@ -96,7 +96,7 @@ export default function TeacherProfile() {
   const { data: profileResponse, isLoading } = useTeacherProfile();
   const { data: withdrawalsResponse } = useTeacherWithdrawals();
   const { mutate: createWithdrawal, isPending: isWithdrawing } = useCreateTeacherWithdrawal();
-  
+
   const withdrawals = withdrawalsResponse?.data?.withdrawals || [];
   const data = profileResponse?.data;
   const teacher = data?.teacher;
@@ -152,18 +152,18 @@ export default function TeacherProfile() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-7 sm:space-y-8 animate-fade-in pt-7 sm:pt-8 pb-10 sm:pb-16" dir={isRtl ? 'rtl' : 'ltr'}>
-      
+
       {/* Header Banner */}
       <div className="relative h-44 sm:h-52 md:h-72 rounded-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
           style={{ backgroundImage: `linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 100%), linear-gradient(135deg, ${settings.primaryColor}aa, ${settings.accentColor}aa), url('https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&q=80')` }}
         />
-        
+
         <div className="absolute inset-x-0 bottom-4 p-6 sm:p-10 flex flex-col sm:flex-row items-center sm:items-end gap-5 sm:gap-8 translate-y-10 sm:translate-y-12">
           <div className="relative group">
             <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-[2rem] sm:rounded-[2.5rem] bg-white p-2 shadow-2xl transition-all duration-300 group-hover:-translate-y-2 group-hover:rotate-3">
-              <div 
+              <div
                 className="w-full h-full rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center text-white text-4xl sm:text-6xl font-black shadow-inner"
                 style={{ backgroundColor: settings.primaryColor }}
               >
@@ -171,7 +171,7 @@ export default function TeacherProfile() {
               </div>
             </div>
           </div>
-          
+
           <div className="text-center sm:text-left flex-1 pb-4">
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white drop-shadow-lg tracking-tight">
               {teacherInfo.name}
@@ -185,7 +185,7 @@ export default function TeacherProfile() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mt-20 sm:mt-24">
-        
+
         {/* Profile Stats - Mobile Optimized Grid */}
         <div className="lg:col-span-2 order-2 lg:order-1 space-y-6 sm:space-y-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
@@ -203,7 +203,7 @@ export default function TeacherProfile() {
           {/* Smart Wallet Card */}
           <div className="bg-white rounded-[2rem] sm:rounded-[3rem] shadow-xl border border-gray-100 p-6 sm:p-8 overflow-hidden relative">
             <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-indigo-600/5 rounded-full blur-3xl" />
-            
+
             <div className="relative z-10">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-12">
                 <div className="flex items-center gap-3 sm:gap-4">
@@ -215,8 +215,8 @@ export default function TeacherProfile() {
                     <p className="text-[10px] sm:text-sm font-bold text-gray-400">{isRtl ? 'إدارة أرباحك' : 'Manage your earnings'}</p>
                   </div>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => setIsWithdrawModalOpen(true)}
                   className="w-full sm:w-auto px-6 py-3 sm:py-4 bg-gray-900 hover:bg-black text-white rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-xl shadow-black/10"
                 >
@@ -239,23 +239,22 @@ export default function TeacherProfile() {
                     <h3 className="text-sm font-black text-gray-900">{isRtl ? 'أحدث العمليات' : 'Recent'}</h3>
                     <ChevronRight className="w-4 h-4 text-indigo-600" />
                   </div>
-                  
+
                   <div className="space-y-3">
                     {withdrawals.length > 0 ? (
                       withdrawals.slice(0, 4).map((tx: any) => (
                         <div key={tx.id} className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-gray-100/50">
                           <div className="flex flex-col">
-                             <span className="text-[10px] font-bold text-gray-900">${tx.amount}</span>
-                             <span className="text-[8px] text-gray-400 font-medium">{new Date(tx.createdAt).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}</span>
+                            <span className="text-[10px] font-bold text-gray-900">${tx.amount}</span>
+                            <span className="text-[8px] text-gray-400 font-medium">{new Date(tx.createdAt).toLocaleDateString(isRtl ? 'ar-EG' : 'en-US')}</span>
                           </div>
-                          <span className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase ${
-                            tx.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 
-                            tx.status === 'pending' ? 'bg-amber-50 text-amber-600' : 
-                            'bg-red-50 text-red-600'
-                          }`}>
+                          <span className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase ${tx.status === 'approved' ? 'bg-emerald-50 text-emerald-600' :
+                              tx.status === 'pending' ? 'bg-amber-50 text-amber-600' :
+                                'bg-red-50 text-red-600'
+                            }`}>
                             {isRtl ? (
-                              tx.status === 'approved' ? 'مكتمل' : 
-                              tx.status === 'pending' ? 'قيد الانتظار' : 'مرفوض'
+                              tx.status === 'approved' ? 'مكتمل' :
+                                tx.status === 'pending' ? 'قيد الانتظار' : 'مرفوض'
                             ) : tx.status}
                           </span>
                         </div>
@@ -281,7 +280,7 @@ export default function TeacherProfile() {
               </div>
               {isRtl ? 'المعلومات' : 'Details'}
             </h3>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
               {[
                 { icon: Mail, label: isRtl ? 'البريد' : 'Email', value: teacherInfo.email },
@@ -305,7 +304,7 @@ export default function TeacherProfile() {
 
       </div>
 
-      <WithdrawalModal 
+      <WithdrawalModal
         isOpen={isWithdrawModalOpen}
         onClose={() => setIsWithdrawModalOpen(false)}
         balance={financialInfo.pendingBalance}

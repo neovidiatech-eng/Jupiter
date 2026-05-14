@@ -72,16 +72,15 @@ export default function SubmitAssignmentModal({ isOpen, onClose, assignmentId, a
               <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-3 uppercase tracking-wider">
                 {text.uploadLabel[language]}
               </label>
-              
+
               <div className="relative group">
                 <input
                   type="file"
                   onChange={handleFileChange}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
-                <div className={`border-2 border-dashed rounded-[24px] p-10 flex flex-col items-center justify-center transition-all ${
-                  selectedFile ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-100 bg-slate-50 group-hover:bg-white group-hover:border-indigo-100'
-                }`}>
+                <div className={`border-2 border-dashed rounded-[24px] p-6 flex flex-col items-center justify-center transition-all ${selectedFile ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-100 bg-slate-50 group-hover:bg-white group-hover:border-indigo-100'
+                  }`}>
                   {selectedFile ? (
                     <>
                       <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-4 text-indigo-500">

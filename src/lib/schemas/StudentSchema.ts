@@ -4,7 +4,7 @@ type TFunc = (key: string, options?: any) => string;
 
 export const getStudentSchema = (t: TFunc) => z.object({
   name: z.string().min(3, t("validation.min", { count: 3 })).max(32, t("validation.max", { count: 32 })),
-  email: z.string().email(t("validation.email")),
+  email: z.string().email(t("validation.invalidEmail")),
   phone_code: z.string().min(1, t("validation.required")),
   phone: z.string().min(11, t("validation.min", { count: 11})),
   gender: z.enum(['male', 'female']),

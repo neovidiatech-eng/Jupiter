@@ -82,7 +82,8 @@ export default function Expenses() {
       setShowModal(false);
       setSelectedExpense(null);
     } catch (error) {
-      ErrorService.error(language === 'ar' ? 'حدث خطأ ما' : 'Something went wrong');
+      console.log(error);
+      
     }
   };
 
