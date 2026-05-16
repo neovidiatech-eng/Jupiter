@@ -1,103 +1,101 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../../contexts/SettingsContext';
 import {
   Mail, Phone, MapPin,
-  Clock, Wallet, X,
-  BookOpen, Users, Star, Send,
-  TrendingUp, CreditCard, ChevronRight
+  Clock,
+  BookOpen, Users, Star,
 } from 'lucide-react';
-import ErrorService from '../../../utils/ErrorService';
+// import ErrorService from '../../../utils/ErrorService';
 import { useTeacherProfile } from '../hooks/useTeacherProfile';
-import { useCreateTeacherWithdrawal, useTeacherWithdrawals } from '../hooks/useWithdraw';
+// import { useCreateTeacherWithdrawal, useTeacherWithdrawals } from '../hooks/useWithdraw';
 
 // Internal Withdrawal Modal Component
-function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl, isLoading }: any) {
-  const [amount, setAmount] = useState('');
+// function WithdrawalModal({ isOpen, onClose, balance, onWithdraw, isRtl, isLoading }: any) {
+//   const [amount, setAmount] = useState('');
 
-  if (!isOpen) return null;
+//   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const numAmount = parseFloat(amount);
-    if (!numAmount || numAmount <= 0) {
-      ErrorService.error(isRtl ? 'يرجى إدخال مبلغ صالح' : 'Please enter a valid amount');
-      return;
-    }
-    if (numAmount > balance) {
-      ErrorService.error(isRtl ? 'المبلغ يتجاوز الرصيد الحالي' : 'Amount exceeds current balance');
-      return;
-    }
-    onWithdraw(numAmount);
-    setAmount('');
-  };
+//   const handleSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     const numAmount = parseFloat(amount);
+//     if (!numAmount || numAmount <= 0) {
+//       ErrorService.error(isRtl ? 'يرجى إدخال مبلغ صالح' : 'Please enter a valid amount');
+//       return;
+//     }
+//     if (numAmount > balance) {
+//       ErrorService.error(isRtl ? 'المبلغ يتجاوز الرصيد الحالي' : 'Amount exceeds current balance');
+//       return;
+//     }
+//     onWithdraw(numAmount);
+//     setAmount('');
+//   };
 
-  return (
-    <div className="fixed inset-0 !mt-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4 animate-in fade-in duration-300">
-      <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl max-w-md w-full p-6 sm:p-8 animate-in slide-in-from-bottom sm:zoom-in-95 duration-300 border border-gray-100">
-        <div className="flex justify-between items-center mb-6 sm:mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
-              <Wallet className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900">{isRtl ? 'طلب سحب رصيد' : 'Withdrawal Request'}</h2>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
-        </div>
+//   return (
+//     <div className="fixed inset-0 !mt-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4 animate-in fade-in duration-300">
+//       <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl max-w-md w-full p-6 sm:p-8 animate-in slide-in-from-bottom sm:zoom-in-95 duration-300 border border-gray-100">
+//         <div className="flex justify-between items-center mb-6 sm:mb-8">
+//           <div className="flex items-center gap-3">
+//             <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+//               <Wallet className="w-5 h-5 sm:w-6 sm:h-6" />
+//             </div>
+//             <h2 className="text-lg sm:text-xl font-bold text-gray-900">{isRtl ? 'طلب سحب رصيد' : 'Withdrawal Request'}</h2>
+//           </div>
+//           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+//             <X className="w-5 h-5 text-gray-400" />
+//           </button>
+//         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-          <div>
-            <label className="block text-xs sm:text-sm font-semibold text-gray-600 mb-2 sm:mb-3 ml-1">
-              {isRtl ? 'المبلغ المطلوب سحبه' : 'Amount to withdraw'}
-            </label>
-            <div className="relative group">
-              <span className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 font-bold text-gray-400">$</span>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full pl-10 sm:pl-12 pr-4 sm:pr-6 py-3 sm:py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-500/20 outline-none transition-all font-bold text-xl sm:text-2xl text-gray-900"
-                autoFocus
-              />
-            </div>
-            <div className="mt-4 p-3 sm:p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/50 flex justify-between items-center">
-              <span className="text-xs sm:text-sm text-indigo-600/70 font-medium">{isRtl ? 'الرصيد المتاح' : 'Available Balance'}</span>
-              <span className="text-sm sm:text-base font-bold text-indigo-700">${balance.toLocaleString()}</span>
-            </div>
-          </div>
+//         <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+//           <div>
+//             <label className="block text-xs sm:text-sm font-semibold text-gray-600 mb-2 sm:mb-3 ml-1">
+//               {isRtl ? 'المبلغ المطلوب سحبه' : 'Amount to withdraw'}
+//             </label>
+//             <div className="relative group">
+//               <span className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 font-bold text-gray-400">$</span>
+//               <input
+//                 type="number"
+//                 value={amount}
+//                 onChange={(e) => setAmount(e.target.value)}
+//                 placeholder="0.00"
+//                 className="w-full pl-10 sm:pl-12 pr-4 sm:pr-6 py-3 sm:py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-500/20 outline-none transition-all font-bold text-xl sm:text-2xl text-gray-900"
+//                 autoFocus
+//               />
+//             </div>
+//             <div className="mt-4 p-3 sm:p-4 rounded-xl bg-indigo-50/50 border border-indigo-100/50 flex justify-between items-center">
+//               <span className="text-xs sm:text-sm text-indigo-600/70 font-medium">{isRtl ? 'الرصيد المتاح' : 'Available Balance'}</span>
+//               <span className="text-sm sm:text-base font-bold text-indigo-700">${balance.toLocaleString()}</span>
+//             </div>
+//           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3.5 sm:py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-[0.98] shadow-lg shadow-indigo-200"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-            )}
-            {isRtl ? 'تأكيد عملية السحب' : 'Confirm Withdrawal'}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
+//           <button
+//             type="submit"
+//             disabled={isLoading}
+//             className="w-full py-3.5 sm:py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-[0.98] shadow-lg shadow-indigo-200"
+//           >
+//             {isLoading ? (
+//               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+//             ) : (
+//               <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+//             )}
+//             {isRtl ? 'تأكيد عملية السحب' : 'Confirm Withdrawal'}
+//           </button>
+//         </form>
+//       </div>
+//     </div>
+//   );
+// }
 
 export default function TeacherProfile() {
   const { i18n } = useTranslation();
   const { settings } = useSettings();
   const isRtl = i18n.language.split('-')[0] === 'ar';
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  // const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   const { data: profileResponse, isLoading } = useTeacherProfile();
-  const { data: withdrawalsResponse } = useTeacherWithdrawals();
-  const { mutate: createWithdrawal, isPending: isWithdrawing } = useCreateTeacherWithdrawal();
+//const { data: withdrawalsResponse } = useTeacherWithdrawals();
+  // const { mutate: createWithdrawal, isPending: isWithdrawing } = useCreateTeacherWithdrawal();
 
-  const withdrawals = withdrawalsResponse?.data?.withdrawals || [];
+  // const withdrawals = withdrawalsResponse?.data?.withdrawals || [];
   const data = profileResponse?.data;
   const teacher = data?.teacher;
   const stats = data?.stats;
@@ -123,13 +121,13 @@ export default function TeacherProfile() {
     experience: isRtl ? 'خبير تعليمي' : 'Educational Expert',
   };
 
-  const wallet = teacher?.wallet?.[0];
-  const financialInfo = {
-    pendingBalance: wallet?.balance || 0,
-    totalWithdrawn: 0,
-    transactions: wallet?.transactions || [],
-    currency: wallet?.currency?.symbol || '$'
-  };
+  //const wallet = teacher?.wallet?.[0];
+  // const financialInfo = {
+  //   pendingBalance: wallet?.balance || 0,
+  //   totalWithdrawn: 0,
+  //   transactions: wallet?.transactions || [],
+  //   currency: wallet?.currency?.symbol || '$'
+  // };
 
   const profileStats = [
     { label: isRtl ? 'الطلاب' : 'Students', value: stats?.totalStudents || 0, icon: Users, gradient: 'from-blue-500 to-indigo-600' },
@@ -138,17 +136,17 @@ export default function TeacherProfile() {
     { label: isRtl ? 'الساعة' : 'Rate', value: `${teacher?.hourPrice || 0}$`, icon: Clock, gradient: 'from-emerald-400 to-teal-600' },
   ];
 
-  const handleWithdraw = (amount: number) => {
-    createWithdrawal(amount, {
-      onSuccess: () => {
-        ErrorService.success(isRtl ? `تم إرسال طلب سحب مبلغ $${amount} بنجاح` : `Withdrawal request for $${amount} submitted successfully`);
-        setIsWithdrawModalOpen(false);
-      },
-      onError: (error: any) => {
-        ErrorService.error(error.response?.data?.message || (isRtl ? 'فشل إرسال طلب السحب' : 'Failed to submit withdrawal request'));
-      }
-    });
-  };
+  // const handleWithdraw = (amount: number) => {
+  //   createWithdrawal(amount, {
+  //     onSuccess: () => {
+  //       ErrorService.success(isRtl ? `تم إرسال طلب سحب مبلغ $${amount} بنجاح` : `Withdrawal request for $${amount} submitted successfully`);
+  //       setIsWithdrawModalOpen(false);
+  //     },
+  //     onError: (error: any) => {
+  //       ErrorService.error(error.response?.data?.message || (isRtl ? 'فشل إرسال طلب السحب' : 'Failed to submit withdrawal request'));
+  //     }
+  //   });
+  // };
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-7 sm:space-y-8 animate-fade-in pt-7 sm:pt-8 pb-10 sm:pb-16" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -201,7 +199,7 @@ export default function TeacherProfile() {
           </div>
 
           {/* Smart Wallet Card */}
-          <div className="bg-white rounded-[2rem] sm:rounded-[3rem] shadow-xl border border-gray-100 p-6 sm:p-8 overflow-hidden relative">
+          {/* <div className="bg-white rounded-[2rem] sm:rounded-[3rem] shadow-xl border border-gray-100 p-6 sm:p-8 overflow-hidden relative">
             <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-indigo-600/5 rounded-full blur-3xl" />
 
             <div className="relative z-10">
@@ -268,7 +266,7 @@ export default function TeacherProfile() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Details Column - Full width on mobile, right on desktop */}
@@ -286,7 +284,7 @@ export default function TeacherProfile() {
                 { icon: Mail, label: isRtl ? 'البريد' : 'Email', value: teacherInfo.email },
                 { icon: Phone, label: isRtl ? 'الهاتف' : 'Phone', value: teacherInfo.phone },
                 { icon: MapPin, label: isRtl ? 'الموقع' : 'Location', value: teacherInfo.country },
-                { icon: Star, label: isRtl ? 'الخبرة' : 'Expertise', value: teacherInfo.experience },
+                // { icon: Star, label: isRtl ? 'الخبرة' : 'Expertise', value: teacherInfo.experience },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-0 rounded-xl hover:bg-gray-50 lg:hover:bg-transparent">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 transition-all">
@@ -304,7 +302,7 @@ export default function TeacherProfile() {
 
       </div>
 
-      <WithdrawalModal
+      {/* <WithdrawalModal
         isOpen={isWithdrawModalOpen}
         onClose={() => setIsWithdrawModalOpen(false)}
         balance={financialInfo.pendingBalance}
@@ -312,7 +310,7 @@ export default function TeacherProfile() {
         isRtl={isRtl}
         isLoading={isWithdrawing}
         settings={settings}
-      />
+      /> */}
     </div>
   );
 }

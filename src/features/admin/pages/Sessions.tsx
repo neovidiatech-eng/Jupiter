@@ -172,7 +172,12 @@ export default function Sessions() {
         const existingDate = new Date(existing.start_time).getTime();
         const currentDate = new Date(schedule.start_time).getTime();
 
-        if (currentDate > existingDate) {
+        const isHistory = currentTab === 'History';
+        const shouldUpdate = isHistory 
+          ? currentDate > existingDate 
+          : currentDate < existingDate;
+
+        if (shouldUpdate) {
           groupedMap.set(key, {
             ...schedule,
             groupCount: existing.groupCount,
@@ -272,7 +277,7 @@ export default function Sessions() {
       dataIndex: "order",
       render: (text: number) => (
         <div className="font-bold text-gray-700">
-          {text || '-'}
+          {text ?? '-'}
         </div>
       )
     },

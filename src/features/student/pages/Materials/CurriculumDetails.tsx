@@ -187,26 +187,27 @@ import { useState } from "react";
 import VideoModal from "../../../../components/modals/VideoModal";
 
 import { useQuery } from "@tanstack/react-query";
-
 import { getStudentProgress } from "../../../../services/CoursesServices";
-
+import { useCompleteLecture } from "../../../../hooks/useLectures";
 import { SiOpen3D } from "react-icons/si";
 
 export default function CurriculumDetails() {
   const navigate = useNavigate();
-
   const { curriculumId } = useParams();
-
   const location = useLocation();
 
-  const [isVideoModalOpen, setIsVideoModalOpen] =
-    useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [selectedVideoName, setSelectedVideoName] = useState("");
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
+  const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
 
-  const [selectedVideoName, setSelectedVideoName] =
-    useState("");
+  const completeLectureMutation = useCompleteLecture();
 
-  const [selectedVideoUrl, setSelectedVideoUrl] =
-    useState("");
+  const handleVideoEnded = () => {
+    if (selectedLectureId) {
+      completeLectureMutation.mutate(selectedLectureId);
+    }
+  };
 
   const {
     data: progressData,
@@ -383,6 +384,8 @@ export default function CurriculumDetails() {
                                   lecture.videoUrl
                                 );
 
+                                setSelectedLectureId(lecture.id);
+
                                 setIsVideoModalOpen(
                                   true
                                 );
@@ -397,6 +400,18 @@ export default function CurriculumDetails() {
                               Watch Video
                             </button>
                           )}
+
+                        {/* Mark Complete Button */}
+                        {isPending && (
+                          <button
+                            onClick={() => completeLectureMutation.mutate(lecture.id)}
+                            disabled={completeLectureMutation.isPending}
+                            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm shadow-emerald-100 disabled:opacity-50"
+                          >
+                            <Check size={16} />
+                            Complete
+                          </button>
+                        )}
 
                         {/* PDF */}
                         {(isCompleted || isPending) &&
@@ -448,6 +463,7 @@ export default function CurriculumDetails() {
             }
             sessionName={selectedVideoName}
             videoUrl={selectedVideoUrl}
+            onEnded={handleVideoEnded}
           />
         </>
       )}

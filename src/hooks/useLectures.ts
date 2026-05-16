@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createLecture, deleteLecture, getAllLectures, getLectureById, updateLecture } from "../services/LecturesServices";
+import { completeLecture, createLecture, deleteLecture, getAllLectures, getLectureById, updateLecture } from "../services/LecturesServices";
 import ErrorService from "../utils/ErrorService";
 import { Lecture } from "../types/lectures";
 
@@ -55,6 +55,16 @@ export const useDeleteLecture = () => {
       ErrorService.success("Lecture deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["lectures"] });
       queryClient.invalidateQueries({ queryKey: ["courses"] });
+    },
+  });
+};
+
+export const useCompleteLecture = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => completeLecture(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student-progress"] });
     },
   });
 };

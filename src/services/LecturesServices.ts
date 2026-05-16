@@ -24,3 +24,7 @@ export const updateLecture = async (id: string, data: Partial<Lecture>): Promise
 export const deleteLecture = async (id: string): Promise<void> => {
   await api.delete(`/materials/lectures/${id}`);
 };
+
+export const completeLecture = async (id: string): Promise<void> => {
+  await api.post(`/materials/lectures/${id}/complete`);
+};

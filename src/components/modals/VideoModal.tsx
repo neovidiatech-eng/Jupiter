@@ -7,6 +7,7 @@ interface VideoModalProps {
   onClose: () => void;
   sessionName: string;
   videoUrl: string;
+  onEnded?: () => void;
 }
 
 export default function VideoModal({
@@ -14,6 +15,7 @@ export default function VideoModal({
   onClose,
   sessionName,
   videoUrl,
+  onEnded,
 }: VideoModalProps) {
   if (!isOpen) return null;
 
@@ -56,6 +58,7 @@ export default function VideoModal({
               className="absolute top-0 left-0"
               controls
               playing
+              onEnded={onEnded}
             />
           )}
         </div>
