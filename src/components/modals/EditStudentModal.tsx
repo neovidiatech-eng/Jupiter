@@ -33,6 +33,7 @@ export default function EditStudentModal({
   });
 
   const nameValue = watch('name');
+  const birthDateValue = watch('birthDate');
 
   useEffect(() => {
     if (nameValue) {
@@ -48,6 +49,28 @@ export default function EditStudentModal({
       reset(studentData);
     }
   }, [isOpen, studentData, reset]);
+
+  // Auto-calculate rank based on age
+  useEffect(() => {
+    const ranks = ranksResponse?.data.items || [];
+    if (birthDateValue && ranks.length > 0) {
+      const birth = new Date(birthDateValue);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+
+      const matchingRank = ranks.find((r: any) => 
+        age >= (r.ageRange?.minAge ?? 0) && age <= (r.ageRange?.maxAge ?? 100)
+      );
+
+      if (matchingRank) {
+        setValue('rankId', matchingRank.id, { shouldValidate: true });
+      }
+    }
+  }, [birthDateValue, ranksResponse, setValue]);
 
   if (!isOpen || !studentData) return null;
 
@@ -241,13 +264,17 @@ export default function EditStudentModal({
                 control={control}
                 render={({ field }) => (
                   <div className="text-start">
-                    <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">Rank</label>
+                    <label className="flex items-center justify-between text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                      <span>{t('rank')}</span>
+                      {birthDateValue && <span className="text-indigo-600 normal-case font-bold">{t('autoSelectedByAge')}</span>}
+                    </label>
                     <CustomSelect
                       value={field.value}
                       options={rankOptions}
-                      placeholder="Select student rank"
+                      placeholder={t('selectRank')}
                       onChange={field.onChange}
-                      className="rounded-2xl border-none bg-gray-50"
+                      disabled={true}
+                      className="rounded-2xl border-none bg-gray-100 cursor-not-allowed opacity-80"
                     />
                     {errors.rankId && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.rankId.message}</p>}
                   </div>

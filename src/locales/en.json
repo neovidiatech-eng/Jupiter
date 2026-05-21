@@ -27,7 +27,10 @@
     "min": "Must be at least {{count}} characters",
     "max": "Must be at most {{count}} characters",
     "passwordMatch": "Passwords do not match",
-    "invalidPhone": "Invalid phone number for the selected country"
+    "invalidPhone": "Invalid phone number for the selected country",
+    "invalidUrl": "Please enter a valid URL",
+    "timeOrder": "End time must be after start time",
+    "dateOrder": "End date must be after start date"
   },
   "login": "Login",
   "academyName": "Jupiter",

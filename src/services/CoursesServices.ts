@@ -1,8 +1,10 @@
 import api from "../lib/axios";
 import { CoursesData, Course, CoursesResponse, CourseResponse } from "../types/courses";
 
-export const getAllCourses = async (): Promise<CoursesData> => {
-    const response = await api.get<CoursesResponse>("/materials/courses");
+export const getAllCourses = async (page: number, limit: number): Promise<CoursesData> => {
+    const response = await api.get<CoursesResponse>("/materials/courses", {
+        params: { page, limit }
+    });
     return response.data.data;
 }
 

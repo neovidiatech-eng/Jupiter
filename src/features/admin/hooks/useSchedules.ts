@@ -13,17 +13,17 @@ export const useGetScheduleById = (id: string) => {
 import ErrorService from "../../../utils/ErrorService";
 import { useTranslation } from "react-i18next";
 
-export const useGetSchedules = () => {
+export const useGetSchedules = (page: number = 1, limit: number = 10) => {
     return useQuery({
-        queryKey: ["schedules"],
-        queryFn: () => getAllSchedules(),
+        queryKey: ["schedules", page, limit],
+        queryFn: () => getAllSchedules(page, limit),
     });
 };
 
-export const useSearchSchedules = (searchTerm: string) => {
+export const useSearchSchedules = (searchTerm: string, page: number = 1, limit: number = 10) => {
     return useQuery({
-        queryKey: ["schedules", searchTerm],
-        queryFn: () => searchTerm ? searchSchedules(searchTerm) : getAllSchedules(),
+        queryKey: ["schedules", searchTerm, page, limit],
+        queryFn: () => searchTerm ? searchSchedules(searchTerm, page, limit) : getAllSchedules(page, limit),
     });
 };
 

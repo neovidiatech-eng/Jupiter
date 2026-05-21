@@ -15,7 +15,7 @@ import {
   LayoutGrid,
   List as ListIcon,
 } from 'lucide-react';
-import { Button, Input, Tag, Card, Empty, Dropdown, Modal } from 'antd';
+import { Button, Input, Tag, Card, Empty, Dropdown, Modal, Pagination } from 'antd';
 import { useCourseById, useCourses, useDeleteCourse } from '../../../hooks/useCourses';
 import { useDeleteLecture } from '../../../hooks/useLectures';
 import { useQueryClient } from '@tanstack/react-query';
@@ -43,6 +43,8 @@ export default function Curriculum() {
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [isAddLectureModalVisible, setIsAddLectureModalVisible] = useState(false);
   const [editingLecture, setEditingLecture] = useState<Lecture | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8;
 
   const queryClient = useQueryClient();
   const { data: coursesData } = useCourses();
@@ -64,6 +66,12 @@ export default function Curriculum() {
     course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const paginatedCourses = filteredCourses?.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleCourseClick = (id: string) => {
     navigate(`/dashboard/curriculum/${id}`);
@@ -408,9 +416,10 @@ export default function Curriculum() {
       </div>
 
       {(filteredCourses?.length ?? 0) > 0 ? (
-        <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-          {filteredCourses?.map((course) => (
-            <Card
+        <>
+          <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
+            {paginatedCourses?.map((course) => (
+              <Card
               key={course.id}
               className={`group overflow-hidden rounded-3xl border border-gray-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-50/50 transition-all duration-300 cursor-pointer ${viewMode === 'list' ? 'p-2' : ''}`}
               styles={{ body: { padding: 0 } }}
@@ -514,7 +523,17 @@ export default function Curriculum() {
               )}
             </Card>
           ))}
-        </div>
+          </div>
+          <div className="flex justify-center mt-8 mb-8">
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={filteredCourses?.length || 0}
+              onChange={(page) => setCurrentPage(page)}
+              showSizeChanger={false}
+            />
+          </div>
+        </>
       ) : (
         <Empty description="No courses found" className="mt-20" />
       )}

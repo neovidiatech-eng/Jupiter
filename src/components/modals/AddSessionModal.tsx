@@ -93,6 +93,7 @@ export default function AddSessionModal({
     setValue,
     formState: { errors },
   } = useForm<any>({
+    mode: 'onBlur',
     resolver: zodResolver(
       schedulingMode === 'single' ? singleSchema : batchSchema
     ),
@@ -238,6 +239,7 @@ export default function AddSessionModal({
   ]);
 
   const formatDateCard = (date: string) => {
+    if (!date) return { month: '---', day: 0 };
     // Handle both YYYY-MM-DD and ISO strings safely
     const datePart = date.includes('T') ? date.split('T')[0] : date;
     const [year, month, day] = datePart.split('-').map(Number);
@@ -535,6 +537,12 @@ export default function AddSessionModal({
                     placeholder="Recording URL..."
                     className="input"
                   />
+
+                  {errors.videoUrl && (
+                    <p className="error-text">
+                      {errors.videoUrl.message as string}
+                    </p>
+                  )}
                 </div>
 
                 {/* Slides URL */}
@@ -550,6 +558,12 @@ export default function AddSessionModal({
                     placeholder="Presentation URL..."
                     className="input"
                   />
+
+                  {errors.slidesUrl && (
+                    <p className="error-text">
+                      {errors.slidesUrl.message as string}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -566,6 +580,12 @@ export default function AddSessionModal({
                 placeholder="Private notes..."
                 className="textarea"
               />
+
+              {errors.notes && (
+                <p className="error-text">
+                  {errors.notes.message as string}
+                </p>
+              )}
             </div>
 
             <PlatformSelector

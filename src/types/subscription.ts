@@ -15,6 +15,8 @@ export interface SubscriptionUser {
   provider: string;
   image: string | null;
   age?: number | null;
+  birth_date?: string | null;
+  birthDate?: string | null;
 }
 export interface SubscriptionPlan {
   id: string;

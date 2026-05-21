@@ -6,7 +6,7 @@ export const getStudentSchema = (t: TFunc) => z.object({
   name: z.string().min(3, t("validation.min", { count: 3 })).max(32, t("validation.max", { count: 32 })),
   email: z.string().email(t("validation.invalidEmail")),
   phone_code: z.string().min(1, t("validation.required")),
-  phone: z.string().min(11, t("validation.min", { count: 11})),
+  phone: z.string().min(1, t("validation.required")),
   gender: z.enum(['male', 'female']),
   birthDate: z.string(t("validation.required")),
   plan: z.string(t("validation.required")),
@@ -19,9 +19,18 @@ export const getStudentSchema = (t: TFunc) => z.object({
 
   if (!phone) return;
 
+  if (!/^[0-9]+$/.test(phone)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: t("validation.invalidPhone"),
+      path: ["phone"],
+    });
+    return;
+  }
+
   // Egypt
   if (phone_code === "+20") {
-    if (!/^01[0125][0-9]{8}$/.test(phone)) {
+    if (!/^(01)[0125][0-9]{8}$|^(1)[0125][0-9]{8}$/.test(phone)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: t("validation.invalidPhone"),
@@ -31,7 +40,7 @@ export const getStudentSchema = (t: TFunc) => z.object({
   }
   // Saudi Arabia
   else if (phone_code === "+966") {
-    if (!/^5[0-9]{8}$/.test(phone)) {
+    if (!/^(05|5)[0-9]{8}$/.test(phone)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: t("validation.invalidPhone"),
@@ -41,7 +50,7 @@ export const getStudentSchema = (t: TFunc) => z.object({
   }
   // UAE
   else if (phone_code === "+971") {
-    if (!/^5[0124568][0-9]{7}$/.test(phone)) {
+    if (!/^(05|5)[0-9]{8}$/.test(phone)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: t("validation.invalidPhone"),
@@ -61,7 +70,7 @@ export const getStudentSchema = (t: TFunc) => z.object({
   }
   // Fallback for other countries
   else {
-    if (!/^[0-9]{7,15}$/.test(phone)) {
+    if (phone.length < 7 || phone.length > 15) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: t("validation.invalidPhone"),

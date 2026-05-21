@@ -120,7 +120,7 @@ export default function Sessions() {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  const { data: searchResults } = useSearchSchedules(debouncedSearch);
+  const { data: searchResults } = useSearchSchedules(debouncedSearch, 1, 1000);
 
   const itemsPerPage = 5;
   const rawScheduleData: Schedule[] = useMemo(() => {

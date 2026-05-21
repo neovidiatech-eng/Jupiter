@@ -495,6 +495,12 @@ export default function Students() {
               payload.planId = null;
             }
 
+            if (updatedData.rankId && updatedData.rankId.trim() !== "") {
+              payload.rankId = updatedData.rankId;
+            } else {
+              payload.rankId = null;
+            }
+
             await updateStudent({ id: updatedData.id, data: payload });
             setIsEditModalOpen(false);
           } catch (error) {

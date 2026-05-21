@@ -53,11 +53,21 @@ api.interceptors.response.use(
       if (!publicPages.some(page => currentPath.includes(page))) {
         ErrorService.error(i18n.t("sessionExpiredError") || "Session expired. Please login again.");
         window.location.href = "/login";
+      } else {
+        const msg = ErrorService.parseErrorMessage(error);
+        if (msg) {
+          ErrorService.error(msg);
+        }
       }
     } else if (status === 403) {
       ErrorService.error(i18n.t("unauthorizedRoleError") || "You do not have permission to perform this action.");
     } else if (status === 404) {
-      ErrorService.error("The requested resource was not found.");
+      const msg = ErrorService.parseErrorMessage(error);
+      if (msg && msg !== "An unknown error occurred. Please try again." && error.response?.data) {
+        ErrorService.error(msg);
+      } else {
+        ErrorService.error("The requested resource was not found.");
+      }
     } else if (status >= 500) {
       ErrorService.error("A server error occurred. Please try again later.");
     } else {

@@ -3,10 +3,10 @@ import { createCourse, deleteCourse, getAllCourses, getCourseById, updateCourse 
 import ErrorService from "../utils/ErrorService";
 import { Course } from "../types/courses";
 
-export const useCourses = () => {
+export const useCourses = (page: number = 1, limit: number = 10) => {
     return useQuery({
-        queryKey: ["courses"],
-        queryFn: getAllCourses,
+        queryKey: ["courses", page, limit],
+        queryFn: () => getAllCourses(page, limit),
     });
 }
 

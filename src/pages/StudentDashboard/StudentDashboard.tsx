@@ -9,7 +9,6 @@ import {
   Plus,
   ClipboardList,
 } from "lucide-react";
-import { useGetAssignments } from "../../hooks/useAssignment";
 // Student Dashboard Page
 import { useState, useEffect, useMemo } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
@@ -22,7 +21,8 @@ import { useJoinSession } from "../../features/student/hooks/useSessions";
 import { useLanguage } from "../../contexts/LanguageContext";
 import TeacherFeedback from "../../features/student/components/Feedback";
 import SubmitAssignmentModal from "../../components/modals/SubmitAssignmentModal";
-import { HomeworkItem } from "../../types/assignment";
+import { Assignment } from "../../types/assignment";
+import { useGetAssignments } from "../../features/student/hooks/useStudentsAssignment";
 
 export default function StudentDashboard() {
   const { language } = useLanguage();
@@ -37,12 +37,12 @@ export default function StudentDashboard() {
   const { mutate: joinSession, isPending: isJoining } = useJoinSession();
 
   const { data: assignmentsResponse } = useGetAssignments();
-  const latestAssignments = (assignmentsResponse?.data?.items || []).slice(0, 3);
+  const latestAssignments = (assignmentsResponse?.data || []).slice(0, 3);
 
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<HomeworkItem | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
 
-  const handleSubmitClick = (e: React.MouseEvent, assignment: HomeworkItem) => {
+  const handleSubmitClick = (e: React.MouseEvent, assignment: Assignment) => {
     e.stopPropagation();
     setSelectedAssignment(assignment);
     setIsSubmitModalOpen(true);
@@ -330,7 +330,7 @@ export default function StudentDashboard() {
                           {assignment.title}
                         </span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider border shrink-0 ${assignment.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                            assignment.status === 'submitted' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                          assignment.status === 'submitted' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'
                           }`}>
                           {language === 'ar' ?
                             (assignment.status === 'completed' ? 'مكتمل' : assignment.status === 'submitted' ? 'تم التسليم' : 'قيد الانتظار') :

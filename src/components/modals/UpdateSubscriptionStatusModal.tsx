@@ -25,7 +25,6 @@ export default function UpdateSubscriptionStatusModal({
   const [selectedRank, setSelectedRank] = useState<string>("");
   const [status, setStatus] = useState<"approved" | "rejected">(initialStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   useEffect(() => {
     setStatus(initialStatus);
     
@@ -35,10 +34,29 @@ export default function UpdateSubscriptionStatusModal({
     }
 
     // Auto-select rank based on age
-    if (request.user.age && ranksData?.data.items) {
+    let age: number | null = null;
+    if (request.user.age !== undefined && request.user.age !== null) {
+      age = Number(request.user.age);
+    } else {
+      const birthStr = request.user.birth_date || request.user.birthDate;
+      if (birthStr) {
+        const birth = new Date(birthStr);
+        if (!isNaN(birth.getTime())) {
+          const today = new Date();
+          let calculatedAge = today.getFullYear() - birth.getFullYear();
+          const m = today.getMonth() - birth.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+            calculatedAge--;
+          }
+          age = calculatedAge;
+        }
+      }
+    }
+
+    if (age !== null && ranksData?.data.items) {
       const matchedRank = ranksData.data.items.find(rank => 
-        request.user.age! >= rank.ageRange.minAge && 
-        request.user.age! <= rank.ageRange.maxAge
+        age! >= rank.ageRange.minAge && 
+        age! <= rank.ageRange.maxAge
       );
       if (matchedRank) {
         setSelectedRank(matchedRank.id);

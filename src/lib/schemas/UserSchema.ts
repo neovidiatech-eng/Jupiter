@@ -10,6 +10,65 @@ export const getUserSchema = (t: TFunc) => z.object({
   role: z.string().min(1, t("validation.required")),
   password: z.string().min(6, t("validation.min", { count: 6 })),
   permissions: z.array(z.string()).optional(),
+}).superRefine((data, ctx) => {
+  const { countryCode, phone } = data;
+  
+  if (!phone) return;
+
+  if (!/^[0-9]+$/.test(phone)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: t("validation.invalidPhone"),
+      path: ["phone"],
+    });
+    return;
+  }
+
+  if (countryCode === "+20") {
+    const reg = /^(01)[0125][0-9]{8}$|^(1)[0125][0-9]{8}$/;
+    if (!reg.test(phone)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("validation.invalidPhone"),
+        path: ["phone"],
+      });
+    }
+  } else if (countryCode === "+966") {
+    const reg = /^(05|5)[0-9]{8}$/;
+    if (!reg.test(phone)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("validation.invalidPhone"),
+        path: ["phone"],
+      });
+    }
+  } else if (countryCode === "+971") {
+    const reg = /^(05|5)[0-9]{8}$/;
+    if (!reg.test(phone)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("validation.invalidPhone"),
+        path: ["phone"],
+      });
+    }
+  } else if (countryCode === "+965") {
+    const reg = /^[569][0-9]{7}$/;
+    if (!reg.test(phone)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("validation.invalidPhone"),
+        path: ["phone"],
+      });
+    }
+  } else {
+    if (phone.length < 7 || phone.length > 15) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t("validation.invalidPhone"),
+        path: ["phone"],
+      });
+    }
+  }
 });
 
 export const getUpdateUserSchema = (t: TFunc) => getUserSchema(t).extend({
