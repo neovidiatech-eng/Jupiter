@@ -11,7 +11,7 @@ interface ViewStudentModalProps {
 }
 
 export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewStudentModalProps) {
-  const {} = useLanguage();
+  const { } = useLanguage();
   const { t } = useTranslation();
 
   if (!isOpen || !studentData) return null;

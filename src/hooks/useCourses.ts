@@ -3,10 +3,10 @@ import { createCourse, deleteCourse, getAllCourses, getCourseById, updateCourse 
 import ErrorService from "../utils/ErrorService";
 import { Course } from "../types/courses";
 
-export const useCourses = (page: number = 1, limit: number = 10) => {
+export const useCourses = (page: number = 1, limit: number = 10, rankId?: string) => {
     return useQuery({
-        queryKey: ["courses", page, limit],
-        queryFn: () => getAllCourses(page, limit),
+        queryKey: ["courses", page, limit, rankId],
+        queryFn: () => getAllCourses(page, limit, rankId),
     });
 }
 
@@ -31,7 +31,7 @@ export const useCreateCourse = () => {
 
 export const useUpdateCourse = () => {
     return useMutation({
-        mutationFn: ({id, data}: {id: string, data: FormData | Course}) => updateCourse(id, data),
+        mutationFn: ({ id, data }: { id: string, data: FormData | Course }) => updateCourse(id, data),
         onSuccess: () => {
             ErrorService.success("Course updated successfully");
         },

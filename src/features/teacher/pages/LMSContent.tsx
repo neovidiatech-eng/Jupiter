@@ -19,11 +19,13 @@ const LMSContent: React.FC = () => {
   const [selectedRank, setSelectedRank] = useState("All Ranks");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 6;
+  const itemsPerPage = 10;
 
   // Fetch all courses
-  const { data: coursesData, isLoading: coursesLoading } = useCourses();
   const { data: ranksData, isLoading: ranksLoading } = useRanks();
+  const rankObj = ranksData?.items?.find((r: any) => r.name === selectedRank);
+  const rankId = rankObj?.id;
+  const { data: coursesData, isLoading: coursesLoading } = useCourses(currentPage, itemsPerPage, rankId);
 
   const rankIcons: Record<string, any> = {
     SILVER: Award,
@@ -32,10 +34,10 @@ const LMSContent: React.FC = () => {
     TITAN: Shield,
   };
 
-  // Ranks
   const ranks = useMemo(() => {
+    const ranksList = ranksData?.items || (Array.isArray(ranksData) ? ranksData : []);
     const fetchedRanks =
-      ranksData?.items?.map((rank: any) => ({
+      ranksList?.map((rank: any) => ({
         label: rank.name,
         icon: rankIcons[rank.name.toUpperCase()] || Award,
         color: rank.color || "#2563eb",
@@ -59,7 +61,7 @@ const LMSContent: React.FC = () => {
       (item: any) =>
         selectedRank === "All Ranks" ||
         item.rank?.name?.toLowerCase() ===
-          selectedRank.toLowerCase()
+        selectedRank.toLowerCase()
     );
   }, [courses, selectedRank]);
 
@@ -69,16 +71,10 @@ const LMSContent: React.FC = () => {
   }, [selectedRank]);
 
   // Pagination
-  const totalPages = Math.ceil(
-    filteredCourses.length / itemsPerPage
-  );
+  const totalPages = coursesData?.pagination?.totalPages || 1;
+  const totalCourses = coursesData?.pagination?.totalItems || 0;
 
-  const paginatedCourses = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-
-    return filteredCourses.slice(start, end);
-  }, [filteredCourses, currentPage]);
+  const paginatedCourses = filteredCourses;
 
   const handleViewLectures = (courseId: string) => {
     navigate(`/teacher-dashboard/courses/${courseId}/lectures`);
@@ -113,20 +109,17 @@ const LMSContent: React.FC = () => {
           const isLast = index === ranks.length - 1;
 
           const centerClasses = `
-            ${
-              isLast && ranks.length % 2 === 1
-                ? "col-span-2 justify-center"
-                : ""
+            ${isLast && ranks.length % 2 === 1
+              ? "col-span-2 justify-center"
+              : ""
             }
-            ${
-              isLast && ranks.length % 3 === 1
-                ? "md:col-span-3 md:justify-center"
-                : ""
+            ${isLast && ranks.length % 3 === 1
+              ? "md:col-span-3 md:justify-center"
+              : ""
             }
-            ${
-              isLast && ranks.length % 5 === 1
-                ? "lg:col-span-5 lg:justify-center"
-                : "lg:col-span-1"
+            ${isLast && ranks.length % 5 === 1
+              ? "lg:col-span-5 lg:justify-center"
+              : "lg:col-span-1"
             }
           `;
 
@@ -134,11 +127,10 @@ const LMSContent: React.FC = () => {
             <button
               key={rank.label}
               onClick={() => setSelectedRank(rank.label)}
-              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-4 rounded-2xl text-sm sm:text-base font-bold transition-all duration-300 ${
-                rank.label === selectedRank
+              className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-4 rounded-2xl text-sm sm:text-base font-bold transition-all duration-300 ${rank.label === selectedRank
                   ? "bg-[#2563eb] text-white shadow-xl shadow-blue-500/20 scale-[1.02]"
                   : "bg-white text-[#2563eb] border border-gray-100 hover:bg-blue-50 shadow-sm"
-              } ${centerClasses}`}
+                } ${centerClasses}`}
             >
               <Icon size={22} />
               <span>{rank.label}</span>
@@ -240,7 +232,7 @@ const LMSContent: React.FC = () => {
                 </span>
 
                 <span className="ml-3">
-                  ({filteredCourses.length} total courses)
+                  ({totalCourses} total courses)
                 </span>
               </div>
 
@@ -252,11 +244,10 @@ const LMSContent: React.FC = () => {
                     )
                   }
                   disabled={currentPage === 1}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all ${
-                    currentPage === 1
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all ${currentPage === 1
                       ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                       : "bg-white border border-gray-100 text-slate-700 hover:bg-slate-50 shadow-sm"
-                  }`}
+                    }`}
                 >
                   <ChevronLeft size={18} />
                   Previous
@@ -269,11 +260,10 @@ const LMSContent: React.FC = () => {
                     )
                   }
                   disabled={currentPage >= totalPages}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all ${
-                    currentPage >= totalPages
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all ${currentPage >= totalPages
                       ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                       : "bg-[#2563eb] text-white hover:bg-blue-700 shadow-lg shadow-blue-100"
-                  }`}
+                    }`}
                 >
                   Next
                   <ChevronRight size={18} />
