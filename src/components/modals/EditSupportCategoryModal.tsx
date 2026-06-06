@@ -9,7 +9,7 @@ import { SupportCategory } from '../../types/support';
 interface EditSupportCategoryModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: SupportCategoryFormData) => void;
+    onSubmit: (data: SupportCategoryFormData) => boolean | Promise<boolean>;
     category: SupportCategory | null;
 }
 
@@ -29,9 +29,11 @@ export default function EditSupportCategoryModal({ isOpen, onClose, onSubmit, ca
         }
     }, [category, reset]);
 
-    const handleOnSubmit = (data: SupportCategoryFormData) => {
-        onSubmit(data);
-        onClose();
+    const handleOnSubmit = async (data: SupportCategoryFormData) => {
+        const isSuccess = await onSubmit(data);
+        if (isSuccess) {
+            onClose();
+        }
     };
 
     if (!isOpen || !category) return null;

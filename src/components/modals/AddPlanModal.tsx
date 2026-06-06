@@ -10,7 +10,7 @@ import { Currency } from '../../types/currency';
 interface AddPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (plan: PlanFormData & { id?: string }) => void;
+  onSave: (plan: PlanFormData & { id?: string }) => boolean | Promise<boolean>;
   initialData?: (PlanFormData & { id: string }) | null;
   currencies: Currency[];
 }
@@ -72,13 +72,15 @@ export default function AddPlanModal({ isOpen, onClose, onSave, initialData, cur
     }
   }, [initialData, reset, isOpen, currencies]);
 
-  const onSubmit = (data: PlanFormData) => {
-    onSave({
+  const onSubmit = async (data: PlanFormData) => {
+    const isSuccess = await onSave({
       ...data,
       id: initialData?.id
     });
-    reset();
-    onClose();
+    if (isSuccess) {
+      reset();
+      onClose();
+    }
   };
 
   if (!isOpen) return null;

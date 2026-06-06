@@ -14,7 +14,7 @@ interface Exam extends ExamFormData {
 interface AddExamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (exam: Exam) => void;
+  onAdd: (exam: Exam) => boolean | Promise<boolean>;
   initialData?: Exam | null;
 }
 
@@ -92,13 +92,15 @@ export default function AddExamModal({ isOpen, onClose, onAdd, initialData }: Ad
     }
   };
 
-  const handleOnSubmit = (data: ExamFormData) => {
-    onAdd({
+  const handleOnSubmit = async (data: ExamFormData) => {
+    const isSuccess = await onAdd({
       id: initialData?.id || Date.now().toString(),
       ...data,
       duration: `${data.duration} دقيقة`
     });
-    onClose();
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   if (!isOpen) return null;

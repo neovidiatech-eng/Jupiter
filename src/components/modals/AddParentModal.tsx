@@ -9,7 +9,7 @@ import CustomSelect from '../ui/CustomSelect';
 interface AddParentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (parent: ParentFormData) => void;
+  onAdd: (parent: ParentFormData) => boolean | Promise<boolean>;
 }
 
 export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) {
@@ -29,9 +29,11 @@ export default function AddParentModal({ onClose, onAdd }: AddParentModalProps) 
     },
   });
 
-  const handleOnSubmit = (data: ParentFormData) => {
-    onAdd(data);
-    onClose();
+  const handleOnSubmit = async (data: ParentFormData) => {
+    const isSuccess = await onAdd(data);
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   const text = {

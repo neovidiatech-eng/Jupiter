@@ -64,41 +64,43 @@ export default function Roles() {
         setIsModalOpen(true);
     };
 
-    const handleSubmitRole = (data: RoleFormData) => {
-        if (selectedRole) {
-            const addedPermissions = data.permissionIds.filter(
-                (id: string) => !selectedRole.permissionIds.includes(id)
-            );
+    const handleSubmitRole = (data: RoleFormData) =>
+        new Promise<boolean>((resolve) => {
+            if (selectedRole) {
+                const addedPermissions = data.permissionIds.filter(
+                    (id: string) => !selectedRole.permissionIds.includes(id)
+                );
 
-            updateRole({
-                id: selectedRole.id,
-                role: { name: data.name },
-            }, {
-                onSuccess: () => {
-                    if (addedPermissions.length > 0) {
-                        addPermissions({
-                            roleId: selectedRole.id,
-                            permissionIds: addedPermissions,
-                        }, {
-                            onSuccess: () => {
-                                setIsModalOpen(false);
-                                setSelectedRole(null);
-                            }
-                        });
-                    } else {
-                        setIsModalOpen(false);
-                        setSelectedRole(null);
-                    }
-                }
-            });
-        } else {
-            addRole({ name: data.name, permissionIds: data.permissionIds }, {
-                onSuccess: () => {
-                    setIsModalOpen(false);
-                }
-            });
-        }
-    };
+                updateRole({
+                    id: selectedRole.id,
+                    role: { name: data.name },
+                }, {
+                    onSuccess: () => {
+                        if (addedPermissions.length > 0) {
+                            addPermissions({
+                                roleId: selectedRole.id,
+                                permissionIds: addedPermissions,
+                            }, {
+                                onSuccess: () => {
+                                    setSelectedRole(null);
+                                    resolve(true);
+                                },
+                                onError: () => resolve(false),
+                            });
+                        } else {
+                            setSelectedRole(null);
+                            resolve(true);
+                        }
+                    },
+                    onError: () => resolve(false),
+                });
+            } else {
+                addRole({ name: data.name, permissionIds: data.permissionIds }, {
+                    onSuccess: () => resolve(true),
+                    onError: () => resolve(false),
+                });
+            }
+        });
 
     const handleAddClick = () => {
         setSelectedRole(null);

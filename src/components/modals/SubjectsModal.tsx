@@ -19,7 +19,7 @@ export const COLORS = [
 
 interface SubjectFormProps {
   initial?: Partial<Subject>;
-  onSave: (data: SubjectFormData) => void;
+  onSave: (data: SubjectFormData) => boolean | Promise<boolean>;
   onCancel: () => void;
   title: string;
 }
@@ -38,6 +38,13 @@ export default function SubjectForm({ initial, onSave, onCancel, title }: Subjec
 
   const selectedColor = watch('color');
   const selectedActive = watch('active');
+
+  const handleSave = async (data: SubjectFormData) => {
+    const isSuccess = await onSave(data);
+    if (isSuccess) {
+      onCancel();
+    }
+  };
 
   useEffect(() => {
     if (initial) {
@@ -61,7 +68,7 @@ export default function SubjectForm({ initial, onSave, onCancel, title }: Subjec
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSave)} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto no-scrollbar">
+        <form onSubmit={handleSubmit(handleSave)} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto no-scrollbar">
           <div>
             <label className="block text-sm font-medium text-gray-700 text-start mb-1.5">
               {t('subjectNameAr')}

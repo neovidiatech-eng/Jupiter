@@ -18,7 +18,7 @@ interface EditCurrencyModalProps {
     exchangeRate: number;
     isDefault: boolean;
   };
-  onSave: (currency: any) => void;
+  onSave: (currency: any) => boolean | Promise<boolean>;
 }
 
 export default function EditCurrencyModal({ isOpen, onClose, currency, onSave }: EditCurrencyModalProps) {
@@ -72,8 +72,8 @@ export default function EditCurrencyModal({ isOpen, onClose, currency, onSave }:
 
   if (!isOpen) return null;
 
-  const onSubmit = (data: CurrencyFormData) => {
-    onSave({
+  const onSubmit = async (data: CurrencyFormData) => {
+    const isSuccess = await onSave({
       id: currency.id,
       code: data.code.toUpperCase(),
       nameAr: data.name_ar,
@@ -82,7 +82,9 @@ export default function EditCurrencyModal({ isOpen, onClose, currency, onSave }:
       exchangeRate: data.exchangeRate,
       isDefault: data.default
     });
-    onClose();
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   return (

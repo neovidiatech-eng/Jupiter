@@ -73,23 +73,49 @@ export default function Support() {
 
     // Handler Functions
     const handleAddCategory = async (data: SupportCategoryFormData) => {
-        await createCategory(data);
+        try {
+            await createCategory(data);
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     };
 
     const handleEditCategory = async (data: SupportCategoryFormData) => {
         if (selectedCategory) {
+          try {
             await updateCategory({ id: selectedCategory.id, data });
+            return true;
+          } catch (error) {
+            console.error(error);
+            return false;
+          }
         }
+        return false;
     };
 
     const handleAddSupport = async (data: SupportItemFormData) => {
-        await createSupport(data);
+        try {
+            await createSupport(data);
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     };
 
     const handleEditSupport = async (data: SupportItemFormData) => {
         if (selectedItem) {
+          try {
             await updateSupport({ id: selectedItem.id, data });
+            return true;
+          } catch (error) {
+            console.error(error);
+            return false;
+          }
         }
+        return false;
     };
 
     return (

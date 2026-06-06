@@ -204,11 +204,10 @@ export default function LMSCoursesPage() {
 
     setCourses(prev => [...prev, newCourse]);
     setNextId(n => n + 1);
-    setShowAddModal(false);
-    reset();
+    return true;
   };
   const onEditSubmit = (data: CourseFormData) => {
-    if (!editCourse) return;
+    if (!editCourse) return false;
 
     setCourses(prev => prev.map(c => c.id === editCourse.id ? {
       ...c,
@@ -222,7 +221,7 @@ export default function LMSCoursesPage() {
     } : c));
 
     setEditCourse(null);
-    reset();
+    return true;
   }
   const handleAddLevel = () => {
     if (!newLevelName.trim()) return;
@@ -540,4 +539,3 @@ export default function LMSCoursesPage() {
     </div >
   );
 }
-

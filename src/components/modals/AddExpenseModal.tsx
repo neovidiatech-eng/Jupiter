@@ -11,7 +11,7 @@ import { useCurrency } from '../../features/admin/hooks/useCurrency';
 interface AddExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (expense: any) => void;
+  onSave: (expense: any) => boolean | Promise<boolean>;
   initialData?: Expense | null;
 }
 
@@ -88,8 +88,11 @@ export default function AddExpenseModal({ isOpen, onClose, onSave, initialData }
 
   if (!isOpen) return null;
 
-  const onSubmit = (data: ExpenseFormData) => {
-    onSave(data);
+  const onSubmit = async (data: ExpenseFormData) => {
+    const isSuccess = await onSave(data);
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   return (

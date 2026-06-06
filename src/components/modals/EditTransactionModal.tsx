@@ -11,7 +11,7 @@ interface EditTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   transaction: TransactionFormData & { id: string };
-  onSave: (transaction: TransactionFormData & { id: string }) => void;
+  onSave: (transaction: TransactionFormData & { id: string }) => boolean | Promise<boolean>;
   currencies: { code: string; symbol: string; rate: number }[];
 }
 
@@ -66,12 +66,14 @@ export default function EditTransactionModal({ isOpen, onClose, transaction, onS
 
   if (!isOpen) return null;
 
-  const onSubmit = (data: TransactionFormData) => {
-    onSave({
+  const onSubmit = async (data: TransactionFormData) => {
+    const isSuccess = await onSave({
       ...data,
       id: transaction.id
     });
-    onClose();
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   return (

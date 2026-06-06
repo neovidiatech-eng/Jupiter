@@ -41,16 +41,29 @@ export default function Subjects() {
     return s.active === (filterActive === 'active');
   });
 
-  const handleAdd = (formData: SubjectFormData) => {
-    addSubject(formData);
-    setShowAddModal(false);
-  };
+  const handleAdd = (formData: SubjectFormData) =>
+    new Promise<boolean>((resolve) => {
+      addSubject(formData, {
+        onSuccess: () => resolve(true),
+        onError: () => resolve(false),
+      });
+    });
 
-  const handleEdit = (formData: SubjectFormData) => {
-    if (!editingSubject) return;
-    updateSubject({ id: editingSubject.id, data: formData });
-    setEditingSubject(null);
-  };
+  const handleEdit = (formData: SubjectFormData) =>
+    new Promise<boolean>((resolve) => {
+      if (!editingSubject) {
+        resolve(false);
+        return;
+      }
+
+      updateSubject(
+        { id: editingSubject.id, data: formData },
+        {
+          onSuccess: () => resolve(true),
+          onError: () => resolve(false),
+        }
+      );
+    });
 
   const handleDelete = async (id: string) => {
     const subject = subjects.find(s => s.id === id);

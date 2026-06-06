@@ -1,5 +1,5 @@
-import { X, User } from 'lucide-react';
-import { useEffect } from 'react';
+import { Eye, EyeOff, X, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,16 +7,53 @@ import { UpdateProfile } from '../../types/profile';
 
 const UpdateProfileSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters").optional().or(z.literal('')),
-  email: z.string().email("Invalid email address").optional().or(z.literal('')),
+  username: z.string().min(3, "Username must be at least 3 characters").optional().or(z.literal('')),
+  password: z.string().min(8, "Password must be at least 8 characters").optional().or(z.literal('')),
+  phone: z.string().optional().or(z.literal('')),
+  phone_code: z.string().optional().or(z.literal('')),
+  country: z.string().optional().or(z.literal('')),
   age: z.string().optional().or(z.literal('')),
+  birth_date: z.string().optional().or(z.literal('')),
+  gender: z.string().optional().or(z.literal('')),
+  timezone: z.string().optional().or(z.literal('')),
 });
 
 type UpdateProfileFormData = z.infer<typeof UpdateProfileSchema>;
 
+const emptyProfileFormData: UpdateProfileFormData = {
+  name: '',
+  username: '',
+  password: '',
+  phone: '',
+  phone_code: '',
+  country: '',
+  age: '',
+  birth_date: '',
+  gender: '',
+  timezone: '',
+};
+
+const toUpdateProfilePayload = (data: UpdateProfileFormData): UpdateProfile => {
+  const payload: UpdateProfile = {};
+
+  Object.entries(data).forEach(([key, value]) => {
+    if (!value) return;
+
+    if (key === 'age') {
+      payload.age = Number(value);
+      return;
+    }
+
+    payload[key as keyof Omit<UpdateProfile, 'age'>] = value;
+  });
+
+  return payload;
+};
+
 interface UpdateProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: UpdateProfile) => void;
+  onSubmit: (data: UpdateProfile) => boolean | Promise<boolean>;
   initialData: UpdateProfile | null;
   isLoading?: boolean;
 }
@@ -28,22 +65,23 @@ export default function UpdateProfileModal({
   initialData,
   isLoading
 }: UpdateProfileModalProps) {
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, reset, formState: { errors } } = useForm<UpdateProfileFormData>({
     resolver: zodResolver(UpdateProfileSchema),
-    defaultValues: initialData || { name: '', email: '', age: '' },
+    defaultValues: { ...emptyProfileFormData, ...initialData, age: initialData?.age?.toString() || '' },
   });
 
   useEffect(() => {
     if (isOpen) {
-      reset(initialData || { name: '', email: '', age: '' });
+      reset({ ...emptyProfileFormData, ...initialData, age: initialData?.age?.toString() || '' });
     }
-  }, [isOpen, reset]); // Only reset when isOpen changes
+  }, [initialData, isOpen, reset]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 !mt-0  bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
-      <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
+      <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
         {/* Header */}
         <div className="px-8 py-5 border-b border-gray-100 flex items-start justify-between bg-white">
           <div className="flex items-center gap-4">
@@ -61,9 +99,11 @@ export default function UpdateProfileModal({
         </div>
 
         {/* Form Body */}
-        <div className="p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4">
+        <div className="p-8 overflow-y-auto">
+          <form onSubmit={handleSubmit(async (data) => {
+            await onSubmit(toUpdateProfilePayload(data));
+          })} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="text-start">
                 <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
                   Full Name
@@ -79,15 +119,74 @@ export default function UpdateProfileModal({
 
               <div className="text-start">
                 <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-                  Email Address
+                  Username
                 </label>
                 <input
-                  type="email"
-                  {...register('email')}
-                  placeholder="email@example.com"
-                  className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.email ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-blue-500/10 transition-all placeholder:text-gray-300`}
+                  type="text"
+                  {...register('username')}
+                  placeholder="Username"
+                  className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.username ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-blue-500/10 transition-all placeholder:text-gray-300`}
                 />
-                {errors.email && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.email.message}</p>}
+                {errors.username && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.username.message}</p>}
+              </div>
+
+              <div className="text-start">
+                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    {...register('password')}
+                    placeholder="Leave empty to keep current password"
+                    className={`w-full px-4 py-3 pr-12 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.password ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-blue-500/10 transition-all placeholder:text-gray-300`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 rounded-full transition-colors"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.password.message}</p>}
+              </div>
+
+              <div className="text-start">
+                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                  Code
+                </label>
+                <input
+                  type="text"
+                  {...register('phone_code')}
+                  placeholder="+20"
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-blue-500/10 transition-all placeholder:text-gray-300"
+                />
+              </div>
+
+              <div className="text-start">
+                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  {...register('phone')}
+                  placeholder="01012345678"
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-blue-500/10 transition-all placeholder:text-gray-300"
+                />
+              </div>
+
+              <div className="text-start">
+                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  {...register('country')}
+                  placeholder="Egypt"
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-blue-500/10 transition-all placeholder:text-gray-300"
+                />
               </div>
 
               <div className="text-start">
@@ -101,6 +200,43 @@ export default function UpdateProfileModal({
                   className={`w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ${errors.age ? 'ring-red-500/20' : 'ring-transparent'} focus:ring-blue-500/10 transition-all placeholder:text-gray-300`}
                 />
                 {errors.age && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.age.message}</p>}
+              </div>
+
+              <div className="text-start">
+                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                  Birth Date
+                </label>
+                <input
+                  type="date"
+                  {...register('birth_date')}
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-blue-500/10 transition-all placeholder:text-gray-300"
+                />
+              </div>
+
+              <div className="text-start">
+                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                  Gender
+                </label>
+                <select
+                  {...register('gender')}
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-blue-500/10 transition-all"
+                >
+                  <option value="">Select</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+
+              <div className="text-start">
+                <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
+                  Timezone
+                </label>
+                <input
+                  type="text"
+                  {...register('timezone')}
+                  placeholder="Africa/Cairo"
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent focus:bg-white focus:border-blue-100 rounded-2xl text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-blue-500/10 transition-all placeholder:text-gray-300"
+                />
               </div>
             </div>
 

@@ -189,6 +189,7 @@ export default function AllSubscriptions() {
         sub.id === updatedSubscription.id ? updatedSubscription : sub,
       ),
     );
+    return true;
   };
 
   const handleDelete = async (id: string) => {

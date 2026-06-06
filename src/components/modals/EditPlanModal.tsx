@@ -11,7 +11,7 @@ interface EditPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   plan: PlanFormData & { id: string };
-  onSave: (plan: PlanFormData & { id: string }) => void;
+  onSave: (plan: PlanFormData & { id: string }) => boolean | Promise<boolean>;
   currencies: Currency[];
 }
 
@@ -37,12 +37,14 @@ export default function EditPlanModal({
     }
   }, [isOpen, plan, reset]);
 
-  const onSubmit = (data: PlanFormData) => {
-    onSave({
+  const onSubmit = async (data: PlanFormData) => {
+    const isSuccess = await onSave({
       ...data,
       id: plan.id
     });
-    onClose();
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   const addFeature = () => {

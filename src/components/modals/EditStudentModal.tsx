@@ -13,7 +13,7 @@ import { useGetRanks } from '../../features/admin/hooks/useRank';
 interface EditStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (studentData: StudentFormData & { id: string }) => void;
+  onSubmit: (studentData: StudentFormData & { id: string }) => boolean | Promise<boolean>;
   studentData: StudentFormData & { id: string } | null;
 }
 
@@ -75,14 +75,16 @@ export default function EditStudentModal({
   if (!isOpen || !studentData) return null;
 
 
-  const handleEditSubmit = (data: StudentFormData) => {
+  const handleEditSubmit = async (data: StudentFormData) => {
     const cleanedData = { ...data };
     if (!(cleanedData as Partial<StudentFormData>).password) {
       delete (cleanedData as Partial<StudentFormData>).password;
     }
 
-    onSubmit({ ...cleanedData, id: studentData!.id });
-    onClose();
+    const isSuccess = await onSubmit({ ...cleanedData, id: studentData!.id });
+    if (isSuccess) {
+      onClose();
+    }
   };
   const countryCodes = [
     { code: '+20', country: 'مصر', countryEn: 'Egypt' },

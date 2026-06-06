@@ -441,10 +441,11 @@ export default function Students() {
             }
             await createStudent(payload);
             setCurrentPage(1);
-            setIsAddModalOpen(false);
+            return true;
           } catch (error) {
             console.error('Error adding student:', error);
             // Detailed error is handled by axios interceptor
+            return false;
           }
         }}
       />
@@ -502,10 +503,11 @@ export default function Students() {
             }
 
             await updateStudent({ id: updatedData.id, data: payload });
-            setIsEditModalOpen(false);
+            return true;
           } catch (error) {
             console.error('Error updating student:', error);
             // Detailed error is handled by axios interceptor
+            return false;
           }
         }}
       />

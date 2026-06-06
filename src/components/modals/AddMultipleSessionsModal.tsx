@@ -19,7 +19,7 @@ export interface SessionPreviewItem {
 interface AddMultipleSessionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (data: MultipleSessionsPayload) => void;
+  onAdd: (data: MultipleSessionsPayload) => boolean | Promise<boolean>;
 }
 
 export default function AddMultipleSessionsModal({ isOpen, onClose, onAdd }: AddMultipleSessionsModalProps) {
@@ -129,7 +129,7 @@ export default function AddMultipleSessionsModal({ isOpen, onClose, onAdd }: Add
     return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
   };
 
-  const onSubmit = (data: MultipleSessionsFormData) => {
+  const onSubmit = async (data: MultipleSessionsFormData) => {
     if (sessionPreview.length === 0) {
       ErrorService.warning(t('addMultipleSessions_selectOneDayMin'));
       return;
@@ -143,14 +143,16 @@ export default function AddMultipleSessionsModal({ isOpen, onClose, onAdd }: Add
       .filter(d => d.checked)
       .map(d => (d.id.charAt(0).toUpperCase() + d.id.slice(1)) as DayOfWeek);
 
-    onAdd({
+    const isSuccess = await onAdd({
       formData: data,
       sessions: sessionPreview,
       selectedDays
     });
-    reset();
-    setWeekDays(prev => prev.map(d => ({ ...d, checked: false })));
-    onClose();
+    if (isSuccess) {
+      reset();
+      setWeekDays(prev => prev.map(d => ({ ...d, checked: false })));
+      onClose();
+    }
   };
 
   if (!isOpen) return null;

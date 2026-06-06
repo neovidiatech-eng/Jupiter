@@ -10,7 +10,7 @@ import CourseFormFields from '../../features/admin/pages/LMSCourses/components/C
 interface CourseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CourseFormData) => void;
+  onSubmit: (data: CourseFormData) => boolean | Promise<boolean>;
   course?: Course | null;
   levels: Level[];
   subjectCategories: string[];
@@ -43,6 +43,14 @@ export default function CourseModal({
   });
 
   const { reset, handleSubmit } = methods;
+
+  const handleFormSubmit = async (data: CourseFormData) => {
+    const isSuccess = await onSubmit(data);
+    if (isSuccess) {
+      reset();
+      onClose();
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -91,7 +99,7 @@ export default function CourseModal({
 
         <div className="p-8">
           <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
               <CourseFormFields
                 levels={levels}
                 subjectCategories={subjectCategories}

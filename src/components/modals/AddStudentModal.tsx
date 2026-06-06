@@ -12,7 +12,7 @@ import { useGetRanks } from '../../features/admin/hooks/useRank';
 interface AddStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (studentData: StudentFormData) => void;
+  onSubmit: (studentData: StudentFormData) => boolean | Promise<boolean>;
 }
 
 export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStudentModalProps) {
@@ -29,10 +29,12 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
       country: 'مصر',
     }
   });
-  const onFormSubmit = (data: StudentFormData) => {
-    onSubmit(data);
-    reset();
-    onClose();
+  const onFormSubmit = async (data: StudentFormData) => {
+    const isSuccess = await onSubmit(data);
+    if (isSuccess) {
+      reset();
+      onClose();
+    }
   };
 
   const ranks = ranksResponse?.data.items || [];

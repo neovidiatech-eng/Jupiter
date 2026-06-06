@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 interface AddSupportCategoryModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: SupportCategoryFormData) => void;
+    onSubmit: (data: SupportCategoryFormData) => boolean | Promise<boolean>;
 }
 
 export default function AddSupportCategoryModal({ isOpen, onClose, onSubmit }: AddSupportCategoryModalProps) {
@@ -21,10 +21,12 @@ export default function AddSupportCategoryModal({ isOpen, onClose, onSubmit }: A
         }
     });
 
-    const handleOnSubmit = (data: SupportCategoryFormData) => {
-        onSubmit(data);
-        reset();
-        onClose();
+    const handleOnSubmit = async (data: SupportCategoryFormData) => {
+        const isSuccess = await onSubmit(data);
+        if (isSuccess) {
+            reset();
+            onClose();
+        }
     };
 
     if (!isOpen) return null;

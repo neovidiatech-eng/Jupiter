@@ -13,7 +13,7 @@ const { Text } = Typography;
 interface AddPolicyModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (values: any) => void;
+  onSave: (values: any) => boolean | Promise<boolean>;
   loading: boolean;
   editingPolicy?: Policy | null;
   isNotice?: boolean;
@@ -58,7 +58,7 @@ export default function AddPolicyModal({ visible, onClose, onSave, loading, edit
     }
   }, [visible, editingPolicy, reset]);
 
-  const onSubmit = (values: PolicyFormData) => {
+  const onSubmit = async (values: PolicyFormData) => {
     const formattedValues = {
       ...values,
       color: typeof values.color === 'string' ? values.color : (values.color as any)?.toHexString?.() || '#4f46e5',
@@ -70,10 +70,10 @@ export default function AddPolicyModal({ visible, onClose, onSave, loading, edit
         content: formattedValues.content || formattedValues.description,
         active: formattedValues.active
       };
-      onSave(noticeData);
+      await onSave(noticeData);
     } else {
       const { content, ...policyData } = formattedValues;
-      onSave(policyData);
+      await onSave(policyData);
     }
   };
 

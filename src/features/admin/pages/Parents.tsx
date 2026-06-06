@@ -83,7 +83,7 @@ export default function Parents() {
       id: (parents.length + 1).toString()
     };
     setParents([...parents, newParent]);
-    setShowAddModal(false);
+    return true;
   };
 
   const handleEditParent = (parentData: Omit<Parent, 'id'>) => {
@@ -91,9 +91,10 @@ export default function Parents() {
       setParents(parents.map(p =>
         p.id === selectedParent.id ? { ...parentData, id: p.id } : p
       ));
-      setShowEditModal(false);
       setSelectedParent(null);
+      return true;
     }
+    return false;
   };
 
   const handleDeleteParent = async (id: string) => {

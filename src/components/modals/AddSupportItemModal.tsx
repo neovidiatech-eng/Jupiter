@@ -9,7 +9,7 @@ import CustomSelect from '../ui/CustomSelect';
 interface AddSupportItemModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: SupportItemFormData) => void;
+    onSubmit: (data: SupportItemFormData) => boolean | Promise<boolean>;
     categories: SupportCategory[];
 }
 
@@ -32,10 +32,12 @@ export default function AddSupportItemModal({ isOpen, onClose, onSubmit, categor
         label: cat.title
     }));
 
-    const handleOnSubmit = (data: SupportItemFormData) => {
-        onSubmit(data);
-        reset();
-        onClose();
+    const handleOnSubmit = async (data: SupportItemFormData) => {
+        const isSuccess = await onSubmit(data);
+        if (isSuccess) {
+            reset();
+            onClose();
+        }
     };
 
     if (!isOpen) return null;

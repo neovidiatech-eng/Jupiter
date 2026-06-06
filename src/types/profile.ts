@@ -2,6 +2,7 @@ export interface ProfileUser {
   id: string;
   email: string;
   name: string;
+  username?: string;
   phone: string;
   provider: string;
   googleId: string | null;
@@ -116,8 +117,15 @@ export interface StudentProfileResponse {
 
 export interface UpdateProfile {
   name?: string;
-  email?: string;
-  age?: string;
+  username?: string;
+  password?: string;
+  phone?: string;
+  phone_code?: string;
+  country?: string;
+  age?: number;
+  birth_date?: string;
+  gender?: string;
+  timezone?: string;
 }
 
 export interface TeacherCurrency {

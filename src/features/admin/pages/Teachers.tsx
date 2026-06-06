@@ -106,17 +106,17 @@ export default function Teachers() {
     try {
       const apiData = mapFormToApi(formData);
       await createTeacherMutation.mutateAsync(apiData);
-      setIsAddModalOpen(false);
-    } catch (error) { console.error(error); }
+      return true;
+    } catch (error) { console.error(error); return false; }
   };
 
   const handleUpdateTeacher = async (formData: UpdateTeacherFormData) => {
-    if (!selectedTeacher) return;
+    if (!selectedTeacher) return false;
     try {
       const apiData = mapFormToApi(formData);
       await updateTeacherMutation.mutateAsync({ id: selectedTeacher.id, data: apiData });
-      setIsEditModalOpen(false);
-    } catch (error) { console.error(error); }
+      return true;
+    } catch (error) { console.error(error); return false; }
   };
 
   const handleDeleteTeacher = async (teacherId: string) => {

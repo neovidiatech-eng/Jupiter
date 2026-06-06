@@ -13,7 +13,7 @@ import { useRoles } from '../../features/admin/hooks/useRoles';
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (userData: UserFormData) => void;
+  onSubmit: (userData: UserFormData) => boolean | Promise<boolean>;
 }
 
 // interface Permission {
@@ -91,10 +91,12 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
 
   if (!isOpen) return null;
 
-  const onFormSubmit = (data: UserFormData) => {
-    onSubmit(data);
-    reset();
-    onClose();
+  const onFormSubmit = async (data: UserFormData) => {
+    const isSuccess = await onSubmit(data);
+    if (isSuccess) {
+      reset();
+      onClose();
+    }
   };
 
   const countryOptions = countryCodes.map((c) => ({

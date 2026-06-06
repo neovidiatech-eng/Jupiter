@@ -11,7 +11,7 @@ import { CustomCheckbox } from '../ui/CustomCheckbox';
 interface AddRoleModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: RoleFormData) => void;
+    onSubmit: (data: RoleFormData) => boolean | Promise<boolean>;
     initialData?: RoleFormData | null;
     isLoading?: boolean;
 }
@@ -60,9 +60,12 @@ export default function AddRoleModal({
         onClose();
     };
 
-    const onFormSubmit = (data: RoleFormData) => {
-        onSubmit(data);
-        reset();
+    const onFormSubmit = async (data: RoleFormData) => {
+        const isSuccess = await onSubmit(data);
+        if (isSuccess) {
+            reset();
+            onClose();
+        }
     };
 
     const toggleCategory = (category: string) => {

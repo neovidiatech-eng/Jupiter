@@ -44,7 +44,7 @@ import ModalStyles from './add-session/ModalStyles';
 interface AddSessionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (data: SessionFormData | MultipleSessionsPayload) => void;
+  onAdd: (data: SessionFormData | MultipleSessionsPayload) => boolean | Promise<boolean>;
 }
 
 const DAYS: DayOfWeek[] = [
@@ -253,9 +253,10 @@ export default function AddSessionModal({
     };
   };
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
+    let isSuccess: boolean;
     if (schedulingMode === 'single') {
-      onAdd(data as SessionFormData);
+      isSuccess = await onAdd(data as SessionFormData);
     } else {
       const batchData: MultipleSessionsPayload = {
         formData: data as MultipleSessionsFormData,
@@ -272,12 +273,13 @@ export default function AddSessionModal({
         })),
       };
 
-      onAdd(batchData);
+      isSuccess = await onAdd(batchData);
     }
 
-    reset();
-
-    onClose();
+    if (isSuccess) {
+      reset();
+      onClose();
+    }
   };
 
   if (!isOpen) return null;

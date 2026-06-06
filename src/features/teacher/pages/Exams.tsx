@@ -147,7 +147,8 @@ export default function Exams() {
     } else {
       setExams([...exams, examData]);
     }
-    handleCloseModal();
+    setEditingExam(null);
+    return true;
   };
   const handleEditExam = (exam: Exam) => {
     setEditingExam(exam);

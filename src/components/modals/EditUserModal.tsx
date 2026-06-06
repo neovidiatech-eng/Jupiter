@@ -13,7 +13,7 @@ import { usePermissions } from '../../features/admin/hooks/usePermissions';
 interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (userData: UpdateUserFormData & { id: string }) => void;
+  onSubmit: (userData: UpdateUserFormData & { id: string }) => boolean | Promise<boolean>;
   userData: UpdateUserFormData & { id: string };
 }
 // Static permission list removed in favor of dynamic fetching
@@ -81,9 +81,11 @@ export default function EditUserModal({ isOpen, onClose, onSubmit, userData }: E
 
   if (!isOpen) return null;
 
-  const onFormSubmit = (data: UserFormData) => {
-    onSubmit({ ...data, id: userData.id });
-    onClose();
+  const onFormSubmit = async (data: UserFormData) => {
+    const isSuccess = await onSubmit({ ...data, id: userData.id });
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   const countryOptions = countryCodes.map((c) => ({

@@ -38,17 +38,28 @@ export default function StudentProfile() {
     duration: profileData?.plan?.duration || 'August 24, 2026'
   };
 
-  const handleUpdateProfile = (data: UpdateProfile) => {
-    updateProfile(data, {
-      onSuccess: () => setIsEditModalOpen(false),
+  const handleUpdateProfile = (data: UpdateProfile) =>
+    new Promise<boolean>((resolve) => {
+      updateProfile(data, {
+        onSuccess: () => {
+          setIsEditModalOpen(false);
+          resolve(true);
+        },
+        onError: () => resolve(false),
+      });
     });
-  };
 
   const initialUpdateData: UpdateProfile = useMemo(() => ({
     name: studentInfo.name !== "---" ? studentInfo.name : "",
-    email: studentInfo.email !== "---" ? studentInfo.email : "",
-    age: profileData?.user?.age?.toString() || (profileData?.birth_date ? (new Date().getFullYear() - new Date(profileData.birth_date).getFullYear()).toString() : "")
-  }), [studentInfo.name, studentInfo.email, profileData?.birth_date, profileData?.user?.age]);
+    username: profileData?.user?.username || "",
+    phone: profileData?.user?.phone || "",
+    phone_code: profileData?.user?.code_country || "",
+    country: profileData?.country || "",
+    age: profileData?.user?.age || (profileData?.birth_date ? new Date().getFullYear() - new Date(profileData.birth_date).getFullYear() : undefined),
+    birth_date: profileData?.birth_date || "",
+    gender: profileData?.user?.gender || "",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+  }), [profileData?.birth_date, profileData?.country, profileData?.user?.age, profileData?.user?.code_country, profileData?.user?.gender, profileData?.user?.phone, profileData?.user?.username, studentInfo.name]);
 
   if (isLoading) {
     return (

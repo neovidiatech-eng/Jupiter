@@ -11,7 +11,7 @@ interface EditExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
   expense: ExpenseFormData & { id: string };
-  onSave: (expense: ExpenseFormData & { id: string }) => void;
+  onSave: (expense: ExpenseFormData & { id: string }) => boolean | Promise<boolean>;
   currencies: { id: string; code: string; symbol: string }[];
 }
 
@@ -64,12 +64,14 @@ export default function EditExpenseModal({ isOpen, onClose, expense, onSave, cur
 
   if (!isOpen) return null;
 
-  const onSubmit = (data: ExpenseFormData) => {
-    onSave({
+  const onSubmit = async (data: ExpenseFormData) => {
+    const isSuccess = await onSave({
       ...data,
       id: expense.id
     });
-    onClose();
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   return (

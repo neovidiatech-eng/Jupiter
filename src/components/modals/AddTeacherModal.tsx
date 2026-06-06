@@ -11,7 +11,7 @@ import { useMemo } from 'react';
 interface AddTeacherModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (teacherData: TeacherFormData) => void;
+  onSubmit: (teacherData: TeacherFormData) => boolean | Promise<boolean>;
 }
 
 export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeacherModalProps) {
@@ -42,10 +42,12 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
     }));
   }, [currenciesData, language]);
 
-  const handleOnSubmit = (data: TeacherFormData) => {
-    onSubmit(data);
-    onClose();
-    reset();
+  const handleOnSubmit = async (data: TeacherFormData) => {
+    const isSuccess = await onSubmit(data);
+    if (isSuccess) {
+      onClose();
+      reset();
+    }
   };
 
   if (!isOpen) return null;
@@ -268,4 +270,3 @@ export default function AddTeacherModal({ isOpen, onClose, onSubmit }: AddTeache
     </div>
   );
 }
- 

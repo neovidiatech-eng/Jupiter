@@ -11,7 +11,7 @@ import { useCurrency } from '../../features/admin/hooks/useCurrency';
 interface EditTeacherModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (teacherData: UpdateTeacherFormData) => void;
+  onSubmit: (teacherData: UpdateTeacherFormData) => boolean | Promise<boolean>;
   teacher: Teacher | null;
 }
 
@@ -50,9 +50,11 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
     }
   }, [teacher, reset]);
 
-  const handleOnSubmit = (data: UpdateTeacherFormData) => {
-    onSubmit(data);
-    onClose();
+  const handleOnSubmit = async (data: UpdateTeacherFormData) => {
+    const isSuccess = await onSubmit(data);
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   if (!isOpen || !teacher) return null;
@@ -274,4 +276,3 @@ export default function EditTeacherModal({ isOpen, onClose, onSubmit, teacher }:
     </div>
   );
 }
-

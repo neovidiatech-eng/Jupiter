@@ -10,7 +10,7 @@ import DatePickerField from '../ui/DatePickerField';
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (transaction: TransactionFormData | Transaction) => void;
+  onSave: (transaction: TransactionFormData | Transaction) => boolean | Promise<boolean>;
   currencies: { code: string; symbol: string; rate: number }[];
   editingTransaction?: Transaction | null;
 }
@@ -96,16 +96,19 @@ export default function AddTransactionModal({ isOpen, onClose, onSave, currencie
     setValue('amount', Number(total.toFixed(2)));
   };
   console.log(errors)
-  const onSubmit = (data: TransactionFormData) => {
+  const onSubmit = async (data: TransactionFormData) => {
+    let isSuccess: boolean;
     if (editingTransaction) {
-      onSave({ ...data, id: editingTransaction.id } as Transaction);
+      isSuccess = await onSave({ ...data, id: editingTransaction.id } as Transaction);
       console.log(data)
     } else {
-      onSave(data);
+      isSuccess = await onSave(data);
       console.log(data)
 
     }
-    onClose();
+    if (isSuccess) {
+      onClose();
+    }
   };
   if (!isOpen) return null;
 

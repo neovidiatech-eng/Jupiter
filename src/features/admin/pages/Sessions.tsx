@@ -42,10 +42,11 @@ export default function Sessions() {
   const handleUpdateSession = async (id: string, data: UpdateSchedulePayload) => {
     try {
       await updateSchedule.mutateAsync({ id, data });
-      setShowEditModal(false);
       setSelectedSession(null);
+      return true;
     } catch (error) {
       console.error('Update session failed:', error);
+      return false;
     }
   };
 
@@ -106,9 +107,10 @@ export default function Sessions() {
           language: formData.language,
         });
       }
-      setShowAddModal(false);
+      return true;
     } catch (error) {
       console.error('Add session failed:', error);
+      return false;
     }
   };
 

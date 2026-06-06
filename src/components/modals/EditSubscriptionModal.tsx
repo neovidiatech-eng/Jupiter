@@ -21,7 +21,7 @@ interface EditSubscriptionModalProps {
     sessionsRemaining: number;
     totalSessions: number;
   };
-  onSave: (updatedSubscription: any) => void;
+  onSave: (updatedSubscription: any) => boolean | Promise<boolean>;
 }
 
 export default function EditSubscriptionModal({
@@ -93,9 +93,11 @@ export default function EditSubscriptionModal({
 
   if (!isOpen) return null;
 
-  const onSubmitForm = (data: EditSubscriptionFormData) => {
-    onSave({ ...subscription, ...data });
-    onClose();
+  const onSubmitForm = async (data: EditSubscriptionFormData) => {
+    const isSuccess = await onSave({ ...subscription, ...data });
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   const handleSendNotification = () => {

@@ -23,29 +23,36 @@ export default function AdminPoliciesPage() {
   const policies = policiesData?.data || [];
   const notice = noticeData?.data;
 
-  const handleSave = (values: any) => {
-    if (isEditingNotice) {
-      updateNotice(values, {
-        onSuccess: () => {
-          setModalVisible(false);
-          setIsEditingNotice(false);
-        }
-      });
-    } else if (editingPolicy) {
-      updatePolicy({ id: editingPolicy.id, data: values }, {
-        onSuccess: () => {
-          setModalVisible(false);
-          setEditingPolicy(null);
-        }
-      });
-    } else {
-      createPolicy(values, {
-        onSuccess: () => {
-          setModalVisible(false);
-        }
-      });
-    }
-  };
+  const handleSave = (values: any) =>
+    new Promise<boolean>((resolve) => {
+      if (isEditingNotice) {
+        updateNotice(values, {
+          onSuccess: () => {
+            setModalVisible(false);
+            setIsEditingNotice(false);
+            resolve(true);
+          },
+          onError: () => resolve(false),
+        });
+      } else if (editingPolicy) {
+        updatePolicy({ id: editingPolicy.id, data: values }, {
+          onSuccess: () => {
+            setModalVisible(false);
+            setEditingPolicy(null);
+            resolve(true);
+          },
+          onError: () => resolve(false),
+        });
+      } else {
+        createPolicy(values, {
+          onSuccess: () => {
+            setModalVisible(false);
+            resolve(true);
+          },
+          onError: () => resolve(false),
+        });
+      }
+    });
 
   const columns = [
     {

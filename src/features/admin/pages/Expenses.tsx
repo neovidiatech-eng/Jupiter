@@ -79,11 +79,11 @@ export default function Expenses() {
         await createMutation.mutateAsync(expenseData);
         ErrorService.success(language === 'ar' ? 'تم إضافة المصروف بنجاح' : 'Expense added successfully');
       }
-      setShowModal(false);
       setSelectedExpense(null);
+      return true;
     } catch (error) {
       console.log(error);
-      
+      return false;
     }
   };
 

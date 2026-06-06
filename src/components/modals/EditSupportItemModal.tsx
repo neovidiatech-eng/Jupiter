@@ -10,7 +10,7 @@ import CustomSelect from '../ui/CustomSelect';
 interface EditSupportItemModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: SupportItemFormData) => void;
+    onSubmit: (data: SupportItemFormData) => boolean | Promise<boolean>;
     categories: SupportCategory[];
     support: SupportItem | null;
 }
@@ -39,9 +39,11 @@ export default function EditSupportItemModal({ isOpen, onClose, onSubmit, catego
         label: cat.title
     }));
 
-    const handleOnSubmit = (data: SupportItemFormData) => {
-        onSubmit(data);
-        onClose();
+    const handleOnSubmit = async (data: SupportItemFormData) => {
+        const isSuccess = await onSubmit(data);
+        if (isSuccess) {
+            onClose();
+        }
     };
 
     if (!isOpen || !support) return null;

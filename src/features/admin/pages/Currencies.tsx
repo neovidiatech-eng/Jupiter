@@ -54,17 +54,24 @@ export default function Currencies() {
 
   const currencies = data?.currencies ?? [];
 
-  const handleSaveCurrency = (formData: CurrencyFormData & { id?: string }) => {
-    if (formData.id) {
-      const { id, ...rest } = formData;
-      updateCurrency({ id, data: rest });
-    } else {
-      const { id: _id, ...rest } = formData as CurrencyFormData & { id?: string };
-      addCurrency(rest as Omit<Currency, 'id' | 'createdAt' | 'updatedAt'>);
-    }
-    setShowAddModal(false);
-    setSelectedCurrency(null);
-  };
+  const handleSaveCurrency = (formData: CurrencyFormData & { id?: string }) =>
+    new Promise<boolean>((resolve) => {
+      const options = {
+        onSuccess: () => {
+          setSelectedCurrency(null);
+          resolve(true);
+        },
+        onError: () => resolve(false),
+      };
+
+      if (formData.id) {
+        const { id, ...rest } = formData;
+        updateCurrency({ id, data: rest }, options);
+      } else {
+        const { id: _id, ...rest } = formData as CurrencyFormData & { id?: string };
+        addCurrency(rest as Omit<Currency, 'id' | 'createdAt' | 'updatedAt'>, options);
+      }
+    });
 
   const handleDeleteCurrency = async (id: string) => {
     const currency = currencies.find(c => c.id === id);

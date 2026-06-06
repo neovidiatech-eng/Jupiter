@@ -9,7 +9,7 @@ import CustomSelect from '../ui/CustomSelect'; // تأكد من المسار
 interface EditParentModalProps {
   parent: ParentFormData & { id: string };
   onClose: () => void;
-  onSubmit: (parent: ParentFormData & { id: string }) => void;
+  onSubmit: (parent: ParentFormData & { id: string }) => boolean | Promise<boolean>;
 }
 
 export default function EditParentModal({ parent, onClose, onSubmit }: EditParentModalProps) {
@@ -29,9 +29,11 @@ export default function EditParentModal({ parent, onClose, onSubmit }: EditParen
     }
   });
 
-  const handleOnSubmit = (data: ParentFormData) => {
-    onSubmit({ ...data, id: parent.id });
-    onClose();
+  const handleOnSubmit = async (data: ParentFormData) => {
+    const isSuccess = await onSubmit({ ...data, id: parent.id });
+    if (isSuccess) {
+      onClose();
+    }
   };
 
   const text = {

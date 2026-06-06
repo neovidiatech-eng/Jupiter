@@ -54,45 +54,47 @@ export default function Users() {
 
   const handlePageChange = (page: number) => setCurrentPage(page);
 
-  const handleAddUser = (userData: UserFormData) => {
-    addStaff.mutate(
-      {
-        name: userData.name,
-        email: userData.email,
-        password: userData.password,
-        codeCountry: userData.countryCode,
-        phone: userData.phone,
-        roleId: userData.role,
-      },
-      {
-        onSuccess: () => {
-          setIsAddModalOpen(false);
-        },
-      }
-    );
-  };
-
-  const handleEditUser = (userData: UserFormData & { id: string }) => {
-    updateStaff.mutate(
-      {
-        id: userData.id,
-        staff: {
+  const handleAddUser = (userData: UserFormData) =>
+    new Promise<boolean>((resolve) => {
+      addStaff.mutate(
+        {
           name: userData.name,
           email: userData.email,
+          password: userData.password,
           codeCountry: userData.countryCode,
           phone: userData.phone,
           roleId: userData.role,
-          ...(userData.password ? { password: userData.password } : {}),
         },
-      },
-      {
-        onSuccess: () => {
-          setIsEditModalOpen(false);
-          setSelectedUser(null);
+        {
+          onSuccess: () => resolve(true),
+          onError: () => resolve(false),
+        }
+      );
+    });
+
+  const handleEditUser = (userData: UserFormData & { id: string }) =>
+    new Promise<boolean>((resolve) => {
+      updateStaff.mutate(
+        {
+          id: userData.id,
+          staff: {
+            name: userData.name,
+            email: userData.email,
+            codeCountry: userData.countryCode,
+            phone: userData.phone,
+            roleId: userData.role,
+            ...(userData.password ? { password: userData.password } : {}),
+          },
         },
-      }
-    );
-  };
+        {
+          onSuccess: () => {
+            setSelectedUser(null);
+            resolve(true);
+          },
+          onError: () => resolve(false),
+        }
+      );
+    });
 
   const handleDeleteUser = async (userId: string) => {
     const confirmed = await confirm({

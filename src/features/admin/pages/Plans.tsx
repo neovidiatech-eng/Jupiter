@@ -105,9 +105,9 @@ export default function Plans() {
 
         });
       }
-      setIsModalOpen(false);
       setSelectedPlan(null);
-    } catch (error) { console.error(error); }
+      return true;
+    } catch (error) { console.error(error); return false; }
   };
 
   const handleDeletePlan = async (id: string) => {
