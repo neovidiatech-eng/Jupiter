@@ -1,12 +1,12 @@
 import api from "../../../lib/axios";
-import { CreateRankBody, RankItem, RankResponse, UpdateRankBody } from "../../../types/rank";
+import { CreateRankBody, RankItem, RankResponse, SingleRankResponse, UpdateRankBody } from "../../../types/rank";
 
 export const getAllRanks = async (): Promise<RankResponse> => {
     const response = await api.get("/materials/ranks");
     return response.data;
 };
 
-export const getRank = async (id: string): Promise<RankResponse> => {
+export const getRank = async (id: string): Promise<SingleRankResponse> => {
     const response = await api.get(`/materials/ranks/${id}`);
     return response.data;
 };

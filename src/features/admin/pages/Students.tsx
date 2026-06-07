@@ -81,7 +81,7 @@ export default function Students() {
     {
       id: 'plans',
       label: t('numberOfPlans'),
-      value: 3,
+      value: plansData?.length,
       icon: ClipboardList,
       bgColor: 'bg-fuchsia-50/50',
       iconBg: 'bg-fuchsia-100',

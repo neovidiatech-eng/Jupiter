@@ -58,7 +58,13 @@ export const searchStudent = async (search: string): Promise<StudentsFetchRespon
     }
 }
 
-export const getStudentById = async (id: string): Promise<StudentsFetchResponse> => {
+export interface StudentResponse {
+    message: string;
+    status: number;
+    data: Student;
+}
+
+export const getStudentById = async (id: string): Promise<StudentResponse> => {
     const response = await api.get(`/students/${id}`);
     return response.data;
 }

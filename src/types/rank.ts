@@ -31,6 +31,13 @@ export interface RankResponse {
   };
 }
 
+export interface SingleRankResponse {
+  message: string;
+  status: number;
+  lang: string;
+  data: RankItem;
+}
+
 export interface CreateRankBody {
   name: string;
   color: string;

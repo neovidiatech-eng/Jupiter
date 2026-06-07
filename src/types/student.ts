@@ -1,6 +1,8 @@
 import { Plan } from "./plan";
 
 export type StudentStatus = 'pending' | 'approved' | 'rejected';
+
+
 export interface UserDetails {
   id: string;
   email: string;
@@ -18,6 +20,7 @@ export interface UserDetails {
   password?: string;
   googleId?: string | null;
   image?: string | null;
+  reviewsReceived?: any[];
   role?: {
     name: string;
   };
@@ -41,7 +44,6 @@ export interface Student {
   totalReviews?: number;
   rankId?: string | null;
   rank?: any;
-
   user: UserDetails;
   plan: Plan | null;
 }

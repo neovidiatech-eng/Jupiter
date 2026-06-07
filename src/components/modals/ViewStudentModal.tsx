@@ -1,8 +1,9 @@
-import { X, Mail, Phone, MapPin, ClipboardList, Clock } from 'lucide-react';
+import { X, Mail, Phone, MapPin, ClipboardList, Clock, Trophy, Star, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import WhatsAppPhone from '../ui/WhatsAppPhone';
 import { useTranslation } from 'react-i18next';
 import { Student } from '../../types/student';
+import { useGetRank } from '../../features/admin/hooks/useRank';
 import { useStudentById } from '../../features/admin/hooks/useStudents';
 
 interface ViewStudentModalProps {
@@ -11,17 +12,20 @@ interface ViewStudentModalProps {
   studentData: Student | null;
 }
 
-export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewStudentModalProps) {
+export default function ViewStudentModal({ isOpen, onClose, studentData: initialStudentData }: ViewStudentModalProps) {
   const { } = useLanguage();
   const { t } = useTranslation();
 
-  const { data: studentByIdData } = useStudentById(studentData?.id || "");
-  console.log("studentByIdData", studentByIdData);
+  const { data: studentByIdData, isLoading } = useStudentById(initialStudentData?.id || "");
+  const studentData = studentByIdData?.data || initialStudentData;
 
+  const { data: rankData } = useGetRank(studentData?.rankId || "");
+
+  const rank = rankData?.data;
   if (!isOpen || !studentData) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
+    <div className="fixed inset-0  !mt-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
       <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
 
         {/* Profile Header */}
@@ -39,9 +43,14 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
           </button>
 
           <div className="absolute -bottom-12 left-8 flex items-end gap-6">
-            <div className="w-24 h-24 rounded-[22px] bg-white p-1.5 shadow-lg">
+            <div className="w-24 h-24 rounded-[22px] bg-white p-1.5 shadow-lg relative">
+              {isLoading && (
+                <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-[22px] flex items-center justify-center z-10">
+                  <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
               <div className="w-full h-full rounded-[18px] bg-indigo-50 flex items-center justify-center text-indigo-600 text-3xl font-black">
-                {studentData.user.name.charAt(0).toUpperCase()}
+                {studentData.user?.name?.charAt(0).toUpperCase()}
               </div>
             </div>
             <div className="mb-2">
@@ -58,6 +67,7 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
             </div>
           </div>
         </div>
+
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto mt-14 p-8 custom-scrollbar">
@@ -99,6 +109,15 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
                   <p className="text-sm font-bold text-gray-800">{studentData.country}</p>
                 </div>
               </div>
+              <div className="flex items-start gap-4 group">
+                <div className="p-2.5 rounded-xl bg-gray-50 text-gray-400 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+                  <Trophy className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">{t('rank')}</p>
+                  <p className="text-sm font-bold text-gray-800">{rank?.name}</p>
+                </div>
+              </div>
             </div>
 
             {/* Academic Information */}
@@ -136,6 +155,47 @@ export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewS
 
               </div>
             </div>
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mt-8 space-y-6">
+            <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[2px] mb-4">{t('reviews') || 'Reviews'}</h4>
+            {studentData.user?.reviewsReceived && studentData.user.reviewsReceived.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {studentData.user.reviewsReceived.map((review: any) => (
+                  <div key={review.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex flex-col gap-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                          {review.reviewer?.name?.charAt(0).toUpperCase() || 'R'}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-900">{review.reviewer?.name || 'Reviewer'}</p>
+                          <p className="text-[10px] text-gray-400 font-bold">{new Date(review.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-md">
+                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                        <span className="text-[10px] font-bold text-amber-600">{review.rating}</span>
+                      </div>
+                    </div>
+                    {review.comment && (
+                      <div className="bg-white p-3 rounded-xl border border-gray-100">
+                        <p className="text-xs text-gray-600 font-medium leading-relaxed flex gap-2">
+                          <MessageSquare className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
+                          {review.comment}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-gray-50/50 rounded-2xl p-8 border border-gray-100 border-dashed flex flex-col items-center justify-center text-center">
+                <MessageSquare className="w-8 h-8 text-gray-300 mb-3" />
+                <p className="text-sm font-bold text-gray-500">{t('noReviewsYet') || 'No reviews yet'}</p>
+              </div>
+            )}
           </div>
         </div>
 
