@@ -13,7 +13,7 @@ import {
   BookOpen,
   Search,
   LayoutGrid,
-  List as ListIcon,
+  List as ListIcon, Presentation,
 } from 'lucide-react';
 import { Button, Input, Tag, Card, Empty, Dropdown, Modal, Pagination } from 'antd';
 import { useCourseById, useCourses, useDeleteCourse } from '../../../hooks/useCourses';
@@ -331,6 +331,30 @@ export default function Curriculum() {
                         </a>
                       </div>
                     )}
+                    {activeLecture.slidesUrl && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Presentation size={16} className="text-purple-500" />
+                          <span className="text-sm font-bold">Lecture Slides</span>
+                        </div>
+                        <a
+                          href={activeLecture.slidesUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-4 p-4 rounded-2xl bg-purple-50 border border-purple-100 group hover:bg-purple-100 transition-all cursor-pointer"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-purple-500 shadow-sm">
+                            <Presentation size={24} />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-gray-900 group-hover:text-purple-600 transition-colors">View Slides</p>
+                            <p className="text-[11px] text-gray-500">Slide Deck • Click to view</p>
+                          </div>
+                          <Button type="text" icon={<ChevronRight size={18} />} className="text-purple-400 group-hover:text-purple-600" />
+                        </a>
+                      </div>
+                    )}
+
                   </>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center">

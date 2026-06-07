@@ -1,7 +1,7 @@
 import { Modal, Button, InputNumber } from 'antd';
 import { useCreateLecture, useUpdateLecture } from '../../../hooks/useLectures';
 import { useQueryClient } from '@tanstack/react-query';
-import { Video, AlignLeft, Type, Hash } from 'lucide-react';
+import { Video, AlignLeft, Type, Hash, Presentation } from 'lucide-react';
 import { useEffect } from 'react';
 import { Lecture } from '../../../types/lectures';
 import { useForm, Controller } from 'react-hook-form';
@@ -31,6 +31,7 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
             content: '',
             videoUrl: '',
             pdfUrl: '',
+            slidesUrl: '',
             order: 1,
             courseId: courseId,
         }
@@ -130,6 +131,8 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                     />
                     {errors.content && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.content.message}</p>}
                 </div>
+                                <div className="grid grid-cols-2 gap-4">
+
                 <div>
                     <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
                         <Type size={14} className="text-indigo-500" /> PDF URL
@@ -140,6 +143,18 @@ export default function AddLectureModal({ visible, onClose, courseId, lecture }:
                         className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                     />
                     {errors.pdfUrl && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.pdfUrl.message}</p>}
+                </div>
+                <div>
+                    <label className="text-gray-700 font-bold flex items-center gap-2 mb-2">
+                        <Presentation size={14} className="text-indigo-500" /> Slide URL
+                    </label>
+                    <input
+                        {...register('slidesUrl')}
+                        placeholder="e.g. https://example.com/pdf"
+                        className="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    />
+                    {errors.slidesUrl && <p className="text-red-500 text-xs mt-1 font-bold uppercase">{errors.slidesUrl.message}</p>}
+                </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

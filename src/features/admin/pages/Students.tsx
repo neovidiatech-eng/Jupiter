@@ -39,12 +39,15 @@ export default function Students() {
   }, [searchTerm]);
 
   const { data: apiResponse, isLoading } = useStudents(currentPage, itemsPerPage, debouncedSearchTerm);
-
   const rawData: any = apiResponse?.data;
+  const studentsDataStatus = rawData?.status;
   const studentsList: Student[] = Array.isArray(rawData?.studentsData) ? rawData.studentsData : (rawData?.students || []);
   const pagination = rawData?.pagination;
   const totalItems = pagination?.totalItems || studentsList.length;
   const totalPages = pagination?.totalPages || Math.ceil(studentsList.length / itemsPerPage);
+  const totalStudentsCount = studentsDataStatus?.totalStudents || 0;
+  const activeStudentsCount = studentsDataStatus?.activeStudents || 0;
+  const pendingStudentsCount = studentsDataStatus?.inactiveStudents || 0;
   const { mutateAsync: createStudent } = useCreateStudent();
   const { mutateAsync: updateStudent } = useUpdateStudent();
   const { mutateAsync: deleteStudent } = useDeleteStudent();
@@ -54,7 +57,7 @@ export default function Students() {
     {
       id: 'total',
       label: t('totalStudents'),
-      value: studentsList.length,
+      value: totalStudentsCount,
       icon: Users,
       bgColor: 'bg-indigo-50/50',
       iconBg: 'bg-indigo-100',
@@ -63,7 +66,7 @@ export default function Students() {
     {
       id: 'active',
       label: t('activeStudents'),
-      value: studentsList.filter(student => student.status === 'approved').length,
+      value: activeStudentsCount,
       icon: UserCheck,
       bgColor: 'bg-emerald-50/50',
       iconBg: 'bg-emerald-100',
@@ -72,7 +75,7 @@ export default function Students() {
     {
       id: 'pending',
       label: t('pendingStudents'),
-      value: studentsList.filter(student => student.status === 'pending').length,
+      value: pendingStudentsCount,
       icon: UserX,
       bgColor: 'bg-amber-50/50',
       iconBg: 'bg-amber-100',
@@ -87,7 +90,7 @@ export default function Students() {
       iconBg: 'bg-fuchsia-100',
       iconColor: 'text-fuchsia-600',
     },
-  ], [studentsList, t]);
+  ], [totalStudentsCount, activeStudentsCount, pendingStudentsCount, plansData?.length, t]);
 
   const plans = plansData || [];
   const planFilterOptions = [

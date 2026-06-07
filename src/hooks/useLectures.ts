@@ -26,9 +26,7 @@ export const useCreateLecture = () => {
       queryClient.invalidateQueries({ queryKey: ["lectures"] });
       queryClient.invalidateQueries({ queryKey: ["courses"] });
     },
-    onError: () => {
-      ErrorService.error("Failed to create lecture");
-    },
+      
   });
 };
 
@@ -41,9 +39,7 @@ export const useUpdateLecture = () => {
       queryClient.invalidateQueries({ queryKey: ["lectures"] });
       queryClient.invalidateQueries({ queryKey: ["courses"] });
     },
-    onError: () => {
-      ErrorService.error("Failed to update lecture");
-    },
+
   });
 };
 

@@ -24,7 +24,7 @@ import {
 
 import CustomSelect from '../ui/CustomSelect';
 
-import { useStudents } from '../../features/admin/hooks/useStudents';
+
 import { useTeacher } from '../../features/admin/hooks/useTeacher';
 import { useCourses } from '../../hooks/useCourses';
 
@@ -40,6 +40,8 @@ import SchedulingSettings from './add-session/SchedulingSettings';
 import PlatformSelector from './add-session/PlatformSelector';
 import SessionPreview from './add-session/SessionPreview';
 import ModalStyles from './add-session/ModalStyles';
+import { getStudents } from '../../features/admin/services/StudentServices';
+import { useQuery } from '@tanstack/react-query';
 
 interface AddSessionModalProps {
   isOpen: boolean;
@@ -70,7 +72,22 @@ export default function AddSessionModal({
     'batch'
   );
 
-  const { data: students } = useStudents();
+  // Fetch all students (no pagination limit) for select dropdown
+  const { data: allStudents } = useQuery({
+    queryKey: ['allStudents'],
+    queryFn: async () => {
+      let page = 1;
+      const aggregated: any[] = [];
+      while (true) {
+        const response = await getStudents(page, 1000);
+        const { studentsData, pagination } = response.data;
+        aggregated.push(...studentsData);
+        if (!pagination?.hasNextPage) break;
+        page++;
+      }
+      return aggregated;
+    },
+  });
   const { data: instructors } = useTeacher();
   const { data: coursesdata } = useCourses();
 
@@ -155,14 +172,14 @@ export default function AddSessionModal({
   }, [watchStartTime, watchType, setValue]);
 
   const selectedStudentData = useMemo(() => {
-    if (!watchStudent || !students?.data?.studentsData) return null;
+    if (!watchStudent || !allStudents) return null;
 
     return (
-      students.data.studentsData.find(
+      allStudents.find(
         (s: Student) => String(s.id) === String(watchStudent)
       ) || null
     );
-  }, [watchStudent, students]);
+  }, [watchStudent, allStudents]);
 
   const studentPlanInfo = useMemo(() => {
     if (!selectedStudentData) return null;
@@ -338,12 +355,10 @@ export default function AddSessionModal({
                   render={({ field }) => (
                     <CustomSelect
                       options={
-                        students?.data?.studentsData?.map(
-                          (student: Student) => ({
-                            value: String(student.id),
-                            label: student.user.name,
-                          })
-                        ) || []
+                        (allStudents || []).map((student: Student) => ({
+                          value: String(student.id),
+                          label: student.user.name,
+                        }))
                       }
                       value={field.value}
                       onChange={field.onChange}
@@ -525,49 +540,51 @@ export default function AddSessionModal({
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {/* Video URL */}
-                <div>
-                  <label className="label">
-                    <Video className="w-3.5 h-3.5" />
-                    Video URL
-                  </label>
+              {schedulingMode === 'single' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Video URL */}
+                  <div>
+                    <label className="label">
+                      <Video className="w-3.5 h-3.5" />
+                      Video URL
+                    </label>
 
-                  <input
-                    type="url"
-                    {...register('videoUrl')}
-                    placeholder="Recording URL..."
-                    className="input"
-                  />
+                    <input
+                      type="url"
+                      {...register('videoUrl')}
+                      placeholder="Recording URL..."
+                      className="input"
+                    />
 
-                  {errors.videoUrl && (
-                    <p className="error-text">
-                      {errors.videoUrl.message as string}
-                    </p>
-                  )}
+                    {errors.videoUrl && (
+                      <p className="error-text">
+                        {errors.videoUrl.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Slides URL */}
+                  <div>
+                    <label className="label">
+                      <Layers className="w-3.5 h-3.5" />
+                      Slides URL
+                    </label>
+
+                    <input
+                      type="url"
+                      {...register('slidesUrl')}
+                      placeholder="Presentation URL..."
+                      className="input"
+                    />
+
+                    {errors.slidesUrl && (
+                      <p className="error-text">
+                        {errors.slidesUrl.message as string}
+                      </p>
+                    )}
+                  </div>
                 </div>
-
-                {/* Slides URL */}
-                <div>
-                  <label className="label">
-                    <Layers className="w-3.5 h-3.5" />
-                    Slides URL
-                  </label>
-
-                  <input
-                    type="url"
-                    {...register('slidesUrl')}
-                    placeholder="Presentation URL..."
-                    className="input"
-                  />
-
-                  {errors.slidesUrl && (
-                    <p className="error-text">
-                      {errors.slidesUrl.message as string}
-                    </p>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Notes */}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Plus, Eye, Trash2, Edit, ExternalLink, MoreVertical , ChevronLeft, ChevronRight, Bell } from 'lucide-react';
+import { Search, Plus, Eye, Trash2, Edit, ExternalLink, MoreVertical, ChevronLeft, ChevronRight, Bell } from 'lucide-react';
 import { useSearchSchedules, useCreateSchedule, useCreateRecurringSchedule, useUpdateSchedule, useDeleteSchedule, useDeleteGroupedSchedule, useGetScheduleById } from '../hooks/useSchedules';
 import { useTeacher } from '../hooks/useTeacher';
 import { useTeacherAvailability } from '../hooks/useTeacherAvailabilty';
@@ -18,6 +18,7 @@ export default function Sessions() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -68,6 +69,8 @@ export default function Sessions() {
     }
   };
 
+
+
   const handleAddSession = async (data: SessionFormData | MultipleSessionsPayload) => {
     try {
       if ('studentId' in data) {
@@ -83,6 +86,23 @@ export default function Sessions() {
           start_time: new Date(`${data.sessionDate}T${data.startTime}`).toISOString(),
           type: data.type,
           notification_Time: data.notification_Time || '10',
+          platform: data.platform,
+          language: data.language,
+          videoUrl: data.videoUrl,
+          slidesUrl: data.slidesUrl,
+        });
+
+        console.log("CREATE PAYLOAD", {
+          studentId: data.studentId,
+          teacherId: data.teacherId,
+          courseId: data.courseId,
+          title: data.title,
+          description: data.description,
+          link: data.link,
+          notes: data.notes,
+          start_time: new Date(`${data.sessionDate}T${data.startTime}`).toISOString(),
+          type: data.type,
+          notification_Time: data.notification_Time,
           platform: data.platform,
           language: data.language,
           videoUrl: data.videoUrl,
@@ -106,6 +126,8 @@ export default function Sessions() {
           notification_Time: formData.notification_Time || '10',
           language: formData.language,
         });
+
+
       }
       return true;
     } catch (error) {
@@ -148,7 +170,7 @@ export default function Sessions() {
       s.student?.user?.name?.toLowerCase().includes(lowerSearch) ||
       s.teacher?.user?.name?.toLowerCase().includes(lowerSearch) ||
       s.subject?.name?.toLowerCase().includes(lowerSearch)
-        );
+    );
   }, [rawScheduleData, searchTerm]);
 
   const groupedMap = new Map<string, GroupedSchedule>();
@@ -175,8 +197,8 @@ export default function Sessions() {
         const currentDate = new Date(schedule.start_time).getTime();
 
         const isHistory = currentTab === 'History';
-        const shouldUpdate = isHistory 
-          ? currentDate > existingDate 
+        const shouldUpdate = isHistory
+          ? currentDate > existingDate
           : currentDate < existingDate;
 
         if (shouldUpdate) {
@@ -294,7 +316,7 @@ export default function Sessions() {
           </div>
           <div>
             <div className="text-sm font-bold text-gray-900">{record.student?.user?.name || "Unknown"}</div>
-            
+
           </div>
         </div>
       ),
@@ -308,16 +330,16 @@ export default function Sessions() {
         </div>
       ),
     },
-{
-  title:"Lesson",
-  render:(_:unknown, record:GroupedSchedule)=>{
-    return(
-      <span className="text-sm font-bold text-gray-800">{record.title || "Unknown"}</span>
-    );
-  }
-},
+    {
+      title: "Lesson",
+      render: (_: unknown, record: GroupedSchedule) => {
+        return (
+          <span className="text-sm font-bold text-gray-800">{record.title || "Unknown"}</span>
+        );
+      }
+    },
 
-    
+
     {
       title: "Date & Time",
       render: (_: unknown, record: GroupedSchedule) => {
@@ -449,22 +471,22 @@ export default function Sessions() {
               className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border-none rounded-full text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:bg-white transition-colors placeholder:text-gray-400"
             />
           </div>
-           <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
-          <div className="flex bg-slate-100/80 p-1.5 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
-            {["History", "Today", "Upcoming"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  setCurrentTab(tab);
-                  setCurrentPage(1);
-                }}
-                className={`flex-1 md:min-w-[120px] px-4 sm:px-8 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${currentTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-              >
-                {tab}
-              </button>
-            ))}
+          <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
+            <div className="flex bg-slate-100/80 p-1.5 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
+              {["History", "Today", "Upcoming"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setCurrentTab(tab);
+                    setCurrentPage(1);
+                  }}
+                  className={`flex-1 md:min-w-[120px] px-4 sm:px-8 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${currentTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
         </div>
 
         {/* Table */}
@@ -597,7 +619,7 @@ export default function Sessions() {
                       </div>
                     </div>
                   </div>
-                 
+
                 </div>
               );
             })}

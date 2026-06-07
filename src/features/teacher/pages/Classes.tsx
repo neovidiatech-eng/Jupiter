@@ -178,14 +178,6 @@ const ClassesPage: React.FC = () => {
                     VIDEO
                   </a>
                 )}
-                <a
-                  href="https://lecture-url.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-white/50 rounded-md text-[10px] font-bold transition-all whitespace-nowrap"
-                >
-                  PDF
-                </a>
                 {record.slidesUrl && (
                   <a
                     href={record.slidesUrl}
