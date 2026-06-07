@@ -8,6 +8,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { usePlans } from '../../features/admin/hooks/usePlans';
 import { useGetRanks } from '../../features/admin/hooks/useRank';
+import { useCourses } from '../../hooks/useCourses';
 
 interface AddStudentModalProps {
   isOpen: boolean;
@@ -27,8 +28,14 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
       status: 'approved',
       gender: 'male',
       country: 'Egypt',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     }
   });
+
+  const rankIdValue = watch('rankId');
+  const { data: coursesData } = useCourses(1, 20, rankIdValue);
+  const startingCourseIdValue = watch('startingCourseId');
+
   const onFormSubmit = async (data: StudentFormData) => {
     const isSuccess = await onSubmit(data);
     if (isSuccess) {
@@ -48,7 +55,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
 
   const nameValue = watch('name');
   const birthDateValue = watch('birthDate');
-  
+
   useEffect(() => {
     if (nameValue) {
       const formattedName = nameValue.toLowerCase().replace(/\s+/g, '.');
@@ -69,7 +76,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
         age--;
       }
 
-      const matchingRank = ranks.find((r: any) => 
+      const matchingRank = ranks.find((r: any) =>
         age >= (r.ageRange?.minAge ?? 0) && age <= (r.ageRange?.maxAge ?? 100)
       );
 
@@ -101,6 +108,25 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
     value: r.id,
     label: r.name,
   }));
+
+  const courses = coursesData?.items || [];
+  const courseOptions = [
+    { value: '', label: t('selectCourse') || 'Select Course' },
+    ...courses.map((c: any) => ({
+      value: c.id,
+      label: c.title,
+    }))
+  ];
+
+  const selectedCourse = courses.find(c => c.id === startingCourseIdValue);
+  const lectures = selectedCourse?.lectures || [];
+  const lectureOptions = [
+    { value: '', label: t('selectLecture') || 'Select Lecture' },
+    ...lectures.map((l: any) => ({
+      value: l.id,
+      label: l.title,
+    }))
+  ];
 
   const genderOptions = [
     { value: 'male', label: t('male') },
@@ -169,7 +195,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
 
               <div className="text-start">
                 <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">
-               {t('email')}
+                  {t('email')}
                 </label>
                 <div className="relative flex items-center">
                   <input
@@ -314,6 +340,43 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
                 </div>
               )}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Controller
+                name="startingCourseId"
+                control={control}
+                render={({ field }) => (
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('startingCourse') || 'Starting Course'}</label>
+                    <CustomSelect
+                      value={field.value || ''}
+                      options={courseOptions}
+                      onChange={field.onChange}
+                      className="rounded-2xl border-none bg-gray-50"
+                    />
+                    {errors.startingCourseId && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.startingCourseId.message}</p>}
+                  </div>
+                )}
+              />
+
+              <Controller
+                name="startingLectureId"
+                control={control}
+                render={({ field }) => (
+                  <div className="text-start">
+                    <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">{t('startingLecture') || 'Starting Lecture'}</label>
+                    <CustomSelect
+                      value={field.value || ''}
+                      options={lectureOptions}
+                      onChange={field.onChange}
+                      className="rounded-2xl border-none bg-gray-50"
+                      disabled={!startingCourseIdValue}
+                    />
+                    {errors.startingLectureId && <p className="text-[10px] text-red-500 mt-1 ml-2 font-bold">{errors.startingLectureId.message}</p>}
+                  </div>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="text-start relative">

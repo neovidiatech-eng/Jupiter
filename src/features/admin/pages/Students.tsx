@@ -1,4 +1,4 @@
-import { useState, lazy, useMemo } from 'react';
+import { useState, lazy, useMemo, useEffect } from 'react';
 import { Search, Eye, Pencil, Trash2, Plus, Users, UserCheck, UserX, ClipboardList, ChevronDown, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 import { useTranslation } from 'react-i18next';
@@ -26,12 +26,25 @@ export default function Students() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
-  const { data: apiResponse, isLoading } = useStudents();
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const rawData: any = apiResponse?.data.studentsData;
-  const studentsList: Student[] = Array.isArray(rawData) ? rawData : (rawData?.students || rawData?.data || []);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1);
+    }, 3000);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  const { data: apiResponse, isLoading } = useStudents(currentPage, itemsPerPage, debouncedSearchTerm);
+
+  const rawData: any = apiResponse?.data;
+  const studentsList: Student[] = Array.isArray(rawData?.studentsData) ? rawData.studentsData : (rawData?.students || []);
+  const pagination = rawData?.pagination;
+  const totalItems = pagination?.totalItems || studentsList.length;
+  const totalPages = pagination?.totalPages || Math.ceil(studentsList.length / itemsPerPage);
   const { mutateAsync: createStudent } = useCreateStudent();
   const { mutateAsync: updateStudent } = useUpdateStudent();
   const { mutateAsync: deleteStudent } = useDeleteStudent();
@@ -94,25 +107,14 @@ export default function Students() {
 
   const filteredStudents = useMemo(() => {
     return studentsList.filter(student => {
-      const matchesSearch =
-        student.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.user.phone?.includes(searchTerm);
-
       const matchesGrade = selectedGrade === 'all' || student.planId === selectedGrade;
       const matchesCountry = selectedCountry === 'all' || student.country === selectedCountry;
 
-      return matchesSearch && matchesGrade && matchesCountry;
+      return matchesGrade && matchesCountry;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [studentsList, searchTerm, selectedGrade, selectedCountry]);
+  }, [studentsList, selectedGrade, selectedCountry]);
 
-  const totalPages = Math.ceil((filteredStudents?.length || 0) / itemsPerPage);
-
-  const currentStudents = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredStudents?.slice(startIndex, endIndex);
-  }, [filteredStudents, currentPage, itemsPerPage]);
+  const currentStudents = filteredStudents;
 
   const handleViewStudent = (student: Student) => {
     setSelectedStudent(student);
@@ -353,10 +355,10 @@ export default function Students() {
         </div>
 
         {/* Pagination */}
-        {!isLoading && filteredStudents.length > 0 && (
+        {!isLoading && totalItems > 0 && (
           <div className="p-4 border-t border-gray-50 flex items-center justify-between">
             <span className="text-xs text-gray-400 font-bold ml-2">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredStudents.length)} of {filteredStudents.length} students
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} students
             </span>
             <div className="flex items-center gap-1.5">
               <button
@@ -419,20 +421,33 @@ export default function Students() {
               email: studentData.email,
               phone: studentData.phone,
               phone_code: studentData.phone_code,
-              birth_date: (studentData.birthDate && studentData.birthDate !== "") ? new Date(studentData.birthDate).toISOString() : null,
               gender: studentData.gender,
               country: studentData.country,
               active: studentData.status === 'approved',
+              timezone: studentData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
 
-            // Only include planId if it's a valid GUID string (not empty)
+            if (studentData.birthDate && studentData.birthDate !== "") {
+              const birth = new Date(studentData.birthDate);
+              const today = new Date();
+              let age = today.getFullYear() - birth.getFullYear();
+              const m = today.getMonth() - birth.getMonth();
+              if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                age--;
+              }
+              payload.age = age;
+            }
+
             if (studentData.plan && studentData.plan.trim() !== "") {
               payload.planId = studentData.plan;
             }
 
-            // Include rankId if it exists
-            if (studentData.rankId && studentData.rankId.trim() !== "") {
-              payload.rankId = studentData.rankId;
+            if (studentData.startingCourseId && studentData.startingCourseId.trim() !== "") {
+              payload.startingCourseId = studentData.startingCourseId;
+            }
+
+            if (studentData.startingLectureId && studentData.startingLectureId.trim() !== "") {
+              payload.startingLectureId = studentData.startingLectureId;
             }
 
             if (studentData.password) {

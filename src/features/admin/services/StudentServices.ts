@@ -2,9 +2,34 @@ import api from "../../../lib/axios";
 import { Student, StudentsFetchResponse } from "../../../types/student";
 import { StudentFormData } from "../../../lib/schemas/StudentSchema";
 
-export const getStudents = async (): Promise<StudentsFetchResponse> => {
-    const response = await api.get("/students?limit=1000");
-    return response.data;
+export const getStudents = async (page: number = 1, limit: number = 20, search?: string): Promise<StudentsFetchResponse> => {
+    let url = `/students/?page=${page}&limit=${limit}`;
+    if (search) {
+        url += `&search=${search}`;
+    }
+    try {
+        const response = await api.get(url);
+        return response.data;
+    } catch (error: any) {
+        if (error.response?.status === 404) {
+            return {
+                message: "",
+                status: 404,
+                lang: "en",
+                data: {
+                    studentsData: [],
+                    pagination: {
+                        page,
+                        limit,
+                        totalItems: 0,
+                        totalPages: 0,
+                        hasNextPage: false,
+                    }
+                }
+            };
+        }
+        throw error;
+    }
 }
 
 export const searchStudent = async (search: string): Promise<StudentsFetchResponse> => {

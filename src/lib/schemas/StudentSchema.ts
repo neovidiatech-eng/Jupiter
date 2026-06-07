@@ -14,6 +14,9 @@ export const getStudentSchema = (t: TFunc) => z.object({
   status: z.enum(['approved', 'pending', 'rejected']),
   rankId: z.string(t("validation.required")),
   password: z.string().min(6, t("validation.min", { count: 6 })),
+  timezone: z.string().optional(),
+  startingCourseId: z.string().optional(),
+  startingLectureId: z.string().optional(),
 }).superRefine((data, ctx) => {
   const { phone_code, phone } = data;
 
