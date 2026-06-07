@@ -1,8 +1,8 @@
 import api from "../../../lib/axios"
 import { WalletHistoryResponse, WithdrawalApiResponse } from "../../../types/transaction";
 
-export const getTransactions = async () : Promise<WalletHistoryResponse> =>{
-    const response = await api.get("/transactions/");
+export const getTransactions = async (page: number = 1, limit: number = 20) : Promise<WalletHistoryResponse> =>{
+    const response = await api.get(`/transactions/?page=${page}&limit=${limit}`);
     return response.data;
 }
 

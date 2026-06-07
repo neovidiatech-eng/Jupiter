@@ -13,6 +13,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import ViewTransactionModal from "../../../components/modals/ViewTransactionModal";
 import { useTransactions } from "../hooks/useTransaction";
 import { Transaction, TransactionType } from "../../../types/transaction";
+import Pagination from "../../../components/ui/Pagination";
 
 export default function Transactions() {
   const { language } = useLanguage();
@@ -26,9 +27,13 @@ export default function Transactions() {
 
   const [showViewModal, setShowViewModal] = useState(false);
 
-  const { data: response, isLoading, error } = useTransactions();
+  const [page, setPage] = useState(1);
+  const limit = 20;
+
+  const { data: response, isLoading, error } = useTransactions(page, limit);
 
   const transactions = response?.data?.transactions || [];
+  const pagination = response?.data?.pagination;
 
   const text = {
     title: { ar: "المعاملات المالية", en: "Financial Transactions" },
@@ -431,6 +436,15 @@ export default function Transactions() {
               </tbody>
             </table>
           </div>
+        )}
+        {pagination && pagination.totalPages > 1 && (
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            itemsPerPage={pagination.limit}
+            onPageChange={(newPage) => setPage(newPage)}
+          />
         )}
       </div>
 

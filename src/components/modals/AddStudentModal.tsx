@@ -26,7 +26,7 @@ export default function AddStudentModal({ isOpen, onClose, onSubmit }: AddStuden
       phone_code: '+20',
       status: 'approved',
       gender: 'male',
-      country: 'مصر',
+      country: 'Egypt',
     }
   });
   const onFormSubmit = async (data: StudentFormData) => {

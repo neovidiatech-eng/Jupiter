@@ -2,15 +2,7 @@ import { z } from 'zod';
 
 type TFunc = (key: string, options?: any) => string;
 
-export const getUserSchema = (t: TFunc) => z.object({
-  name: z.string().min(3, t("validation.min", { count: 3 })).max(32, t("validation.max", { count: 32 })),
-  email: z.string().email(t("validation.email")),
-  countryCode: z.string(),
-  phone: z.string().min(1, t("validation.required")),
-  role: z.string().min(1, t("validation.required")),
-  password: z.string().min(6, t("validation.min", { count: 6 })),
-  permissions: z.array(z.string()).optional(),
-}).superRefine((data, ctx) => {
+const getPhoneRefinement = (t: TFunc) => (data: any, ctx: z.RefinementCtx) => {
   const { countryCode, phone } = data;
   
   if (!phone) return;
@@ -69,11 +61,23 @@ export const getUserSchema = (t: TFunc) => z.object({
       });
     }
   }
+};
+
+const getBaseUserSchema = (t: TFunc) => z.object({
+  name: z.string().min(3, t("validation.min", { count: 3 })).max(32, t("validation.max", { count: 32 })),
+  email: z.string().email(t("validation.email")),
+  countryCode: z.string(),
+  phone: z.string().min(1, t("validation.required")),
+  role: z.string().min(1, t("validation.required")),
+  password: z.string().min(6, t("validation.min", { count: 6 })),
+  permissions: z.array(z.string()).optional(),
 });
 
-export const getUpdateUserSchema = (t: TFunc) => getUserSchema(t).extend({
+export const getUserSchema = (t: TFunc) => getBaseUserSchema(t).superRefine(getPhoneRefinement(t));
+
+export const getUpdateUserSchema = (t: TFunc) => getBaseUserSchema(t).extend({
   password: z.string().min(6, t("validation.min", { count: 6 })).or(z.literal('')),
-});
+}).superRefine(getPhoneRefinement(t));
 
 export type UserFormData = z.infer<ReturnType<typeof getUserSchema>>;
 export type UpdateUserFormData = z.infer<ReturnType<typeof getUpdateUserSchema>>;

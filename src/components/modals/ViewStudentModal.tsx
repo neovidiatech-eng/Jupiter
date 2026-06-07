@@ -3,6 +3,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import WhatsAppPhone from '../ui/WhatsAppPhone';
 import { useTranslation } from 'react-i18next';
 import { Student } from '../../types/student';
+import { useStudentById } from '../../features/admin/hooks/useStudents';
 
 interface ViewStudentModalProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ interface ViewStudentModalProps {
 export default function ViewStudentModal({ isOpen, onClose, studentData }: ViewStudentModalProps) {
   const { } = useLanguage();
   const { t } = useTranslation();
+
+  const { data: studentByIdData } = useStudentById(studentData?.id || "");
+  console.log("studentByIdData", studentByIdData);
 
   if (!isOpen || !studentData) return null;
 

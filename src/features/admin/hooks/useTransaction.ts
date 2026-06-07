@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getAllWithdrawals, getTransactions, updateWithdrawalStatus } from "../services/TransactionServices"
 
-export const useTransactions = () => {
+export const useTransactions = (page: number = 1, limit: number = 20) => {
     return useQuery({
-        queryKey: ["transactions"],
-        queryFn: getTransactions,
+        queryKey: ["transactions", page, limit],
+        queryFn: () => getTransactions(page, limit),
     })
 }
 

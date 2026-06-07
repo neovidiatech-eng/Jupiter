@@ -37,7 +37,6 @@ export default function Students() {
   const { mutateAsync: deleteStudent } = useDeleteStudent();
   const { data: plansData } = usePlans();
   const { confirm, ConfirmDialog } = useConfirm();
-
   const stats = useMemo(() => [
     {
       id: 'total',
