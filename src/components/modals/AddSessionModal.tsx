@@ -413,6 +413,7 @@ export default function AddSessionModal({
             <StudentPlanCard studentPlanInfo={studentPlanInfo} />
 
             {/* Title */}
+          {schedulingMode === 'single' && (
             <div className="mb-6">
               <label className="label">
                 <Video className="w-3.5 h-3.5" />
@@ -432,6 +433,7 @@ export default function AddSessionModal({
                 </p>
               )}
             </div>
+          )}
 
             {/* Description */}
             <div className="mb-6">
