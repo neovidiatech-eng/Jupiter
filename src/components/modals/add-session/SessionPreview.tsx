@@ -52,9 +52,9 @@ export default function SessionPreview({
 
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-3">
-                      <h4 className="text-sm font-bold text-gray-900">
+                      {/* <h4 className="text-sm font-bold text-gray-900">
                         {watchTitle || 'Untitled Session'}
-                      </h4>
+                      </h4> */}
                       <span
                         className={`text-[10px] px-2 py-1 rounded-full font-bold ${
                           session.available

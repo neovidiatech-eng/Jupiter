@@ -428,6 +428,7 @@ export default function AddSessionModal({
                   Session Title
                 </label>
 
+
                 <input
                   type="text"
                   {...register('title')}
@@ -442,6 +443,7 @@ export default function AddSessionModal({
                 )}
               </div>
             )}
+
 
             {/* Description */}
             <div className="mb-6">
