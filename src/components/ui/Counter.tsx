@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Video } from "lucide-react";
-import { useJoinSession, useUserSessions } from "../../hooks/useSessions";
+import { Video, LogOut } from "lucide-react";
+import { useJoinSession, useEndSession, useUserSessions } from "../../hooks/useSessions";
 import { Schedule } from "../../types/scheduales";
 import { useLanguage } from "../../contexts/LanguageContext";
 
@@ -14,7 +14,8 @@ interface CountdownState {
 export default function MiniHeaderTimer() {
   const { language } = useLanguage();
   const { data, isLoading } = useUserSessions("");
-  const { mutateAsync: joinSession } = useJoinSession();
+  const { mutateAsync: joinSession, isPending: isJoining } = useJoinSession();
+  const { mutateAsync: endSession, isPending: isLeaving } = useEndSession();
 
   const [timeLeft, setTimeLeft] = useState<CountdownState>({
     days: 0,
@@ -23,6 +24,7 @@ export default function MiniHeaderTimer() {
     seconds: 0,
   });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [leftSessionId, setLeftSessionId] = useState<string | null>(null);
 
   // Get nearest upcoming session
   const nextSession = useMemo<Schedule | null>(() => {
@@ -43,9 +45,9 @@ export default function MiniHeaderTimer() {
     // Sort by start time
     const sorted = [...sessions].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
     
-    // Find the first session that hasn't ended yet
-    return sorted.find(s => new Date(s.end_time).getTime() > now) || null;
-  }, [data, refreshTrigger]);
+    // Find the first session that hasn't ended yet (and not left by student)
+    return sorted.find(s => new Date(s.end_time).getTime() > now && s.id !== leftSessionId) || null;
+  }, [data, refreshTrigger, leftSessionId]);
 
 
   useEffect(() => {
@@ -100,10 +102,23 @@ export default function MiniHeaderTimer() {
   }, [nextSession, timeLeft]);
 
   const handleJoinSession = async () => {
-    if (!nextSession?.id || !nextSession?.link) return;
+    if (!nextSession?.id) return;
     try {
       await joinSession(nextSession.id);
-      window.open(nextSession.link, "_blank", "noopener,noreferrer");
+      if (nextSession.link) {
+        window.open(nextSession.link, "_blank", "noopener,noreferrer");
+      }
+    } catch (error) {
+      // Error is handled by global interceptor
+    }
+  };
+
+  const handleLeaveSession = async () => {
+    if (!nextSession?.id) return;
+    const sessionId = nextSession.id;
+    try {
+      await endSession(sessionId);
+      setLeftSessionId(sessionId); // hide this session immediately after leaving
     } catch (error) {
       // Error is handled by global interceptor
     }
@@ -154,23 +169,38 @@ export default function MiniHeaderTimer() {
         </div>
       </div>
 
-      {/* Join Button */}
-      <button
-        onClick={handleJoinSession}
-        disabled={!isReady}
-        className={`flex items-center gap-2 px-6 py-2.5 rounded-[14px] text-sm font-bold transition-all duration-300 active:scale-95 ${
-          isReady 
-            ? "bg-[#2049BF] text-white shadow-lg shadow-blue-100" 
-            : "bg-[#E5E7EB] text-gray-400 cursor-not-allowed border border-gray-200"
-        }`}
-      >
-        <Video size={18} className={isReady ? "text-white" : "text-gray-300"} />
-        <span>
-          {isSessionOngoing 
-            ? (language === "ar" ? "دخول الحصة" : "Join Ongoing") 
-            : (language === "ar" ? "انضم للحصة" : "Join Session")}
-        </span>
-      </button>
+      {/* Action Button: Leave when ongoing, Join otherwise */}
+      {isSessionOngoing ? (
+        <button
+          onClick={handleLeaveSession}
+          disabled={isLeaving}
+          className="flex items-center gap-2 px-6 py-2.5 rounded-[14px] text-sm font-bold transition-all duration-300 active:scale-95 bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <LogOut size={18} className="text-white" />
+          <span>
+            {isLeaving
+              ? (language === "ar" ? "جاري المغادرة..." : "Leaving...")
+              : (language === "ar" ? "مغادرة الحصة" : "Leave Session")}
+          </span>
+        </button>
+      ) : (
+        <button
+          onClick={handleJoinSession}
+          disabled={!isReady || isJoining}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-[14px] text-sm font-bold transition-all duration-300 active:scale-95 ${
+            isReady
+              ? "bg-[#2049BF] text-white shadow-lg shadow-blue-100 hover:bg-blue-700"
+              : "bg-[#E5E7EB] text-gray-400 cursor-not-allowed border border-gray-200"
+          }`}
+        >
+          <Video size={18} className={isReady ? "text-white" : "text-gray-300"} />
+          <span>
+            {isJoining
+              ? (language === "ar" ? "جاري الانضمام..." : "Joining...")
+              : (language === "ar" ? "انضم للحصة" : "Join Session")}
+          </span>
+        </button>
+      )}
     </div>
   );
 }
