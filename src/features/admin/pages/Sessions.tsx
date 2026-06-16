@@ -89,7 +89,6 @@ export default function Sessions() {
           platform: data.platform,
           language: data.language,
           videoUrl: data.videoUrl,
-          slidesUrl: data.slidesUrl,
         });
 
         console.log("CREATE PAYLOAD", {
@@ -115,7 +114,6 @@ export default function Sessions() {
           studentId: formData.studentId,
           teacherId: formData.teacherId,
           courseId: formData.courseId,
-          title: formData.title,
           description: formData.description || '',
           link: formData.link || '',
           notes: formData.notes || '',
@@ -125,6 +123,7 @@ export default function Sessions() {
           endDate: formData.batchEndDate,
           notification_Time: formData.notification_Time || '10',
           language: formData.language,
+
         });
 
 
@@ -213,11 +212,12 @@ export default function Sessions() {
 
   const groupedSchedules: GroupedSchedule[] = Array.from(
     groupedMap.values()
-  ).sort(
-    (a, b) =>
-      new Date(b.start_time).getTime() -
-      new Date(a.start_time).getTime()
-  );
+  ).sort((a, b) => {
+    if (currentTab === 'History') {
+      return new Date(b.start_time).getTime() - new Date(a.start_time).getTime();
+    }
+    return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+  });
 
   const totalItems = groupedSchedules.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);

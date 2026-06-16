@@ -10,6 +10,7 @@ interface SchedulingSettingsProps {
   setValue: UseFormSetValue<any>;
   DAYS: DayOfWeek[];
   control: Control<any>;
+  errors?: any;
 }
 
 export default function SchedulingSettings({
@@ -20,6 +21,7 @@ export default function SchedulingSettings({
   setValue,
   DAYS,
   control,
+  errors,
 }: SchedulingSettingsProps) {
   return (
     <>
@@ -58,6 +60,7 @@ export default function SchedulingSettings({
                   label="Session Date"
                   value={field.value}
                   onChange={field.onChange}
+                  error={errors?.sessionDate?.message}
                 />
               )}
             />
@@ -95,6 +98,7 @@ export default function SchedulingSettings({
                   label="Start Date"
                   value={field.value}
                   onChange={field.onChange}
+                  error={errors?.batchStartDate?.message}
                 />
               )}
             />
@@ -106,6 +110,7 @@ export default function SchedulingSettings({
                   label="End Date"
                   value={field.value}
                   onChange={field.onChange}
+                  error={errors?.batchEndDate?.message}
                 />
               )}
             />

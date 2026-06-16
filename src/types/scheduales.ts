@@ -42,7 +42,6 @@ export interface CreateRecurringSchedulePayload {
     studentId: string;
     teacherId: string;
     courseId: string;
-    title: string;
     description: string;
     link: string;
     notes: string;

@@ -89,17 +89,14 @@ export default function AddSessionModal({
     },
   });
   const { data: instructors } = useTeacher();
-  const { data: coursesdata } = useCourses();
+  const { data: coursesdata } = useCourses(1, 1000);
 
   const singleSchema = getSessionSchema(t);
   const batchSchema = getMultipleSessionsSchema(t);
 
   const courses: Course[] = coursesdata?.items || [];
 
-  const courseOptions = courses.map((course: Course) => ({
-    value: String(course.id),
-    label: course.title,
-  }));
+
 
   const {
     register,
@@ -126,7 +123,6 @@ export default function AddSessionModal({
       platform: 'zoom',
       link: '',
       videoUrl: '',
-      slidesUrl: '',
       sessionDate: new Date().toISOString().split('T')[0],
       startTime: '14:00',
       endTime: '15:00',
@@ -180,6 +176,18 @@ export default function AddSessionModal({
       ) || null
     );
   }, [watchStudent, allStudents]);
+
+  const filteredCourses = useMemo(() => {
+    if (!selectedStudentData?.rankId) return courses;
+    return courses.filter(
+      (course) => String(course.rankId) === String(selectedStudentData.rankId)
+    );
+  }, [courses, selectedStudentData]);
+
+  const courseOptions = filteredCourses.map((course: Course) => ({
+    value: String(course.id),
+    label: course.title,
+  }));
 
   const studentPlanInfo = useMemo(() => {
     if (!selectedStudentData) return null;
@@ -413,25 +421,27 @@ export default function AddSessionModal({
             <StudentPlanCard studentPlanInfo={studentPlanInfo} />
 
             {/* Title */}
-            <div className="mb-6">
-              <label className="label">
-                <Video className="w-3.5 h-3.5" />
-                Session Title
-              </label>
+            {schedulingMode === 'single' && (
+              <div className="mb-6">
+                <label className="label">
+                  <Video className="w-3.5 h-3.5" />
+                  Session Title
+                </label>
 
-              <input
-                type="text"
-                {...register('title')}
-                placeholder="Session Title"
-                className="input"
-              />
+                <input
+                  type="text"
+                  {...register('title')}
+                  placeholder="Session Title"
+                  className="input"
+                />
 
-              {errors.title && (
-                <p className="error-text">
-                  {errors.title.message as string}
-                </p>
-              )}
-            </div>
+                {errors.title && (
+                  <p className="error-text">
+                    {errors.title.message as string}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Description */}
             <div className="mb-6">
@@ -515,6 +525,7 @@ export default function AddSessionModal({
               setValue={setValue}
               DAYS={DAYS}
               control={control}
+              errors={errors}
             />
 
             {/* Link + Video + Slides */}
@@ -572,16 +583,16 @@ export default function AddSessionModal({
 
                     <input
                       type="url"
-                      {...register('slidesUrl')}
+                      // {...register('slidesUrl')}
                       placeholder="Presentation URL..."
                       className="input"
                     />
 
-                    {errors.slidesUrl && (
+                    {/* {errors.slidesUrl && (
                       <p className="error-text">
                         {errors.slidesUrl.message as string}
                       </p>
-                    )}
+                    )} */}
                   </div>
                 </div>
               )}
