@@ -26,6 +26,7 @@ export const useJoinSession = () => {
         mutationFn: (id: string) => JoinSession(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["user-sessions"] })
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] })
         },
     })
 }
@@ -37,6 +38,7 @@ export const useEndSession = () => {
         onSuccess: () => {
             ErrorService.success("Session ended successfully")
             queryClient.invalidateQueries({ queryKey: ["user-sessions"] })
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] })
         },
     })
 }

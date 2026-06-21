@@ -176,7 +176,14 @@ export default function StudentDashboard() {
 
             <div className="flex flex-wrap gap-4 pt-6">
               <button
-                onClick={() => nextSession && joinSession(nextSession.id)}
+                onClick={async () => {
+                  if (nextSession) {
+                    joinSession(nextSession.id);
+                    if (nextSession.link) {
+                      window.open(nextSession.link, "_blank", "noopener,noreferrer");
+                    }
+                  }
+                }}
                 disabled={!isSessionReady || isJoining}
                 className={`px-8 py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${isSessionReady
                   ? "bg-white text-blue-600 hover:bg-blue-50 hover:-translate-y-1"
