@@ -143,6 +143,7 @@ export interface Schedule {
     language?: string;
     videoUrl?: string;
     slidesUrl?: string;
+    notification_Time?: string;
     student: Student;
     teacher: Teacher;
     subject?: ScheduleSubject;

@@ -75,35 +75,32 @@ export default function Plans() {
 
   const handleSavePlan = async (planData: PlanFormData & { id?: string }) => {
     try {
+      const payload: any = {
+        name: planData.name,
+        price: Number(planData.price),
+        duration: Number(planData.duration),
+        sessionsCount: Number(planData.sessionsCount),
+        active: planData.status === "active",
+        currencyId: planData.currencyId,
+        type: planData.type,
+      };
+
+      if (planData.description && planData.description.trim() !== "") {
+        payload.description = planData.description;
+      }
+
+      const validFeatures = planData.features?.filter(f => f.trim() !== "") || [];
+      if (validFeatures.length > 0) {
+        payload.features = validFeatures;
+      }
+
       if (planData.id) {
         await updatePlanMutation({
           id: planData.id,
-          data: {
-            name: planData.name,
-            description: planData.description,
-            price: Number(planData.price),
-            duration: Number(planData.duration),
-            sessionsCount: Number(planData.sessionsCount),
-            active: planData.status === "active",
-            currencyId: planData.currencyId,
-            features: planData.features,
-            type: planData.type,
-
-          }
+          data: payload,
         });
       } else {
-        await createPlanMutation({
-          name: planData.name,
-          description: planData.description,
-          price: Number(planData.price),
-          duration: Number(planData.duration),
-          sessionsCount: Number(planData.sessionsCount),
-          active: planData.status === "active",
-          currencyId: planData.currencyId,
-          features: planData.features,
-            type: planData.type,
-
-        });
+        await createPlanMutation(payload);
       }
       setSelectedPlan(null);
       return true;

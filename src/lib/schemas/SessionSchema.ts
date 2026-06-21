@@ -8,7 +8,7 @@ const getBaseSession = (t: TFunc) => z.object({
   studentId: z.string().min(1, t("validation.required")),
   teacherId: z.string().min(1, t("validation.required")),
   courseId: z.string().min(1, t("validation.required")),
-  description: z.string().min(10, t("validation.required")),
+  description: z.string().optional(),
   notification_Time: z.string().optional(),
   link: z.string().url("Invalid Url"),
   notes: z.string().min(10, t("validation.required")),

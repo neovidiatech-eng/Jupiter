@@ -30,11 +30,15 @@ export interface Teacher {
         id: string;
         email: string;
         name: string;
-        username:string;
+        username?: string;
         phone: string;
         code_country: string;
         status: string;
-        confirmAt: string | null;
+        gender?: string;
+        age?: number | null;
+        password?: string;
+        createdAt?: string;
+        confirmAt?: string | null;
     };
     teacherSubjects: TeacherSubject[];
 }

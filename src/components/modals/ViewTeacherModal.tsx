@@ -4,6 +4,7 @@ import { useSessions } from '../../contexts/SessionsContext';
 import { Teacher } from '../../types/teachers';
 import { useCurrency } from '../../features/admin/hooks/useCurrency';
 import { Currency } from '../../types/currency';
+import { useTeacherById } from '../../features/admin/hooks/useTeacher';
 
 interface ViewTeacherModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
   const { language, t } = useLanguage();
   const { sessions } = useSessions();
   const { data: currenciesData } = useCurrency();
+  const { data: teacherDetails } = useTeacherById(teacher?.id || '');
 
   if (!isOpen || !teacher) return null;
 
@@ -115,7 +117,7 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
                 <Users className="w-5 h-5 text-fuchsia-600" />
               </div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Age</p>
-              <p className="text-sm font-bold text-slate-900">{teacher.age || 'N/A'} Years</p>
+              <p className="text-sm font-bold text-slate-900">{teacher.user.age || 'N/A'} Years</p>
             </div>
           </div>
 
@@ -128,10 +130,8 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'Students', value: uniqueStudents.length, icon: Users, color: 'indigo' },
-                  { label: 'Today', value: todaySessions.length, icon: Clock, color: 'emerald' },
-                  { label: 'Completed', value: completedSessions.length, icon: CheckCircle, color: 'blue' },
-                  { label: 'Upcoming', value: upcomingSessions.length, icon: Calendar, color: 'fuchsia' },
+                  { label: 'Total Students', value: teacherDetails?.teacherStudents ?? 0, icon: Users, color: 'indigo' },
+                  { label: 'Total Sessions', value: teacherDetails?.sessionCount ?? 0, icon: Calendar, color: 'emerald' },
                 ].map((stat, i) => (
                   <div key={i} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-5">
                     <div className={`p-4 bg-${stat.color}-50 rounded-2xl`}>
