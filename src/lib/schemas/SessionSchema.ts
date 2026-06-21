@@ -11,7 +11,7 @@ const getBaseSession = (t: TFunc) => z.object({
   description: z.string().optional(),
   notification_Time: z.string().optional(),
   link: z.string().url("Invalid Url"),
-  notes: z.string().min(10, t("validation.required")),
+  notes: z.string().optional(),
   language: z.string().min(1, t("validation.required")),
 });
 
