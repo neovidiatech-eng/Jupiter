@@ -3,6 +3,7 @@ import { Video, LogOut } from "lucide-react";
 import { useJoinSession, useEndSession, useUserSessions } from "../../hooks/useSessions";
 import { Schedule } from "../../types/scheduales";
 import { useLanguage } from "../../contexts/LanguageContext";
+import FeedbackModal from "../../features/teacher/components/FeedbackModal";
 
 interface CountdownState {
   days: number;
@@ -25,6 +26,9 @@ export default function MiniHeaderTimer() {
   });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [leftSessionId, setLeftSessionId] = useState<string | null>(null);
+  const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
+  const [feedbackSessionTitle, setFeedbackSessionTitle] = useState<string>("");
+  const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
 
   // Get nearest upcoming session
   const nextSession = useMemo<Schedule | null>(() => {
@@ -101,6 +105,14 @@ export default function MiniHeaderTimer() {
     return now >= (startTime - JOIN_THRESHOLD_MS) && now < endTime;
   }, [nextSession, timeLeft]);
 
+  const canLeaveSession = useMemo(() => {
+    if (!nextSession) return false;
+    const now = new Date().getTime();
+    const startTime = new Date(nextSession.start_time).getTime();
+    const MINIMUM_STAY_MS = 10 * 60 * 1000; // 15 minutes
+    return now >= (startTime + MINIMUM_STAY_MS);
+  }, [nextSession, timeLeft]);
+
   const handleJoinSession = async () => {
     if (!nextSession?.id) return;
     try {
@@ -116,9 +128,13 @@ export default function MiniHeaderTimer() {
   const handleLeaveSession = async () => {
     if (!nextSession?.id) return;
     const sessionId = nextSession.id;
+    const sessionTitle = nextSession.title || "";
     try {
       await endSession(sessionId);
       setLeftSessionId(sessionId); // hide this session immediately after leaving
+      setFeedbackSessionId(sessionId);
+      setFeedbackSessionTitle(sessionTitle);
+      setIsFeedbackModalVisible(true);
     } catch (error) {
       // Error is handled by global interceptor
     }
@@ -169,8 +185,8 @@ export default function MiniHeaderTimer() {
         </div>
       </div>
 
-      {/* Action Button: Leave when ongoing, Join otherwise */}
-      {isSessionOngoing ? (
+      {/* Action Button: Leave when ongoing and 15 mins passed, Join otherwise */}
+      {isSessionOngoing && canLeaveSession ? (
         <button
           onClick={handleLeaveSession}
           disabled={isLeaving}
@@ -197,9 +213,21 @@ export default function MiniHeaderTimer() {
           <span>
             {isJoining
               ? (language === "ar" ? "جاري الانضمام..." : "Joining...")
-              : (language === "ar" ? "انضم للحصة" : "Join Session")}
+              : (isSessionOngoing && !canLeaveSession 
+                  ? (language === "ar" ? "انضم للحصة" : "Join Session")
+                  : (language === "ar" ? "انضم للحصة" : "Join Session")
+                )}
           </span>
         </button>
+      )}
+
+      {isFeedbackModalVisible && feedbackSessionId && (
+        <FeedbackModal
+          visible={isFeedbackModalVisible}
+          onClose={() => setIsFeedbackModalVisible(false)}
+          sessionId={feedbackSessionId}
+          sessionTitle={feedbackSessionTitle}
+        />
       )}
     </div>
   );

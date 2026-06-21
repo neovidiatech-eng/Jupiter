@@ -136,7 +136,7 @@ export default function Dashboard() {
       {/* Header Area */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Good Morning, Sarah</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Good Morning, Admin</h1>
           <p className="text-sm text-gray-500">Here's what's happening in the club kit today.</p>
         </div>
 
