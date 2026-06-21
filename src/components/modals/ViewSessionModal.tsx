@@ -1,4 +1,4 @@
-import { X, Calendar, Clock, User, GraduationCap, Video, FileText, Bell, ExternalLink, Repeat, BookOpen } from 'lucide-react';
+import { X, Calendar, Clock, User, GraduationCap, Video, FileText, Bell, ExternalLink, Repeat } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Schedule } from '../../types/scheduales';
 
@@ -84,7 +84,7 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900 leading-tight">{t('sessionDetails')}</h2>
-              <p className="text-[13px] font-semibold text-gray-400 mt-0.5">{session.title}</p>
+              <p className="text-[13px] font-semibold text-gray-400 mt-0.5 break-words whitespace-pre-wrap line-clamp-3">{session.title}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -172,15 +172,17 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
             </div>
 
             {/* Notification */}
-            <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
-              <div className="p-2 bg-rose-50 rounded-lg text-rose-400">
-                <Bell className="w-4 h-4" />
+            {session.notification_Time && (
+              <div className="flex items-center gap-3 bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
+                <div className="p-2 bg-rose-50 rounded-lg text-rose-400">
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('notificationTime')}</p>
+                  <p className="text-sm font-bold text-gray-800">{session.notification_Time} {t('minutes')}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('notificationTime')}</p>
-                <p className="text-sm font-bold text-gray-800">10 {t('minutes')}</p>
-              </div>
-            </div>
+            )}
 
             {/* Meeting Link */}
             {session.link && (
@@ -208,7 +210,7 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
                   <FileText className="w-3.5 h-3.5 text-gray-400" />
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('notes')}</p>
                 </div>
-                <p className="text-sm font-medium text-gray-700 leading-relaxed">{session.notes}</p>
+                <p className="text-sm font-medium text-gray-700 leading-relaxed break-words whitespace-pre-wrap overflow-hidden">{session.notes}</p>
               </div>
             )}
 

@@ -98,7 +98,7 @@ export default function StudentDashboard() {
     };
   }, [timeLeft]);
 
-  const JOIN_THRESHOLD_SECONDS = 2 * 60;
+  const JOIN_THRESHOLD_SECONDS = 5 * 60;
 
   const isSessionOngoing = useMemo(() => {
     if (!nextSession) return false;

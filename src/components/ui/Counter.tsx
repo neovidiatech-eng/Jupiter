@@ -97,7 +97,7 @@ export default function MiniHeaderTimer() {
     const now = new Date().getTime();
     const startTime = new Date(nextSession.start_time).getTime();
     const endTime = new Date(nextSession.end_time).getTime();
-    const JOIN_THRESHOLD_MS = 2 * 60 * 1000;
+    const JOIN_THRESHOLD_MS = 5 * 60 * 1000;
     return now >= (startTime - JOIN_THRESHOLD_MS) && now < endTime;
   }, [nextSession, timeLeft]);
 

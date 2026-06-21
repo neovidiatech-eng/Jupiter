@@ -75,12 +75,11 @@ export default function Sessions() {
     try {
       if ('studentId' in data) {
         // Single Session
-        await createSchedule.mutateAsync({
+        const singlePayload: any = {
           studentId: data.studentId,
           teacherId: data.teacherId,
           courseId: data.courseId,
           title: data.title,
-          description: data.description || '',
           link: data.link || '',
           notes: data.notes || '',
           start_time: new Date(`${data.sessionDate}T${data.startTime}`).toISOString(),
@@ -89,32 +88,23 @@ export default function Sessions() {
           platform: data.platform,
           language: data.language,
           videoUrl: data.videoUrl,
-        });
+        };
 
-        console.log("CREATE PAYLOAD", {
-          studentId: data.studentId,
-          teacherId: data.teacherId,
-          courseId: data.courseId,
-          title: data.title,
-          description: data.description,
-          link: data.link,
-          notes: data.notes,
-          start_time: new Date(`${data.sessionDate}T${data.startTime}`).toISOString(),
-          type: data.type,
-          notification_Time: data.notification_Time,
-          platform: data.platform,
-          language: data.language,
-          videoUrl: data.videoUrl,
-          slidesUrl: data.slidesUrl,
-        });
+        // Only include description if it has a value
+        if (data.description) {
+          singlePayload.description = data.description;
+        }
+
+        await createSchedule.mutateAsync(singlePayload);
+
+        console.log("CREATE PAYLOAD", singlePayload);
       } else {
         // Batch Session
         const { formData } = data;
-        await createRecurringSchedule.mutateAsync({
+        const batchPayload: any = {
           studentId: formData.studentId,
           teacherId: formData.teacherId,
           courseId: formData.courseId,
-          description: formData.description || '',
           link: formData.link || '',
           notes: formData.notes || '',
           startTime: formData.startTime || '00:00',
@@ -123,10 +113,14 @@ export default function Sessions() {
           endDate: formData.batchEndDate,
           notification_Time: formData.notification_Time || '10',
           language: formData.language,
+        };
 
-        });
+        // Only include description if it has a value
+        if (formData.description) {
+          batchPayload.description = formData.description;
+        }
 
-
+        await createRecurringSchedule.mutateAsync(batchPayload);
       }
       return true;
     } catch (error) {

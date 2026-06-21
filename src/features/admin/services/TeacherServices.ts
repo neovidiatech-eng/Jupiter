@@ -11,7 +11,7 @@ export const searchTeacher = async (search: string): Promise<TeachersData> => {
     return response.data.data
 }
 
-export const getTeacherById = async (id: string): Promise<Teacher> => {
+export const getTeacherById = async (id: string): Promise<any> => {
     const response = await api.get(`/teachers/${id}`);
     return response.data.data
 }

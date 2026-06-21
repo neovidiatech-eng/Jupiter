@@ -519,6 +519,30 @@ export default function AddSessionModal({
               </div>
             </div>
 
+            {/* Notification Time */}
+            <div className="mb-6">
+              <label className="label">
+                <AlertCircle className="w-3.5 h-3.5" />
+                Notification Time
+              </label>
+
+              <Controller
+                name="notification_Time"
+                control={control}
+                render={({ field }) => (
+                  <CustomSelect
+                    options={[
+                      { value: '10', label: '10 Minutes before' },
+                      { value: '30', label: '30 Minutes before' },
+                      { value: '60', label: '60 Minutes before' },
+                    ]}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+
             <SchedulingSettings
               schedulingMode={schedulingMode}
               setSchedulingMode={setSchedulingMode}
