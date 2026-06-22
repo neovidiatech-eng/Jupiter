@@ -1,4 +1,4 @@
-import { X, Phone, Mail, GraduationCap, DollarSign, Calendar, CheckCircle, Clock, Users } from 'lucide-react';
+import { X, Phone, Mail, GraduationCap, DollarSign, Calendar, Users, BookPlus, Videotape } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useSessions } from '../../contexts/SessionsContext';
 import { Teacher } from '../../types/teachers';
@@ -22,10 +22,8 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
 
   const teacherSessions = sessions.filter(s => s.teacherName === teacher.user?.name);
   const today = new Date().toISOString().split('T')[0];
-  const todaySessions = teacherSessions.filter(s => s.date === today);
   const upcomingSessions = teacherSessions.filter(s => s.date >= today);
   const completedSessions = teacherSessions.filter(s => s.date < today);
-  const uniqueStudents = [...new Set(teacherSessions.map(s => s.studentName))];
 
   const calcSessionHours = (session: { time: string; endTime: string }) => {
     const parseTime = (timeStr: string) => {
@@ -128,10 +126,12 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('statistics')}</h4>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 {[
                   { label: 'Total Students', value: teacherDetails?.teacherStudents ?? 0, icon: Users, color: 'indigo' },
-                  { label: 'Total Sessions', value: teacherDetails?.sessionCount ?? 0, icon: Calendar, color: 'emerald' },
+                  { label: 'Total Sessions', value: teacherDetails?.totalsessions ?? 0, icon: Videotape, color: 'red' },
+                  { label: 'Completed Sessions', value: teacherDetails?.sessionCount ?? 0, icon: Calendar, color: 'emerald' },
+
                 ].map((stat, i) => (
                   <div key={i} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-5">
                     <div className={`p-4 bg-${stat.color}-50 rounded-2xl`}>

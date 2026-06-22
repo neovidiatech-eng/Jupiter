@@ -227,6 +227,7 @@ export default function Teachers() {
                     <th className="px-8 py-5 text-start text-xs font-black uppercase tracking-widest text-gray-400">Teacher</th>
                     <th className="px-8 py-5 text-start text-xs font-black uppercase tracking-widest text-gray-400">Email</th>
                     <th className="px-8 py-5 text-start text-xs font-black uppercase tracking-widest text-gray-400">  User Name</th>
+                    <th className="px-8 py-5 text-start text-xs font-black uppercase tracking-widest text-gray-400">  Password</th>
                     <th className="px-8 py-5 text-start text-xs font-black uppercase tracking-widest text-gray-400">Phone</th>
                     <th className="px-8 py-5 text-start text-xs font-black uppercase tracking-widest text-gray-400">Price</th>
                     <th className="px-8 py-5 text-start text-xs font-black uppercase tracking-widest text-gray-400">Status</th>
@@ -252,6 +253,9 @@ export default function Teachers() {
                       </td>
                       <td className="px-8 py-5">
                         <span className="text-sm font-bold text-gray-500">{teacher.user?.username}</span>
+                      </td>
+                                            <td className="px-8 py-5">
+                        <span className="text-sm font-bold text-gray-500">{teacher.user?.password}</span>
                       </td>
                       <td className="px-8 py-5">
                          <WhatsAppPhone

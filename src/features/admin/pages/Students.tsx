@@ -1,5 +1,5 @@
 import { useState, lazy, useMemo, useEffect } from 'react';
-import { Search, Eye, Pencil, Trash2, Plus, Users, UserCheck, UserX, ClipboardList, ChevronDown, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, EyeOff, Pencil, Trash2, Plus, Users, UserCheck, UserX, ClipboardList, ChevronDown, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 import { useTranslation } from 'react-i18next';
 import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } from '../hooks/useStudents';
@@ -12,6 +12,11 @@ import { Table, Dropdown } from 'antd';
 const AddStudentModal = lazy(() => import('../../../components/modals/AddStudentModal'));
 const ViewStudentModal = lazy(() => import('../../../components/modals/ViewStudentModal'));
 const EditStudentModal = lazy(() => import('../../../components/modals/EditStudentModal'));
+
+const PasswordCell = ({ password }: { password?: string }) => {
+  if (!password) return <span className="text-gray-400">---</span>;
+  return <span className="font-mono text-sm text-gray-700">{password}</span>;
+};
 
 
 
@@ -169,6 +174,12 @@ export default function Students() {
             <div className="text-sm font-medium text-gray-900">{record.user.username}</div>
           </div>
         </div>
+      ),
+    },
+    {
+      title: t('password'),
+      render: (_: any, record: Student) => (
+        <PasswordCell password={record.user.password} />
       ),
     },
     {

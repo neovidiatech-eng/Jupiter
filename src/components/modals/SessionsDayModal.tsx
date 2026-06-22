@@ -54,7 +54,7 @@ export default function SessionsDayModal({
                   {new Date(s.end_time).toLocaleTimeString()}
                 </div>
 
-                {s.link && (
+                {s.link && s.status?.toLowerCase() !== 'completed' && (
                   <a
                     href={s.link}
                     target="_blank"
