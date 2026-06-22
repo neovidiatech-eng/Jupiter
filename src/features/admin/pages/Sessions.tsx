@@ -428,7 +428,7 @@ export default function Sessions() {
         const isCompleted = record.status?.toLowerCase() === "completed";
         return (
           <div className="flex items-center gap-1.5">
-            {record.link ? (
+            {record.link && !isCompleted ? (
               <a
                 href={record.link}
                 target="_blank"
@@ -444,7 +444,7 @@ export default function Sessions() {
               </a>
             ) : (
               <span className="text-sm font-bold text-gray-400">
-                {isCompleted ? "Session Archive" : "Link Pending"}
+                {isCompleted ? "Session Completed" : "Link Pending"}
               </span>
             )}
           </div>
@@ -467,12 +467,12 @@ export default function Sessions() {
               const recurringId = record.parent_recurring_id;
               const relatedSessions = recurringId
                 ? scheduleData
-                    .filter((s) => s.parent_recurring_id === recurringId)
-                    .sort(
-                      (a, b) =>
-                        new Date(a.start_time).getTime() -
-                        new Date(b.start_time).getTime(),
-                    )
+                  .filter((s) => s.parent_recurring_id === recurringId)
+                  .sort(
+                    (a, b) =>
+                      new Date(a.start_time).getTime() -
+                      new Date(b.start_time).getTime(),
+                  )
                 : [record];
 
               setGroupedSessions(relatedSessions);
@@ -607,11 +607,10 @@ export default function Sessions() {
               <button
                 key={i}
                 onClick={() => handlePageChange(i + 1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                  currentPage === i + 1
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${currentPage === i + 1
                     ? "bg-[#6366f1] text-white shadow-sm"
                     : "text-gray-500 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 {i + 1}
               </button>

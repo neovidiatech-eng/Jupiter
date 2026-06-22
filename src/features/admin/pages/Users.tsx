@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Eye, Pencil, Trash2, Plus } from 'lucide-react';
+import { Search, Eye, EyeOff, Pencil, Trash2, Plus } from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 import AddUserModal from '../../../components/modals/AddUserModal';
 import EditUserModal from '../../../components/modals/EditUserModal';
@@ -12,6 +12,11 @@ import { UserFormData } from '../../../lib/schemas/UserSchema';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { TableSkeleton } from '../../../components/ui/CustomSkeleton';
 
+const PasswordCell = ({ password }: { password?: string }) => {
+  if (!password) return <span className="text-gray-400">---</span>;
+  return <span className="font-mono text-sm text-gray-700">{password}</span>;
+};
+
 /** Map a StuffItem from the API to the flat shape the modals & table need */
 const toModalUser = (item: StuffItem) => ({
   id: item.id,
@@ -22,6 +27,7 @@ const toModalUser = (item: StuffItem) => ({
   role: item.role?.name || '',
   status: (item.user.status as 'active' | 'inactive') || 'active',
   permissions: [] as string[],
+  password: item.user.password || '',
 });
 
 type ModalUser = ReturnType<typeof toModalUser>;
@@ -162,7 +168,7 @@ export default function Users() {
       {/* Table Section */}
       <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
         {isLoading ? (
-          <TableSkeleton rows={itemsPerPage} columns={6} />
+          <TableSkeleton rows={itemsPerPage} columns={7} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
@@ -170,6 +176,7 @@ export default function Users() {
                 <tr className="bg-gray-50/50 border-b border-gray-100">
                   <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('name')}</th>
                   <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('email')}</th>
+                  <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('password')}</th>
                   <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('phone')}</th>
                   <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('role')}</th>
                   <th className="px-8 py-5 text-start text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('status')}</th>
@@ -179,7 +186,7 @@ export default function Users() {
               <tbody className="divide-y divide-gray-50">
                 {isError ? (
                   <tr>
-                    <td colSpan={6} className="px-8 py-20 text-center">
+                    <td colSpan={7} className="px-8 py-20 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <span className="text-red-500 font-bold">{t('errorLoadingData')}</span>
                       </div>
@@ -187,7 +194,7 @@ export default function Users() {
                   </tr>
                 ) : currentUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-8 py-20 text-center">
+                    <td colSpan={7} className="px-8 py-20 text-center">
                       <div className="flex flex-col items-center gap-3 text-gray-400">
                         <Search className="w-12 h-12 opacity-20" />
                         <span className="font-medium">{t('noData')}</span>
@@ -212,6 +219,9 @@ export default function Users() {
                       </td>
                       <td className="px-8 py-5">
                         <span className="text-sm text-gray-600 font-medium">{user.email}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <PasswordCell password={user.password} />
                       </td>
                       <td className="px-8 py-5">
                         <WhatsAppPhone

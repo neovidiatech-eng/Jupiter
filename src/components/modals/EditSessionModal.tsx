@@ -78,9 +78,9 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
+    <div className="fixed inset-0 !mt-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
       <div className="bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-[1000px] max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
-        
+
         {/* Header */}
         <div className="px-8 py-5 border-b border-gray-100 flex items-start justify-between bg-white shrink-0">
           <div className="flex items-center gap-4">
@@ -99,10 +99,10 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row overflow-hidden flex-1">
-          
+
           {/* Left Column - Editable Fields */}
           <div className="w-full lg:w-[58%] p-6 md:p-8 bg-white overflow-y-auto custom-scrollbar">
-            
+
             {/* Read-only info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <div className="flex items-start gap-3 bg-gray-50 rounded-2xl p-4 border border-gray-100">
@@ -251,7 +251,7 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
                 <h3 className="font-bold text-gray-900 text-sm">{language === 'ar' ? 'معاينة التعديلات' : 'Edit Preview'}</h3>
               </div>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
               {/* Preview Card */}
               <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
@@ -260,18 +260,17 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
                     {formData.title?.charAt(0)?.toUpperCase() || 'S'}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-gray-900">{formData.title || t('sessionTitleLabel')}</h4>
+                    <h4 className="text-sm font-bold text-gray-900 break-words">{formData.title || t('sessionTitleLabel')}</h4>
                     <p className="text-[10px] font-bold text-gray-400">{session.student?.user?.name}</p>
                   </div>
                 </div>
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('status')}</span>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-widest ${
-                      formData.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                      formData.status === 'cancelled' ? 'bg-red-50 text-red-600 border-red-100' :
-                      'bg-blue-50 text-blue-600 border-blue-100'
-                    }`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold border uppercase tracking-widest ${formData.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                        formData.status === 'cancelled' ? 'bg-red-50 text-red-600 border-red-100' :
+                          'bg-blue-50 text-blue-600 border-blue-100'
+                      }`}>
                       {t(formData.status)}
                     </span>
                   </div>
@@ -308,17 +307,17 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
 
               {/* Description Preview */}
               {formData.description && (
-                <div className="bg-white border border-gray-100 rounded-2xl p-4">
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 break-words">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t('description')}</p>
-                  <p className="text-xs font-medium text-gray-700 leading-relaxed">{formData.description}</p>
+                  <p className="text-xs font-medium text-gray-700 leading-relaxed break-words whitespace-pre-wrap">{formData.description}</p>
                 </div>
               )}
 
               {/* Notes Preview */}
               {formData.notes && (
-                <div className="bg-amber-50/50 border border-amber-100/50 rounded-2xl p-4">
+                <div className="bg-amber-50/50 border border-amber-100/50 rounded-2xl p-4 break-words">
                   <p className="text-[10px] font-bold text-amber-600/60 uppercase tracking-wider mb-1">{t('notes')}</p>
-                  <p className="text-xs font-medium text-amber-900/70 leading-relaxed">{formData.notes}</p>
+                  <p className="text-xs font-medium text-amber-900/70 leading-relaxed break-words whitespace-pre-wrap">{formData.notes}</p>
                 </div>
               )}
             </div>
@@ -334,7 +333,7 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
           >
             {t('cancel')}
           </button>
-          <button 
+          <button
             type="submit"
             onClick={handleSubmit}
             className="flex-1 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-2xl transition-all shadow-[0_10px_20px_-5px_rgba(79,70,229,0.3)] active:scale-95"
@@ -343,7 +342,8 @@ export default function EditSessionModal({ isOpen, onClose, session, onSave }: E
           </button>
         </div>
       </div>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }
