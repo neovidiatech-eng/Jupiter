@@ -22,22 +22,22 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
 
   const teacherSessions = sessions.filter(s => s.teacherName === teacher.user?.name);
   const today = new Date().toISOString().split('T')[0];
-  const upcomingSessions = teacherSessions.filter(s => s.date >= today);
-  const completedSessions = teacherSessions.filter(s => s.date < today);
+  // const upcomingSessions = teacherSessions.filter(s => s.date >= today);
+  // const completedSessions = teacherSessions.filter(s => s.date < today);
 
-  const calcSessionHours = (session: { time: string; endTime: string }) => {
-    const parseTime = (timeStr: string) => {
-      const m = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-      if (!m) return 0;
-      let h = parseInt(m[1]);
-      const min = parseInt(m[2]);
-      const p = m[3].toUpperCase();
-      if (p === 'PM' && h !== 12) h += 12;
-      if (p === 'AM' && h === 12) h = 0;
-      return h + min / 60;
-    };
-    return Math.max(0, parseTime(session.endTime) - parseTime(session.time));
-  };
+  // const calcSessionHours = (session: { time: string; endTime: string }) => {
+  //   const parseTime = (timeStr: string) => {
+  //     const m = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  //     if (!m) return 0;
+  //     let h = parseInt(m[1]);
+  //     const min = parseInt(m[2]);
+  //     const p = m[3].toUpperCase();
+  //     if (p === 'PM' && h !== 12) h += 12;
+  //     if (p === 'AM' && h === 12) h = 0;
+  //     return h + min / 60;
+  //   };
+  //   return Math.max(0, parseTime(session.endTime) - parseTime(session.time));
+  // };
 
 
 

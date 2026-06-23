@@ -26,6 +26,12 @@ export const getSubscriptionRequests = async () => {
   return data.subscriptionRequests;
 };
 
+// get ALL subscriptions (GET /subscription/)
+export const getAllSubscriptions = async () => {
+  const response = await api.get("/subscription/");
+  return response.data.data as any[];
+};
+
 // delete
 export const deleteSubscriptionRequest = async (id: string) => {
   try {
@@ -35,6 +41,15 @@ export const deleteSubscriptionRequest = async (id: string) => {
     console.error("Delete subscription failed:", error);
     throw error;
   }
+};
+
+// renew subscription
+export const renewSubscription = async (
+  studentId: string,
+  body: { planId: string; rankId: string; courseId: string }
+) => {
+  const res = await api.post(`/subscription/${studentId}/renew`, body);
+  return res.data;
 };
 
 // change status
