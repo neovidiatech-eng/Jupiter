@@ -1,4 +1,4 @@
-import { X, Phone, Mail, GraduationCap, DollarSign, Calendar, Users, BookPlus, Videotape } from 'lucide-react';
+import { X, Phone, Mail, GraduationCap, DollarSign, Calendar, Users, Videotape } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useSessions } from '../../contexts/SessionsContext';
 import { Teacher } from '../../types/teachers';
@@ -22,31 +22,26 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
 
   const teacherSessions = sessions.filter(s => s.teacherName === teacher.user?.name);
   const today = new Date().toISOString().split('T')[0];
-  const upcomingSessions = teacherSessions.filter(s => s.date >= today);
-  const completedSessions = teacherSessions.filter(s => s.date < today);
+  // const upcomingSessions = teacherSessions.filter(s => s.date >= today);
+  // const completedSessions = teacherSessions.filter(s => s.date < today);
 
-  const calcSessionHours = (session: { time: string; endTime: string }) => {
-    const parseTime = (timeStr: string) => {
-      const m = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-      if (!m) return 0;
-      let h = parseInt(m[1]);
-      const min = parseInt(m[2]);
-      const p = m[3].toUpperCase();
-      if (p === 'PM' && h !== 12) h += 12;
-      if (p === 'AM' && h === 12) h = 0;
-      return h + min / 60;
-    };
-    return Math.max(0, parseTime(session.endTime) - parseTime(session.time));
-  };
+  // const calcSessionHours = (session: { time: string; endTime: string }) => {
+  //   const parseTime = (timeStr: string) => {
+  //     const m = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  //     if (!m) return 0;
+  //     let h = parseInt(m[1]);
+  //     const min = parseInt(m[2]);
+  //     const p = m[3].toUpperCase();
+  //     if (p === 'PM' && h !== 12) h += 12;
+  //     if (p === 'AM' && h === 12) h = 0;
+  //     return h + min / 60;
+  //   };
+  //   return Math.max(0, parseTime(session.endTime) - parseTime(session.time));
+  // };
 
-  const totalHours = teacherSessions.reduce((sum, s) => sum + calcSessionHours(s), 0);
-  const completedHours = completedSessions.reduce((sum, s) => sum + calcSessionHours(s), 0);
-  const pendingHours = upcomingSessions.reduce((sum, s) => sum + calcSessionHours(s), 0);
+
 
   const hourPrice = teacher.hour_price || 0;
-  const totalEarnings = completedHours * hourPrice;
-  const pendingEarnings = pendingHours * hourPrice;
-  const totalOwed = totalHours * hourPrice;
 
   const currencies = currenciesData?.currencies || [];
   const teacherCurrency = currencies.find(
@@ -120,13 +115,13 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
           </div>
 
           {/* Stats & Earnings Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 gap-10">
             {/* Statistics */}
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('statistics')}</h4>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {[
                   { label: 'Total Students', value: teacherDetails?.teacherStudents ?? 0, icon: Users, color: 'indigo' },
                   { label: 'Total Sessions', value: teacherDetails?.totalsessions ?? 0, icon: Videotape, color: 'red' },
@@ -139,7 +134,7 @@ export default function ViewTeacherModal({ isOpen, onClose, teacher }: ViewTeach
                     </div>
                     <div>
                       <p className="text-2xl font-black text-slate-900 leading-none mb-1">{stat.value}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                      <p className="text-[10px] font-bold text-sl-ate-400 uppercase tracking-widest">{stat.label}</p>
                     </div>
                   </div>
                 ))}

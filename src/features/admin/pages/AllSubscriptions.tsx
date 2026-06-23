@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
-import { Search, Edit, Trash2, Eye, CreditCard, User, Package, Calendar, CheckCircle, Clock, TrendingUp } from "lucide-react";
+import { Search, Eye, CreditCard, User, Package, Calendar, CheckCircle, Clock, TrendingUp, RefreshCw } from "lucide-react";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import Pagination from "../../../components/ui/Pagination";
 import ViewSubscriptionDetailsModal from "../../../components/modals/ViewSubscriptionDetailsModal";
-import EditSubscriptionModal from "../../../components/modals/EditSubscriptionModal";
+import RenewSubscriptionModal from "../../../components/modals/RenewSubscriptionModal";
 import CustomSelect from "../../../components/ui/CustomSelect";
 import { TableSkeleton } from "../../../components/ui/CustomSkeleton";
-import {
-  deleteSubscriptionRequest,
-  getSubscriptionRequests,
-} from "../services/subscriptionRequestServices";
-import { useConfirm } from "../../../hooks/useConfirm";
+import { getAllSubscriptions } from "../services/subscriptionRequestServices";
 
 interface Subscription {
   id: string;
+  studentId: string;
   studentName: string;
   planName: string;
   planPrice: string;
@@ -32,12 +29,11 @@ export default function AllSubscriptions() {
     "all" | "active" | "expired" | "cancelled"
   >("all");
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showRenewModal, setShowRenewModal] = useState(false);
   const [selectedSubscription, setSelectedSubscription] =
     useState<Subscription | null>(null);
+  const [renewTarget, setRenewTarget] = useState<{ studentId: string; studentName: string } | null>(null);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const { confirm, ConfirmDialog } = useConfirm();
   const [isLoading, setIsLoading] = useState(false);
 
   const itemsPerPage = 10;
@@ -64,52 +60,37 @@ export default function AllSubscriptions() {
     status: { ar: "الحالة", en: "Status" },
     progress: { ar: "التقدم", en: "Progress" },
     actions: { ar: "الإجراءات", en: "Actions" },
-    edit: { ar: "تعديل", en: "Edit" },
-    delete: { ar: "حذف", en: "Delete" },
     view: { ar: "عرض", en: "View" },
     noSubscriptions: { ar: "لا توجد اشتراكات", en: "No subscriptions found" },
     showing: { ar: "عرض", en: "Showing" },
     of: { ar: "من", en: "of" },
     subscriptions: { ar: "اشتراك", en: "subscriptions" },
     sessions: { ar: "حصة", en: "sessions" },
-    confirmDelete: {
-      ar: "هل أنت متأكد من حذف هذا الاشتراك؟",
-      en: "Are you sure you want to delete this subscription?",
-    },
   };
 
   const mapSubscriptionToUI = (item: any): Subscription => {
+    const currencySymbol = item.currency?.symbol || item.currency?.code || "";
+    const amount = item.amount ?? item.plan?.price ?? 0;
+    const status = item.status as "active" | "expired" | "cancelled";
     return {
       id: item.id,
+      studentId: item.student?.id || "",
       studentName: item.user?.name || "—",
       planName: item.plan?.name || item.plan?.name_ar || item.plan?.name_en || "—",
-      planPrice: `${item.plan?.price || 0} $`,
-      startDate: item.createdAt?.split("T")[0] || "",
+      planPrice: `${amount} ${currencySymbol}`.trim(),
+      startDate: item.startDate?.split("T")[0] || item.paidAt?.split("T")[0] || "",
       endDate: "",
-      status: mapStatus(item.status),
-      sessionsRemaining: item.plan?.hours || 0,
-      totalSessions: item.plan?.hours || 0,
+      status: ["active", "expired", "cancelled"].includes(status) ? status : "expired",
+      sessionsRemaining: item.student?.sessions_remaining ?? item.plan?.sessionsCount ?? 0,
+      totalSessions: item.student?.sessions ?? item.plan?.sessionsCount ?? 0,
     };
-  };
-
-  const mapStatus = (status: string): "active" | "expired" | "cancelled" => {
-    switch (status) {
-      case "approved":
-        return "active";
-      case "pending":
-        return "active";
-      case "rejected":
-        return "cancelled";
-      default:
-        return "expired";
-    }
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getSubscriptionRequests();
+        const data = await getAllSubscriptions();
         const formatted = data.map((item: any) => mapSubscriptionToUI(item));
         setSubscriptions(formatted);
       } catch (err) {
@@ -159,7 +140,7 @@ export default function AllSubscriptions() {
       case "cancelled":
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-100">
-            <Trash2 size={12} />
+            <Clock size={12} />
             {text.cancelled[language]}
           </span>
         );
@@ -178,34 +159,9 @@ export default function AllSubscriptions() {
     setShowViewModal(true);
   };
 
-  const handleEdit = (subscription: Subscription) => {
-    setSelectedSubscription(subscription);
-    setShowEditModal(true);
-  };
-
-  const handleSave = (updatedSubscription: Subscription) => {
-    setSubscriptions((prev) =>
-      prev.map((sub) =>
-        sub.id === updatedSubscription.id ? updatedSubscription : sub,
-      ),
-    );
-    return true;
-  };
-
-  const handleDelete = async (id: string) => {
-    const confirmed = await confirm({
-      title: language === "ar" ? "حذف اشتراك" : "Delete Subscription",
-      message: text.confirmDelete[language],
-    });
-    if (!confirmed) return;
-
-    try {
-      setDeletingId(id);
-      await deleteSubscriptionRequest(id);
-      setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
-    } finally {
-      setDeletingId(null);
-    }
+  const handleRenew = (subscription: Subscription) => {
+    setRenewTarget({ studentId: subscription.studentId, studentName: subscription.studentName });
+    setShowRenewModal(true);
   };
 
   return (
@@ -342,21 +298,16 @@ export default function AllSubscriptions() {
                         >
                           <Eye size={18} />
                         </button>
-                        <button
-                          onClick={() => handleEdit(subscription)}
-                          className="p-2.5 bg-slate-100 text-slate-600 hover:bg-emerald-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95"
-                          title={text.edit[language]}
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          disabled={deletingId === subscription.id}
-                          onClick={() => handleDelete(subscription.id)}
-                          className="p-2.5 bg-slate-100 text-slate-600 hover:bg-red-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
-                          title={text.delete[language]}
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {subscription.sessionsRemaining === 0 && (
+                          <button
+                            onClick={() => handleRenew(subscription)}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl transition-all shadow-sm active:scale-95 text-xs font-bold whitespace-nowrap border border-amber-200 hover:border-amber-500"
+                            title="Renew Subscription"
+                          >
+                            <RefreshCw size={14} />
+                            {language === "ar" ? "تجديد" : "Renew"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -381,27 +332,35 @@ export default function AllSubscriptions() {
       </div>
 
       {selectedSubscription && (
-        <>
-          <ViewSubscriptionDetailsModal
-            isOpen={showViewModal}
-            onClose={() => {
-              setShowViewModal(false);
-              setSelectedSubscription(null);
-            }}
-            subscription={selectedSubscription}
-          />
-          <EditSubscriptionModal
-            isOpen={showEditModal}
-            onClose={() => {
-              setShowEditModal(false);
-              setSelectedSubscription(null);
-            }}
-            subscription={selectedSubscription}
-            onSave={handleSave}
-          />
-        </>
+        <ViewSubscriptionDetailsModal
+          isOpen={showViewModal}
+          onClose={() => {
+            setShowViewModal(false);
+            setSelectedSubscription(null);
+          }}
+          subscription={selectedSubscription}
+        />
       )}
-      {ConfirmDialog}
+
+      {renewTarget && (
+        <RenewSubscriptionModal
+          isOpen={showRenewModal}
+          onClose={() => {
+            setShowRenewModal(false);
+            setRenewTarget(null);
+          }}
+          studentId={renewTarget.studentId}
+          studentName={renewTarget.studentName}
+          onSuccess={() => {
+            // Refetch subscriptions after renewal
+            setIsLoading(true);
+            getAllSubscriptions()
+              .then((data) => setSubscriptions(data.map(mapSubscriptionToUI)))
+              .catch(console.error)
+              .finally(() => setIsLoading(false));
+          }}
+        />
+      )}
     </div>
   );
 }
