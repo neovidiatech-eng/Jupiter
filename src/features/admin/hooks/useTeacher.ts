@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createTeacher, deleteTeacher, getTeacher, getTeacherById, searchTeacher, updateTeacher } from "../services/TeacherServices"
+import { createTeacher, deleteTeacher, getTeacher, getTeacherById, updateTeacher } from "../services/TeacherServices"
 import { CreateTeacherInput, Teacher, TeachersData } from "../../../types/teachers"
 import ErrorService from "../../../utils/ErrorService"
 import { useTranslation } from "react-i18next"
 
-export const useTeacher = (search?: string) => {
+export const useTeacher = ({ search, page, limit }: { search?: string, page: number, limit: number }) => {
     return useQuery<TeachersData>({
         queryKey: ["teachers", search],
-        queryFn: () => search ? searchTeacher(search) : getTeacher(),
+        queryFn: () => getTeacher({ search, page, limit }),
     })
 }
 export const useTeacherById = (id: string) => {

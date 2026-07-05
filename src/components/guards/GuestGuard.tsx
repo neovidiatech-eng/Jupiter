@@ -8,7 +8,7 @@ const GuestGuard = () => {
     // If already logged in, redirect to the appropriate dashboard based on role
     if (role === 'teacher') return <Navigate to="/teacher-dashboard" replace />;
     if (role === 'student') return <Navigate to="/student-dashboard" replace />;
-    if (role === 'super_admin') return <Navigate to="/dashboard" replace />;
+    if (role === 'super_admin' || role === 'admin' || role === 'staff') return <Navigate to="/dashboard" replace />;
     
     // If token exists but no role is found, clear and stay at login
     localStorage.removeItem('token');
