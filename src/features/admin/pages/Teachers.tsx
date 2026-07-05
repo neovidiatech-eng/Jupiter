@@ -36,7 +36,7 @@ export default function Teachers() {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  const { data: teachersResponse, isLoading } = useTeacher(debouncedSearch);
+  const { data: teachersResponse, isLoading } = useTeacher({search: debouncedSearch, page: currentPage, limit: itemsPerPage});
   const { data: currenciesData } = useCurrency();
   const deleteTeacherMutation = useDeleteTeacher();
   const createTeacherMutation = useCreateTeacher();

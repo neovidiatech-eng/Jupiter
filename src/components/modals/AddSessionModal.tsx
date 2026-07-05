@@ -88,7 +88,7 @@ export default function AddSessionModal({
       return aggregated;
     },
   });
-  const { data: instructors } = useTeacher();
+  const { data: instructors } = useTeacher({search: "", page: 1, limit: 1000});
   const { data: coursesdata } = useCourses(1, 1000);
 
   const singleSchema = getSessionSchema(t);

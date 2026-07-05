@@ -29,10 +29,10 @@
     "passwordComplexity": "Password must contain at least 8 characters, one uppercase, one lowercase, one number and one special character"
   },
   "login": "Login",
-  "academyName": "Academy",
-  "academySubtitle": "Jupiter Educational",
+  "academyName": "Jupiter",
+  "academySubtitle": "Jupiter EG",
   "academyDescription": "Integrated educational platform for managing the educational process",
-  "footerText": "© 2024 Al-Nimr Educational Academy - All Rights Reserved",
+  "footerText": "© 2024 Jupiter EG - All Rights Reserved",
   "arabic": "Arabic",
   "english": "English",
   "registerNewStudent": "Register New Student",

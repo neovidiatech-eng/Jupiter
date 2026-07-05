@@ -122,7 +122,7 @@ function App() {
                       </Route>
 
                       {/* Protected Dashboard Routes */}
-                      <Route element={<AuthGuard allowedRoles={['admin', 'super_admin']} />}>
+                      <Route element={<AuthGuard allowedRoles={['admin', 'super_admin', 'staff']} />}>
                         <Route path="/dashboard/*" element={<AdminDashboard />} />
                       </Route>
 
@@ -145,7 +145,7 @@ function App() {
                         element={
                           isAuthenticated ? (
                             <Navigate to={
-                              localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' ? "/dashboard" :
+                              localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' || localStorage.getItem('role') === 'staff' ? "/dashboard" :
                                 localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
                                   "/student-dashboard"
                             } replace />
@@ -159,7 +159,7 @@ function App() {
                         element={
                           isAuthenticated ? (
                             <Navigate to={
-                              localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' ? "/dashboard" :
+                              localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' || localStorage.getItem('role') === 'staff' ? "/dashboard" :
                                 localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
                                   "/student-dashboard"
                             } replace />

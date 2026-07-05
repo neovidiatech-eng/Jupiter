@@ -60,7 +60,7 @@ export default function Sessions() {
   const deleteSchedule = useDeleteSchedule();
   const deleteGroupedSchedule = useDeleteGroupedSchedule();
   const { data: fullSessionData } = useGetScheduleById(viewingId || "");
-  const { data: instructors } = useTeacher();
+  const { data: instructors } = useTeacher({search: "", page: 1, limit: 1000});
 
   // Fetch today's availability
   const today = new Date().toISOString().split("T")[0];
