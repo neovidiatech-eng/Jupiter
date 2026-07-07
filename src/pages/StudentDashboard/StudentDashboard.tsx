@@ -23,10 +23,12 @@ import TeacherFeedback from "../../features/student/components/Feedback";
 import SubmitAssignmentModal from "../../components/modals/SubmitAssignmentModal";
 import { Assignment } from "../../types/assignment";
 import { useGetAssignments } from "../../features/student/hooks/useStudentsAssignment";
+import { useServerTime } from "../../hooks/useServerTime";
 
 export default function StudentDashboard() {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { getServerTime } = useServerTime();
 
   const { data: dashboardResponse, isLoading: isDashboardLoading, refetch } = useDashboardData();
   const dashboardData = dashboardResponse?.data;
@@ -60,7 +62,7 @@ export default function StudentDashboard() {
     const endTime = new Date(nextSession.end_time).getTime();
 
     const updateTimer = () => {
-      const now = new Date().getTime();
+      const now = getServerTime();
 
       if (now < startTime) {
         // Counting down to start
@@ -80,7 +82,7 @@ export default function StudentDashboard() {
     updateTimer();
     const timer = setInterval(updateTimer, 1000);
     return () => clearInterval(timer);
-  }, [nextSession, refetch]);
+  }, [nextSession, refetch, getServerTime]);
 
   const countdown = useMemo(() => {
     const totalSeconds = Math.floor(timeLeft / 1000);
@@ -102,19 +104,19 @@ export default function StudentDashboard() {
 
   const isSessionOngoing = useMemo(() => {
     if (!nextSession) return false;
-    const now = new Date().getTime();
+    const now = getServerTime();
     const startTime = new Date(nextSession.start_time).getTime();
     const endTime = new Date(nextSession.end_time).getTime();
     return now >= startTime && now < endTime;
-  }, [nextSession, timeLeft]);
+  }, [nextSession, timeLeft, getServerTime]);
 
   const isSessionReady = useMemo(() => {
     if (!nextSession) return false;
-    const now = new Date().getTime();
+    const now = getServerTime();
     const startTime = new Date(nextSession.start_time).getTime();
     const endTime = new Date(nextSession.end_time).getTime();
     return (now >= startTime - (JOIN_THRESHOLD_SECONDS * 1000)) && now < endTime;
-  }, [nextSession, timeLeft]);
+  }, [nextSession, timeLeft, getServerTime]);
 
   const renderStudentHome = () => (
     <div className="space-y-8 animate-in fade-in duration-700">

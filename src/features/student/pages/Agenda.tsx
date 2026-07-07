@@ -11,10 +11,20 @@ import { useStudentAgenda } from "../hooks/useStudentAgenda";
 import { AgendaSession } from "../../../types/Agenda";
 import SessionsDayModal from "../../../components/modals/SessionsDayModal";
 import { formatDateLocal, getLocalDateKey } from "../../../utils/dateUtils";
+import { useServerTime } from "../../../hooks/useServerTime";
 
 export default function Agenda() {
   const { t, language } = useLanguage();
+  const { getServerDate, timeOffset } = useServerTime();
   const [currentDate, setCurrentDate] = useState(new Date());
+  
+  // Update currentDate once we get the offset
+  useMemo(() => {
+    if (timeOffset !== 0) {
+      setCurrentDate(getServerDate());
+    }
+  }, [timeOffset]);
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const locale = language === "ar" ? "ar-EG" : "en-US";
@@ -92,11 +102,11 @@ export default function Agenda() {
   };
 
   const isToday = (date: Date) =>
-    date.toDateString() === new Date().toDateString();
+    date.toDateString() === getServerDate().toDateString();
 
   const days = getDaysInMonth(currentDate);
 
-  const todayKey = formatDateLocal(new Date());
+  const todayKey = formatDateLocal(getServerDate());
   const todaySessions = sessionsByDate[todayKey] || [];
 
   // 📌 Error

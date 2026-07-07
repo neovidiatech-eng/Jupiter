@@ -38,6 +38,7 @@ import {
 } from "../../../lib/schemas/SessionSchema";
 import { Table, Dropdown } from "antd";
 import { Link } from "react-router-dom";
+import { useServerTime } from "../../../hooks/useServerTime";
 
 type GroupedSchedule = Schedule & { groupCount?: number };
 
@@ -63,9 +64,10 @@ export default function Sessions() {
   const deleteGroupedSchedule = useDeleteGroupedSchedule();
   const { data: fullSessionData } = useGetScheduleById(viewingId || "");
   const { data: instructors } = useTeacher({search: "", page: 1, limit: 1000});
+  const { getServerDate } = useServerTime();
 
   // Fetch today's availability
-  const today = new Date().toISOString().split("T")[0];
+  const today = getServerDate().toISOString().split("T")[0];
   const { data: availabilityData } = useTeacherAvailability(today, today);
 
   const handleUpdateSession = async (
@@ -705,7 +707,7 @@ export default function Sessions() {
                 const availability = availabilityData?.find(
                   (a: any) => a.id === instructor.id,
                 );
-                const now = new Date();
+                const now = getServerDate();
                 const currentSchedule = availability?.schedules?.find(
                   (s: any) => {
                     const start = new Date(s.start_time);
