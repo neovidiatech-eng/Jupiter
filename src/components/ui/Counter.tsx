@@ -29,6 +29,23 @@ export default function MiniHeaderTimer() {
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
   const [feedbackSessionTitle, setFeedbackSessionTitle] = useState<string>("");
   const [isFeedbackModalVisible, setIsFeedbackModalVisible] = useState(false);
+  const [timeOffset, setTimeOffset] = useState<number>(0);
+
+  useEffect(() => {
+    const loadTime = async () => {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const res = await fetch(`https://worldtimeapi.org/api/timezone/${tz}`);
+        const apiData = await res.json();
+        const serverTime = new Date(apiData.datetime).getTime();
+        const localTime = new Date().getTime();
+        setTimeOffset(serverTime - localTime);
+      } catch (error) {
+        console.error("Failed to fetch time:", error);
+      }
+    };
+    loadTime();
+  }, []);
 
   // Get nearest upcoming session
   const nextSession = useMemo<Schedule | null>(() => {
@@ -44,14 +61,14 @@ export default function MiniHeaderTimer() {
 
     if (!sessions.length) return null;
 
-    const now = new Date().getTime();
+    const now = new Date().getTime() + timeOffset;
     
     // Sort by start time
     const sorted = [...sessions].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
     
     // Find the first session that hasn't ended yet (and not left by student)
     return sorted.find(s => new Date(s.end_time).getTime() > now && s.id !== leftSessionId) || null;
-  }, [data, refreshTrigger, leftSessionId]);
+  }, [data, refreshTrigger, leftSessionId, timeOffset]);
 
 
   useEffect(() => {
@@ -63,7 +80,7 @@ export default function MiniHeaderTimer() {
     const endTime = new Date(nextSession.end_time).getTime();
 
     const updateTimer = () => {
-      const now = new Date().getTime();
+      const now = new Date().getTime() + timeOffset;
       let diff = 0;
       
       if (now < startTime) {
@@ -86,32 +103,32 @@ export default function MiniHeaderTimer() {
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [nextSession]);
+  }, [nextSession, timeOffset]);
 
   const isSessionOngoing = useMemo(() => {
     if (!nextSession) return false;
-    const now = new Date().getTime();
+    const now = new Date().getTime() + timeOffset;
     const startTime = new Date(nextSession.start_time).getTime();
     const endTime = new Date(nextSession.end_time).getTime();
     return now >= startTime && now < endTime;
-  }, [nextSession, timeLeft]);
+  }, [nextSession, timeLeft, timeOffset]);
 
   const isReady = useMemo(() => {
     if (!nextSession) return false;
-    const now = new Date().getTime();
+    const now = new Date().getTime() + timeOffset;
     const startTime = new Date(nextSession.start_time).getTime();
     const endTime = new Date(nextSession.end_time).getTime();
     const JOIN_THRESHOLD_MS = 5 * 60 * 1000;
     return now >= (startTime - JOIN_THRESHOLD_MS) && now < endTime;
-  }, [nextSession, timeLeft]);
+  }, [nextSession, timeLeft, timeOffset]);
 
   const canLeaveSession = useMemo(() => {
     if (!nextSession) return false;
-    const now = new Date().getTime();
+    const now = new Date().getTime() + timeOffset;
     const startTime = new Date(nextSession.start_time).getTime();
     const MINIMUM_STAY_MS = 10 * 60 * 1000; // 15 minutes
     return now >= (startTime + MINIMUM_STAY_MS);
-  }, [nextSession, timeLeft]);
+  }, [nextSession, timeLeft, timeOffset]);
 
   const handleJoinSession = async () => {
     if (!nextSession?.id) return;

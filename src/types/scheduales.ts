@@ -189,7 +189,8 @@ export interface GetUserSchedulesResponse {
             toDaySchedule: Schedule[];
             previousSchedule: Schedule[];
         };
-}       
+}
+
 
 
 export interface SendReviewSchedulePayload {

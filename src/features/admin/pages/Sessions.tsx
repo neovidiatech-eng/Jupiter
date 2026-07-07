@@ -25,6 +25,7 @@ import { useTeacherAvailability } from "../hooks/useTeacherAvailabilty";
 import AddSessionModal from "../../../components/modals/AddSessionModal";
 import ViewSessionModal from "../../../components/modals/ViewSessionModal";
 import EditSessionModal from "../../../components/modals/EditSessionModal";
+import EditInstructorModal from "../../../components/modals/EditInstructorModal";
 import ConfirmModal from "../../../components/modals/ConfirmModal";
 import {
   DayOfWeek,
@@ -37,6 +38,7 @@ import {
 } from "../../../lib/schemas/SessionSchema";
 import { Table, Dropdown } from "antd";
 import { Link } from "react-router-dom";
+import { useServerTime } from "../../../hooks/useServerTime";
 
 type GroupedSchedule = Schedule & { groupCount?: number };
 
@@ -48,6 +50,7 @@ export default function Sessions() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditInstructorModal, setShowEditInstructorModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Schedule | null>(null);
   const [groupedSessions, setGroupedSessions] = useState<Schedule[]>([]);
   const [currentTab, setCurrentTab] = useState("Today");
@@ -61,9 +64,10 @@ export default function Sessions() {
   const deleteGroupedSchedule = useDeleteGroupedSchedule();
   const { data: fullSessionData } = useGetScheduleById(viewingId || "");
   const { data: instructors } = useTeacher({search: "", page: 1, limit: 1000});
+  const { getServerDate } = useServerTime();
 
   // Fetch today's availability
-  const today = new Date().toISOString().split("T")[0];
+  const today = getServerDate().toISOString().split("T")[0];
   const { data: availabilityData } = useTeacherAvailability(today, today);
 
   const handleUpdateSession = async (
@@ -503,6 +507,18 @@ export default function Sessions() {
             danger: true,
             onClick: () => handleDeleteSession(record),
           },
+          {
+            key:"edit Instructor",
+            label: (
+              <span className="flex items-center gap-2 text-xs font-bold text-gray-700">
+                <Edit className="w-3.5 h-3.5" /> Edit Instructor
+              </span>
+            ),
+            onClick: () => {
+              setSelectedSession(record);
+              setShowEditInstructorModal(true);
+            },
+          },
         ];
 
         return (
@@ -691,7 +707,7 @@ export default function Sessions() {
                 const availability = availabilityData?.find(
                   (a: any) => a.id === instructor.id,
                 );
-                const now = new Date();
+                const now = getServerDate();
                 const currentSchedule = availability?.schedules?.find(
                   (s: any) => {
                     const start = new Date(s.start_time);
@@ -804,6 +820,17 @@ export default function Sessions() {
         session={selectedSession}
         onSave={handleUpdateSession}
       />
+
+      {selectedSession && (
+        <EditInstructorModal
+          isOpen={showEditInstructorModal}
+          onClose={() => {
+            setShowEditInstructorModal(false);
+            setSelectedSession(null);
+          }}
+          session={selectedSession}
+        />
+      )}
 
       <ConfirmModal
         isOpen={!!sessionToDelete}
