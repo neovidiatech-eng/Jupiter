@@ -9,7 +9,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { SiTiktok } from 'react-icons/si';
-import { useSettings as useThemeSettings } from '../../../contexts/SettingsContext';
+
 import { useSettings } from '../hooks/useSettings';
 import { message } from 'antd';
 import { UpdateSettingsRequest } from '../../../types/settings';
@@ -29,7 +29,7 @@ const tabs: { id: Tab; label: string; icon: any }[] = [
 ];
 
 export default function SettingsPage() {
-  const { settings: themeSettings } = useThemeSettings();
+  const primaryColor = '#2563eb';
   const { settings: apiSettings, isLoading, updateSettings: apiUpdateSettings } = useSettings();
 
   const [activeTab, setActiveTab] = useState<Tab>('general');
@@ -87,7 +87,7 @@ export default function SettingsPage() {
             onClick={handleSave}
             disabled={saving}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm text-white`}
-            style={{ backgroundColor: themeSettings.primaryColor }}
+            style={{ backgroundColor: primaryColor }}
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? 'Saving...' : 'Save Changes'}
@@ -105,7 +105,7 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? '' : 'text-gray-600 hover:bg-gray-50'
                   }`}
-                style={activeTab === tab.id ? { backgroundColor: themeSettings.primaryColor + '15', color: themeSettings.primaryColor } : {}}
+                style={activeTab === tab.id ? { backgroundColor: primaryColor + '15', color: primaryColor } : {}}
               >
                 <tab.icon className="w-4 h-4" />
                 <span className="flex-1 text-left">{tab.label}</span>
@@ -119,7 +119,7 @@ export default function SettingsPage() {
         <div className="flex-1">
           {/* General */}
           {activeTab === 'general' && (
-            <SectionCard title="General Settings" icon={Settings} primaryColor={themeSettings.primaryColor}>
+            <SectionCard title="General Settings" icon={Settings} primaryColor={primaryColor}>
               <div className="max-w-md">
                 <FieldGroup label="User Prefix">
                   <input
@@ -136,7 +136,7 @@ export default function SettingsPage() {
 
           {/* Social */}
           {activeTab === 'social' && (
-            <SectionCard title="Social Media Links" icon={Share2} primaryColor={themeSettings.primaryColor}>
+            <SectionCard title="Social Media Links" icon={Share2} primaryColor={primaryColor}>
               <div className="space-y-4">
                 {socialPlatforms.map(({ platform, label, placeholder, icon: Icon, color }) => (
                   <div key={platform} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -164,7 +164,7 @@ export default function SettingsPage() {
 
           {/* Contact */}
           {activeTab === 'contact' && (
-            <SectionCard title="Contact Information" icon={Phone} primaryColor={themeSettings.primaryColor}>
+            <SectionCard title="Contact Information" icon={Phone} primaryColor={primaryColor}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">

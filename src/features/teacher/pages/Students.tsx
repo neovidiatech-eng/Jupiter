@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, Search, GraduationCap, Mail, Phone, BookOpen, Clock } from 'lucide-react';
-import { useSettings } from '../../../contexts/SettingsContext';
+
 
 interface StudentData {
   id: string;
@@ -17,8 +17,8 @@ interface StudentData {
 
 export default function TeacherStudents() {
   const { t, i18n } = useTranslation();
-  const { settings } = useSettings();
   const isRtl = i18n.language.split('-')[0] === 'ar';
+  const primaryColor = '#2563eb';
   
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -68,7 +68,7 @@ export default function TeacherStudents() {
     <div className="space-y-6 animate-fade-in pb-10" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Users className="w-6 h-6" style={{ color: settings.primaryColor }} />
+          <Users className="w-6 h-6" style={{ color: primaryColor }} />
           {isRtl ? 'طلابي' : 'My Students'}
         </h1>
         
@@ -82,7 +82,7 @@ export default function TeacherStudents() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`block w-full ${isRtl ? 'pr-10 pl-3' : 'pl-10 pr-3'} py-2.5 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all sm:text-sm`}
-            style={{ '--tw-ring-color': settings.primaryColor } as any}
+            style={{ '--tw-ring-color': primaryColor } as any}
           />
         </div>
       </div>
@@ -92,7 +92,7 @@ export default function TeacherStudents() {
           <div key={student.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center font-bold text-lg" style={{ color: settings.primaryColor }}>
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center font-bold text-lg" style={{ color: primaryColor }}>
                   {student.name.substring(0, 2)}
                 </div>
                 <div>

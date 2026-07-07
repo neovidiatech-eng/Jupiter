@@ -1,5 +1,5 @@
 import { Bell, LogOut, Menu } from "lucide-react";
-import { useSettings } from "../../contexts/SettingsContext";
+
 import { useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../features/student/hooks/useProfile";
@@ -20,7 +20,7 @@ export default function Header({
   userName,
   isCollapsed,
 }: HeaderProps) {
-  useSettings();
+
   const isStudent = userRole === "student";
   const isTeacher = userRole === "teacher";
 

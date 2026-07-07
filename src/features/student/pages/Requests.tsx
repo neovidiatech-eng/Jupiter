@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Clock, FileText, CheckCircle, XCircle } from 'lucide-react';
-import { useSettings } from '../../../contexts/SettingsContext';
+
 import { useForm } from 'react-hook-form';
 import { Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,8 +18,8 @@ interface StudentRequest {
 
 export default function StudentRequests() {
   const { i18n, t } = useTranslation();
-  const { settings } = useSettings();
   const isRtl = i18n.language.split('-')[0] === 'ar';
+  const primaryColor = '#2563eb';
 
   const [requests, setRequests] = useState<StudentRequest[]>([
     {
@@ -108,7 +108,7 @@ export default function StudentRequests() {
         <button 
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-medium transition-all hover:opacity-90 shadow-sm hover:shadow-md"
-          style={{ backgroundColor: settings.primaryColor }}
+          style={{ backgroundColor: primaryColor }}
         >
           <Plus className="w-5 h-5" />
           {isRtl ? 'تقديم طلب جديد' : 'Submit New Request'}
@@ -121,7 +121,7 @@ export default function StudentRequests() {
             <div key={request.id} className="bg-gray-50 border border-gray-100 rounded-xl p-5 hover:border-gray-200 transition-colors">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${settings.primaryColor}15`, color: settings.primaryColor }}>
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
@@ -164,7 +164,7 @@ export default function StudentRequests() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-slide-up">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center" style={{ backgroundColor: settings.primaryColor }}>
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center" style={{ backgroundColor: primaryColor }}>
               <h2 className="text-lg font-bold text-white">{isRtl ? 'تقديم طلب جديد' : 'Submit New Request'}</h2>
               <button 
                 onClick={() => { setIsModalOpen(false); reset(); }}
@@ -217,7 +217,7 @@ export default function StudentRequests() {
                 <button 
                   type="submit"
                   className="flex-1 px-6 py-3 text-white font-semibold rounded-xl transition-all hover:opacity-90 shadow-sm"
-                  style={{ backgroundColor: settings.primaryColor }}
+                  style={{ backgroundColor: primaryColor }}
                 >
                   {isRtl ? 'إرسال الطلب' : 'Submit Request'}
                 </button>

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Send, MoreVertical, Search, CheckCircle2 } from 'lucide-react';
-import { useSettings } from '../../../contexts/SettingsContext';
+
 
 interface Message {
   id: string;
@@ -19,8 +19,8 @@ interface ChatStudent {
 
 export default function TeacherChat() {
   const { i18n } = useTranslation();
-  const { settings } = useSettings();
   const isRtl = i18n.language.split('-')[0] === 'ar';
+  const primaryColor = '#2563eb';
   
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', text: isRtl ? 'السلام عليكم يا أستاذ.' : 'Hello teacher.', sender: 'student', timestamp: '10:00 AM' },
@@ -75,7 +75,7 @@ export default function TeacherChat() {
               type="text"
               placeholder={isRtl ? 'بحث في المحادثات...' : 'Search chats...'}
               className={`block w-full ${isRtl ? 'pr-9 pl-3' : 'pl-9 pr-3'} py-2 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
-              style={{ '--tw-ring-color': settings.primaryColor } as any}
+              style={{ '--tw-ring-color': primaryColor } as any}
             />
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function TeacherChat() {
                   {student.name.substring(0,2)}
                 </div>
                 {student.unreadCount > 0 && (
-                  <div className={`absolute -top-1 ${isRtl ? '-left-1' : '-right-1'} w-5 h-5 rounded-full text-[10px] text-white flex items-center justify-center font-bold`} style={{ backgroundColor: settings.primaryColor }}>
+                  <div className={`absolute -top-1 ${isRtl ? '-left-1' : '-right-1'} w-5 h-5 rounded-full text-[10px] text-white flex items-center justify-center font-bold`} style={{ backgroundColor: primaryColor }}>
                     {student.unreadCount}
                   </div>
                 )}
@@ -110,7 +110,7 @@ export default function TeacherChat() {
         {/* Chat Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white z-10">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: settings.primaryColor }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: primaryColor }}>
               {selectedStudent.name.substring(0,1)}
             </div>
             <div>
@@ -138,7 +138,7 @@ export default function TeacherChat() {
                       ? 'text-white rounded-tr-sm' 
                       : 'bg-white text-gray-800 border border-gray-100 rounded-tl-sm'
                   }`}
-                  style={isMe ? { backgroundColor: settings.primaryColor } : {}}
+                  style={isMe ? { backgroundColor: primaryColor } : {}}
                 >
                   <p className="leading-relaxed text-sm">{message.text}</p>
                 </div>
@@ -161,13 +161,13 @@ export default function TeacherChat() {
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder={isRtl ? 'اكتب رسالتك هنا...' : 'Type your message...'}
               className="flex-1 bg-gray-50 border border-gray-200 rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:border-transparent transition-all"
-              style={{ '--tw-ring-color': settings.primaryColor } as any}
+              style={{ '--tw-ring-color': primaryColor } as any}
             />
             <button 
               type="submit"
               disabled={!newMessage.trim()}
               className="w-12 h-12 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
-              style={{ backgroundColor: settings.primaryColor }}
+              style={{ backgroundColor: primaryColor }}
             >
               <Send className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''} ${!isRtl ? 'ml-1' : 'mr-1'}`} />
             </button>

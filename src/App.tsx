@@ -7,7 +7,7 @@ import {
 import { useState, lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionsProvider } from "./contexts/SessionsContext";
-import { SettingsProvider } from "./contexts/SettingsContext";
+
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import ErrorBoundary from "./components/layout/ErrorBoundary";
@@ -89,7 +89,7 @@ function App() {
       <GoogleOAuthProvider clientId={googleClientId}>
         <QueryClientProvider client={queryClient}>
           <Provider store={store}>
-            <SettingsProvider>
+
               <SessionsProvider>
                 <Router>
                   {!isAuthenticated && <LanguageSwitcher />}
@@ -172,7 +172,7 @@ function App() {
                   </Suspense>
                 </Router>
               </SessionsProvider>
-            </SettingsProvider>
+
           </Provider>
         </QueryClientProvider>
       </GoogleOAuthProvider>

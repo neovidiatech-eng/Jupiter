@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useSettings } from '../../../contexts/SettingsContext';
+
 import {
   Mail, Phone, MapPin,
   Clock,
@@ -87,8 +87,9 @@ import { useTeacherProfile } from '../hooks/useTeacherProfile';
 
 export default function TeacherProfile() {
   const { i18n } = useTranslation();
-  const { settings } = useSettings();
   const isRtl = i18n.language.split('-')[0] === 'ar';
+  const primaryColor = '#2563eb';
+  const accentColor = '#06b6d4';
   // const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   const { data: profileResponse, isLoading } = useTeacherProfile();
@@ -155,7 +156,7 @@ export default function TeacherProfile() {
       <div className="relative h-44 sm:h-52 md:h-72 rounded-[2rem] sm:rounded-[3rem] overflow-hidden shadow-2xl">
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
-          style={{ backgroundImage: `linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 100%), linear-gradient(135deg, ${settings.primaryColor}aa, ${settings.accentColor}aa), url('https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&q=80')` }}
+          style={{ backgroundImage: `linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 100%), linear-gradient(135deg, ${primaryColor}aa, ${accentColor}aa), url('https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&q=80')` }}
         />
 
         <div className="absolute inset-x-0 bottom-4 p-6 sm:p-10 flex flex-col sm:flex-row items-center sm:items-end gap-5 sm:gap-8 translate-y-10 sm:translate-y-12">
@@ -163,7 +164,7 @@ export default function TeacherProfile() {
             <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-[2rem] sm:rounded-[2.5rem] bg-white p-2 shadow-2xl transition-all duration-300 group-hover:-translate-y-2 group-hover:rotate-3">
               <div
                 className="w-full h-full rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center text-white text-4xl sm:text-6xl font-black shadow-inner"
-                style={{ backgroundColor: settings.primaryColor }}
+                style={{ backgroundColor: primaryColor }}
               >
                 {teacherInfo.name.charAt(0)}
               </div>
