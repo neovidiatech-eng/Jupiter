@@ -66,3 +66,8 @@ export const getScheduleById = async (id: string): Promise<{ data: { schedule: S
     const response = await api.get<{ data: { schedule: Schedule } }>(`/schedules/${id}`);
     return response.data;
 };
+
+export const updateInstructorForSchedule = async (scheduleId: string, teacherId: string) => {
+    const response = await api.patch(`/schedules/change-instructor/${scheduleId}`, { teacherId });
+    return response.data;
+};

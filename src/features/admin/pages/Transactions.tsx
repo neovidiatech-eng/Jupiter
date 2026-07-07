@@ -111,11 +111,11 @@ export default function Transactions() {
 
     const totalIncome = transactions
       .filter((t) => incomeTypes.includes(t.type))
-      .reduce((sum, t) => sum + (t.originalAmount || t.amount), 0);
+      .reduce((sum, t) => sum + (t.originalAmount || t.amount || 0), 0);
 
     const totalExpenses = transactions
       .filter((t) => expenseTypes.includes(t.type))
-      .reduce((sum, t) => sum + (t.originalAmount || t.amount), 0);
+      .reduce((sum, t) => sum + (t.originalAmount || t.amount || 0), 0);
 
     const netProfit = totalIncome - totalExpenses;
 
@@ -385,7 +385,7 @@ export default function Transactions() {
                               : "text-orange-600"
                           }`}
                         >
-                          {(transaction.originalAmount || transaction.amount).toFixed(2)}
+                          {(transaction.originalAmount || transaction.amount || 0).toFixed(2)}
                         </span>
 
                         <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">

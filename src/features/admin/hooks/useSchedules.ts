@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updateSchedule, createSchedule, createRecurringSchedule, deleteSchedule, deleteRecurringScheduale } from "../services/SchedulesServices";
 import { UpdateSchedulePayload, CreateSchedulePayload, CreateRecurringSchedulePayload } from "../../../types/scheduales";
-import { getAllSchedules, searchSchedules, getSchedulesForTeacher, getScheduleById } from "../services/SessionsServices";
+import { getAllSchedules, searchSchedules, getSchedulesForTeacher, getScheduleById, updateInstructorForSchedule } from "../services/SessionsServices";
 
 export const useGetScheduleById = (id: string) => {
     return useQuery({
@@ -98,3 +98,18 @@ export const useUpdateSchedule = () => {
         }
     });
 };
+
+
+export const useUpdateInstructorForSchedule = () => {
+    const queryClient = useQueryClient();
+    const { t } = useTranslation();
+    return useMutation({
+        mutationFn: ({ id, teacherId }: { id: string; teacherId: string }) =>
+            updateInstructorForSchedule(id, teacherId),
+
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["schedules"] });
+            ErrorService.success(t('sessionUpdatedSuccess'));
+        }
+    });
+}

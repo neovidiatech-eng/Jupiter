@@ -25,6 +25,7 @@ import { useTeacherAvailability } from "../hooks/useTeacherAvailabilty";
 import AddSessionModal from "../../../components/modals/AddSessionModal";
 import ViewSessionModal from "../../../components/modals/ViewSessionModal";
 import EditSessionModal from "../../../components/modals/EditSessionModal";
+import EditInstructorModal from "../../../components/modals/EditInstructorModal";
 import ConfirmModal from "../../../components/modals/ConfirmModal";
 import {
   DayOfWeek,
@@ -48,6 +49,7 @@ export default function Sessions() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditInstructorModal, setShowEditInstructorModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Schedule | null>(null);
   const [groupedSessions, setGroupedSessions] = useState<Schedule[]>([]);
   const [currentTab, setCurrentTab] = useState("Today");
@@ -503,6 +505,18 @@ export default function Sessions() {
             danger: true,
             onClick: () => handleDeleteSession(record),
           },
+          {
+            key:"edit Instructor",
+            label: (
+              <span className="flex items-center gap-2 text-xs font-bold text-gray-700">
+                <Edit className="w-3.5 h-3.5" /> Edit Instructor
+              </span>
+            ),
+            onClick: () => {
+              setSelectedSession(record);
+              setShowEditInstructorModal(true);
+            },
+          },
         ];
 
         return (
@@ -804,6 +818,17 @@ export default function Sessions() {
         session={selectedSession}
         onSave={handleUpdateSession}
       />
+
+      {selectedSession && (
+        <EditInstructorModal
+          isOpen={showEditInstructorModal}
+          onClose={() => {
+            setShowEditInstructorModal(false);
+            setSelectedSession(null);
+          }}
+          session={selectedSession}
+        />
+      )}
 
       <ConfirmModal
         isOpen={!!sessionToDelete}
