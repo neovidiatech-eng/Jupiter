@@ -9,6 +9,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { CustomCheckbox } from "../components/ui/CustomCheckbox";
 import ErrorService from "../utils/ErrorService";
 import { connectSocket } from "../lib/socket";
+import { getDashboardPathForRole, storeAuthPermissions } from "../utils/auth";
+import { message } from "antd";
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -41,6 +43,9 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
       const token = result.data?.accessToken || result.accessToken;
 
+
+      
+
       if (token) {
         // clear old
         localStorage.removeItem("token");
@@ -56,14 +61,31 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         const role = result.data?.role || result.role;
         localStorage.setItem("role", role);
 
+        // Save user name and email
+        const userObj = result.data?.user || result.user || result.data || {};
+        const name = userObj.name || userObj.username || username || "Admin";
+        const email = userObj.email || username || "admin@admin.com";
+        localStorage.setItem("name", name);
+        localStorage.setItem("email", email);
+
+        const permissions = result.data?.permissions || result.permissions || [];
+        storeAuthPermissions(permissions, data.rememberMe || false);
+        onLoginSuccess();
+        message.success(result.message || t('loginSuccess'));
+ 
+
         // navigation حسب role
-        if (role === "teacher") {
-          navigate("/teacher-dashboard");
-        } else if (role === "student") {
-          navigate("/student-dashboard");
-        } else {
-          navigate("/dashboard");
-        }
+        
+        // if (role === "teacher") {
+        //   navigate("/teacher-dashboard");
+        // } else if (role === "student") {
+        //   navigate("/student-dashboard");
+        // } else {
+        //   navigate("/dashboard");
+        // }
+
+                navigate(getDashboardPathForRole(role));
+
 
         onLoginSuccess();
         connectSocket(token);
