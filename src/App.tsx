@@ -14,6 +14,7 @@ import ErrorBoundary from "./components/layout/ErrorBoundary";
 import LanguageSwitcher from "./components/ui/LanguageSwitcher";
 import AuthGuard from "./components/guards/AuthGuard";
 import GuestGuard from "./components/guards/GuestGuard";
+import { getDashboardPathForRole } from "./utils/auth";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { googleClientId } from "./components/constants";
@@ -122,7 +123,7 @@ function App() {
                       </Route>
 
                       {/* Protected Dashboard Routes */}
-                      <Route element={<AuthGuard allowedRoles={['admin', 'super_admin', 'staff']} />}>
+                      <Route element={<AuthGuard allowedRoles={['super_admin', 'admin']} allowCustomAdminRoles={true} />}>
                         <Route path="/dashboard/*" element={<AdminDashboard />} />
                       </Route>
 
@@ -144,11 +145,7 @@ function App() {
                         path="/"
                         element={
                           isAuthenticated ? (
-                            <Navigate to={
-                              localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' || localStorage.getItem('role') === 'staff' ? "/dashboard" :
-                                localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
-                                  "/student-dashboard"
-                            } replace />
+                            <Navigate to={getDashboardPathForRole(localStorage.getItem('role'))} replace />
                           ) : (
                             <Navigate to="/login" replace />
                           )
@@ -158,11 +155,7 @@ function App() {
                         path="*"
                         element={
                           isAuthenticated ? (
-                            <Navigate to={
-                              localStorage.getItem('role') === 'admin' || localStorage.getItem('role') === 'super_admin' || localStorage.getItem('role') === 'staff' ? "/dashboard" :
-                                localStorage.getItem('role') === 'teacher' ? "/teacher-dashboard" :
-                                  "/student-dashboard"
-                            } replace />
+                            <Navigate to={getDashboardPathForRole(localStorage.getItem('role'))} replace />
                           ) : (
                             <Navigate to="/login" replace />
                           )

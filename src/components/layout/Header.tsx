@@ -11,6 +11,7 @@ interface HeaderProps {
   onMenuClick?: () => void;
   userRole: "admin" | "teacher" | "student";
   userName?: string;
+  userEmail?: string;
   isCollapsed?: boolean;
 }
 
@@ -60,9 +61,18 @@ export default function Header({
         path: "/teacher-dashboard/profile"
       };
     }
+
+    const rawRole = localStorage.getItem("role") || userRole;
+    const roleDisplayName = rawRole
+      ? rawRole
+          .split(/[-_]/)
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      : "Admin";
+
     return {
       name: userName || "---",
-      subtext: userRole,
+      subtext: roleDisplayName,
       avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || "U")}&background=1e1b4b&color=fff`,
       path: "/dashboard"
     };
@@ -72,6 +82,8 @@ export default function Header({
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
     localStorage.removeItem("role");
+    localStorage.removeItem("name");
+    localStorage.removeItem("email");
     disconnectSocket();
     navigate("/");
   }, [navigate]);

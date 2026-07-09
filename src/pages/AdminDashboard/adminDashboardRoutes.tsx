@@ -289,7 +289,7 @@ export const adminDashboardRoutes: RouteConfig[] = [
         element: <TransactionsPage />,
       },
       {
-        id: "transaction Requests",
+        id: "transaction-requests",
         label: "transaction Requests",
         icon: AlertCircle,
         path: "transaction-requests",
