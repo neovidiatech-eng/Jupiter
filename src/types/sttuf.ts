@@ -53,7 +53,7 @@ export interface CreateStaffPayload {
     name: string;
     email: string;
     password: string;
-    codeCountry: string;
+    code_country: string;
     phone: string;
     roleId: string;
 }

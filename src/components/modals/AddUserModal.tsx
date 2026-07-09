@@ -80,15 +80,13 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
     defaultValues: {
       name: '',
       email: '',
-      countryCode: '+20',
+      code_country: '+20',
       phone: '',
       role: '',
       password: '',
       permissions: [],
     } as UserFormData
   });
-  if (!isOpen) return null;
-
   if (!isOpen) return null;
 
   const onFormSubmit = async (data: UserFormData) => {
@@ -179,7 +177,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit }: AddUserModal
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Controller
-                  name="countryCode"
+                  name="code_country"
                   control={control}
                   render={({ field }) => (
                     <CustomSelect

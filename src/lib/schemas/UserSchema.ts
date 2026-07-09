@@ -3,7 +3,7 @@ import { z } from 'zod';
 type TFunc = (key: string, options?: any) => string;
 
 const getPhoneRefinement = (t: TFunc) => (data: any, ctx: z.RefinementCtx) => {
-  const { countryCode, phone } = data;
+  const { code_country: countryCode, phone } = data;
   
   if (!phone) return;
 
@@ -66,7 +66,7 @@ const getPhoneRefinement = (t: TFunc) => (data: any, ctx: z.RefinementCtx) => {
 const getBaseUserSchema = (t: TFunc) => z.object({
   name: z.string().min(3, t("validation.min", { count: 3 })).max(32, t("validation.max", { count: 32 })),
   email: z.string().email(t("validation.email")),
-  countryCode: z.string(),
+  code_country: z.string(),
   phone: z.string().min(1, t("validation.required")),
   role: z.string().min(1, t("validation.required")),
   password: z.string().min(6, t("validation.min", { count: 6 })),
