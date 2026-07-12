@@ -207,18 +207,24 @@ const ClassesPage: React.FC = () => {
       title: "Actions",
       key: "actions",
       width: 280,
-      render: (record: Schedule) => (
+      render: (record: Schedule) => {
+        const isCompleted = record.status?.toLowerCase() === "completed";
+        return (
         <Space size="small">
           {record.link && (
             <a
-              href={record.link}
-              target="_blank"
+              href={isCompleted ? undefined : record.link}
+              target={isCompleted ? undefined : "_blank"}
               rel="noreferrer"
               onClick={(e) => {
                 e.preventDefault();
-                handleJoinSession(record.id, record.link);
+                if (!isCompleted) handleJoinSession(record.id, record.link);
               }}
-              className="flex items-center gap-2 px-3 py-1.5 border border-blue-100 bg-blue-50/30 rounded-full text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition-all"
+              className={`flex items-center gap-2 px-3 py-1.5 border rounded-full text-[10px] font-bold transition-all ${
+                isCompleted 
+                  ? "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed" 
+                  : "border-blue-100 bg-blue-50/30 text-blue-700 hover:bg-blue-100"
+              }`}
             >
               <Monitor size={12} /> Join Class
             </a>
@@ -228,14 +234,18 @@ const ClassesPage: React.FC = () => {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              handleEndSession(record.id);
+              if (!isCompleted) handleEndSession(record.id);
             }}
-            className="flex items-center gap-2 px-3 py-1.5 border border-red-100 bg-red-50/30 rounded-full text-[10px] font-bold text-red-600 hover:bg-red-100 transition-all"
+            className={`flex items-center gap-2 px-3 py-1.5 border rounded-full text-[10px] font-bold transition-all ${
+              isCompleted
+                ? "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
+                : "border-red-100 bg-red-50/30 text-red-600 hover:bg-red-100"
+            }`}
           >
             <LogOut size={12} /> End Session
           </a>
         </Space>
-      ),
+      )},
     },
 
     {

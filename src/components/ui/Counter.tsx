@@ -5,6 +5,15 @@ import { Schedule } from "../../types/scheduales";
 import { useLanguage } from "../../contexts/LanguageContext";
 import FeedbackModal from "../../features/teacher/components/FeedbackModal";
 
+const getActualEndTime = (session: Schedule) => {
+  const start = new Date(session.start_time).getTime();
+  const end = session.end_time ? new Date(session.end_time).getTime() : 0;
+  if (!end || isNaN(end) || end <= start) {
+    return start + (session.type?.toLowerCase() === 'half' ? 30 * 60 * 1000 : 60 * 60 * 1000);
+  }
+  return end;
+};
+
 interface CountdownState {
   days: number;
   hours: number;
@@ -41,7 +50,7 @@ export default function MiniHeaderTimer() {
         const localTime = new Date().getTime();
         setTimeOffset(serverTime - localTime);
       } catch (error) {
-        console.error("Failed to fetch time:", error);
+        // Silent fallback to local device time if API fails
       }
     };
     loadTime();
@@ -66,8 +75,8 @@ export default function MiniHeaderTimer() {
     // Sort by start time
     const sorted = [...sessions].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
     
-    // Find the first session that hasn't ended yet (and not left by student)
-    return sorted.find(s => new Date(s.end_time).getTime() > now && s.id !== leftSessionId) || null;
+    // Find the first session that hasn't ended yet and is not completed
+    return sorted.find(s => s.status?.toLowerCase() !== "completed" && getActualEndTime(s) > now) || null;
   }, [data, refreshTrigger, leftSessionId, timeOffset]);
 
 
@@ -77,7 +86,7 @@ export default function MiniHeaderTimer() {
       return;
     }
     const startTime = new Date(nextSession.start_time).getTime();
-    const endTime = new Date(nextSession.end_time).getTime();
+    const endTime = getActualEndTime(nextSession);
 
     const updateTimer = () => {
       const now = new Date().getTime() + timeOffset;
@@ -109,7 +118,7 @@ export default function MiniHeaderTimer() {
     if (!nextSession) return false;
     const now = new Date().getTime() + timeOffset;
     const startTime = new Date(nextSession.start_time).getTime();
-    const endTime = new Date(nextSession.end_time).getTime();
+    const endTime = getActualEndTime(nextSession);
     return now >= startTime && now < endTime;
   }, [nextSession, timeLeft, timeOffset]);
 
@@ -117,7 +126,7 @@ export default function MiniHeaderTimer() {
     if (!nextSession) return false;
     const now = new Date().getTime() + timeOffset;
     const startTime = new Date(nextSession.start_time).getTime();
-    const endTime = new Date(nextSession.end_time).getTime();
+    const endTime = getActualEndTime(nextSession);
     const JOIN_THRESHOLD_MS = 5 * 60 * 1000;
     return now >= (startTime - JOIN_THRESHOLD_MS) && now < endTime;
   }, [nextSession, timeLeft, timeOffset]);
@@ -126,8 +135,9 @@ export default function MiniHeaderTimer() {
     if (!nextSession) return false;
     const now = new Date().getTime() + timeOffset;
     const startTime = new Date(nextSession.start_time).getTime();
-    const MINIMUM_STAY_MS = 10 * 60 * 1000; // 15 minutes
-    return now >= (startTime + MINIMUM_STAY_MS);
+    const endTime = getActualEndTime(nextSession);
+    const halfSessionDurationMs = (endTime - startTime) / 2;
+    return now >= (startTime + halfSessionDurationMs);
   }, [nextSession, timeLeft, timeOffset]);
 
   const handleJoinSession = async () => {
@@ -206,14 +216,16 @@ export default function MiniHeaderTimer() {
       {isSessionOngoing && canLeaveSession ? (
         <button
           onClick={handleLeaveSession}
-          disabled={isLeaving}
+          disabled={isLeaving || nextSession?.id === leftSessionId}
           className="flex items-center gap-2 px-6 py-2.5 rounded-[14px] text-sm font-bold transition-all duration-300 active:scale-95 bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-100 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <LogOut size={18} className="text-white" />
           <span>
             {isLeaving
               ? (language === "ar" ? "جاري المغادرة..." : "Leaving...")
-              : (language === "ar" ? "مغادرة الحصة" : "Leave Session")}
+              : nextSession?.id === leftSessionId
+                ? (language === "ar" ? "غادرت الحصة" : "Session Left")
+                : (language === "ar" ? "مغادرة الحصة" : "Leave Session")}
           </span>
         </button>
       ) : (
