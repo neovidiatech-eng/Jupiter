@@ -24,6 +24,16 @@ import SubmitAssignmentModal from "../../components/modals/SubmitAssignmentModal
 import { Assignment } from "../../types/assignment";
 import { useGetAssignments } from "../../features/student/hooks/useStudentsAssignment";
 import { useServerTime } from "../../hooks/useServerTime";
+import { useUserSessions } from "../../hooks/useSessions";
+
+const getActualEndTime = (session: any) => {
+  const start = new Date(session.start_time).getTime();
+  const end = session.end_time ? new Date(session.end_time).getTime() : 0;
+  if (!end || isNaN(end) || end <= start) {
+    return start + (session.type?.toLowerCase() === 'half' ? 30 * 60 * 1000 : 60 * 60 * 1000);
+  }
+  return end;
+};
 
 export default function StudentDashboard() {
   const { language } = useLanguage();
@@ -33,7 +43,20 @@ export default function StudentDashboard() {
   const { data: dashboardResponse, isLoading: isDashboardLoading, refetch } = useDashboardData();
   const dashboardData = dashboardResponse?.data;
   const metadata = dashboardData?.metadata;
-  const nextSession = dashboardData?.nextSchedule;
+  
+  const { data: userSessionsData } = useUserSessions("");
+  const nextSession = useMemo(() => {
+    if (!userSessionsData?.data) return dashboardData?.nextSchedule || null;
+    const sessions = Array.isArray(userSessionsData.data) ? userSessionsData.data : [
+      ...((userSessionsData.data as any).toDaySchedule || []),
+      ...((userSessionsData.data as any).upcomingSchedule || []),
+      ...((userSessionsData.data as any).previousSchedule || []),
+    ];
+    if (!sessions.length) return dashboardData?.nextSchedule || null;
+    const now = getServerTime();
+    const sorted = [...sessions].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    return sorted.find(s => s.status?.toLowerCase() !== "completed" && getActualEndTime(s) > now) || dashboardData?.nextSchedule || null;
+  }, [userSessionsData, dashboardData, getServerTime]);
 
   const { mutate: startChat, isPending } = useCreateConversation();
   const { mutate: joinSession, isPending: isJoining } = useJoinSession();
@@ -59,7 +82,7 @@ export default function StudentDashboard() {
       return;
     }
     const startTime = new Date(nextSession.start_time).getTime();
-    const endTime = new Date(nextSession.end_time).getTime();
+    const endTime = getActualEndTime(nextSession);
 
     const updateTimer = () => {
       const now = getServerTime();
@@ -106,7 +129,7 @@ export default function StudentDashboard() {
     if (!nextSession) return false;
     const now = getServerTime();
     const startTime = new Date(nextSession.start_time).getTime();
-    const endTime = new Date(nextSession.end_time).getTime();
+    const endTime = getActualEndTime(nextSession);
     return now >= startTime && now < endTime;
   }, [nextSession, timeLeft, getServerTime]);
 
@@ -114,7 +137,7 @@ export default function StudentDashboard() {
     if (!nextSession) return false;
     const now = getServerTime();
     const startTime = new Date(nextSession.start_time).getTime();
-    const endTime = new Date(nextSession.end_time).getTime();
+    const endTime = getActualEndTime(nextSession);
     return (now >= startTime - (JOIN_THRESHOLD_SECONDS * 1000)) && now < endTime;
   }, [nextSession, timeLeft, getServerTime]);
 

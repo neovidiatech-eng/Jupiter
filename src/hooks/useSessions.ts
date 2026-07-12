@@ -25,8 +25,9 @@ export const useJoinSession = () => {
     return useMutation({
         mutationFn: (id: string) => JoinSession(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["user-sessions"] })
-            queryClient.invalidateQueries({ queryKey: ["dashboard"] })
+            ErrorService.success("Joined session successfully");
+            queryClient.invalidateQueries({ queryKey: ["user-sessions"] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] });
         },
     })
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export function useServerTime() {
   const [timeOffset, setTimeOffset] = useState<number>(0);
@@ -13,15 +13,18 @@ export function useServerTime() {
         const localTime = new Date().getTime();
         setTimeOffset(serverTime - localTime);
       } catch (error) {
-        console.error("Failed to fetch time:", error);
+        // Silent fallback to local device time if API fails
       }
     };
     loadTime();
   }, []);
 
+  const getServerTime = useCallback(() => new Date().getTime() + timeOffset, [timeOffset]);
+  const getServerDate = useCallback(() => new Date(new Date().getTime() + timeOffset), [timeOffset]);
+
   return {
     timeOffset,
-    getServerTime: () => new Date().getTime() + timeOffset,
-    getServerDate: () => new Date(new Date().getTime() + timeOffset)
+    getServerTime,
+    getServerDate
   };
 }
