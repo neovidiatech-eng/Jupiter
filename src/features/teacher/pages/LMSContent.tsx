@@ -12,6 +12,7 @@ import {
 import { useCourses } from "../../../hooks/useCourses";
 import { useRanks } from "../../../hooks/useRanks";
 import { useNavigate } from "react-router-dom";
+import { baseURL } from "../../../consts";
 
 const LMSContent: React.FC = () => {
   const navigate = useNavigate();
@@ -154,13 +155,13 @@ const LMSContent: React.FC = () => {
                     className="h-52 relative bg-cover bg-center"
                     style={{
                       backgroundImage: item.image
-                        ? `url("https://agro-plus.net/${item.image}")`
+                        ? `url("${baseURL}/${item.image}")`
                         : "linear-gradient(to bottom right, #2563eb, #7c3aed)",
                     }}
                   >
                     {item.image && (
                       <img
-                        src={`https://agro-plus.net/${item.image}`}
+                        src={`${baseURL}/${item.image}`}
                         alt={item.title}
                         className="absolute inset-0 w-full h-full object-cover"
                       />

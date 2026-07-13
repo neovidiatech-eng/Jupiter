@@ -24,6 +24,7 @@ import AddLectureModal from './AddLectureModal';
 import { Lecture } from '../../../types/lectures';
 import ReactPlayer from 'react-player';
 import { useGetRanks } from '../hooks/useRank';
+import { baseURL } from '../../../consts';
 
 const Player = ReactPlayer as any;
 
@@ -485,11 +486,11 @@ export default function Curriculum() {
                       style={{
                         backgroundImage:
                           course?.image
-                            ? `url("https://agro-plus.net/${course.image}")`
+                            ? `url("${baseURL}/${course.image}")`
                             : "linear-gradient(to bottom right, #6366f1, #a855f7)"
                       }}
                     >
-                      {course?.image && <img src={`https://agro-plus.net/${course.image}`} alt={course.title} className="absolute top-0 left-0 w-full h-full object-cover" />}
+                      {course?.image && <img src={`${baseURL}/${course.image}`} alt={course.title} className="absolute top-0 left-0 w-full h-full object-cover" />}
 
                       <div className="absolute top-0 right-0 p-8 opacity-10" >
                         <BookOpen size={100} className="text-white" />

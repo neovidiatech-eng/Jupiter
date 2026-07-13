@@ -8,6 +8,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getCourseSchema, CourseFormData } from '../../../lib/schemas/CourseSchema';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { baseURL } from '../../../consts';
 
 interface AddCourseModalProps {
     visible: boolean;
@@ -47,7 +48,7 @@ export default function AddCourseModal({ visible, onClose, course }: AddCourseMo
                         uid: '-1',
                         name: course.image,
                         status: 'done',
-                        url: `https://agro-plus.net/uploads/${course.image}`,
+                        url: `${baseURL}/${course.image}`,
                     }]);
                 } else {
                     setFileList([]);
