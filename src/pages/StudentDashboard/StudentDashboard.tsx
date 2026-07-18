@@ -26,9 +26,11 @@ import { useGetAssignments } from "../../features/student/hooks/useStudentsAssig
 import { useServerTime } from "../../hooks/useServerTime";
 import { useUserSessions } from "../../hooks/useSessions";
 
+import { parseCairoTime } from "../../utils/dateUtils";
+
 const getActualEndTime = (session: any) => {
-  const start = new Date(session.start_time).getTime();
-  const end = session.end_time ? new Date(session.end_time).getTime() : 0;
+  const start = parseCairoTime(session.start_time);
+  const end = session.end_time ? parseCairoTime(session.end_time) : 0;
   if (!end || isNaN(end) || end <= start) {
     return start + (session.type?.toLowerCase() === 'half' ? 30 * 60 * 1000 : 60 * 60 * 1000);
   }
@@ -54,7 +56,7 @@ export default function StudentDashboard() {
     ];
     if (!sessions.length) return dashboardData?.nextSchedule || null;
     const now = getServerTime();
-    const sorted = [...sessions].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    const sorted = [...sessions].sort((a, b) => parseCairoTime(a.start_time) - parseCairoTime(b.start_time));
     return sorted.find(s => s.status?.toLowerCase() !== "completed" && getActualEndTime(s) > now) || dashboardData?.nextSchedule || null;
   }, [userSessionsData, dashboardData, getServerTime]);
 
@@ -81,7 +83,7 @@ export default function StudentDashboard() {
       setTimeLeft(0);
       return;
     }
-    const startTime = new Date(nextSession.start_time).getTime();
+    const startTime = parseCairoTime(nextSession.start_time);
     const endTime = getActualEndTime(nextSession);
 
     const updateTimer = () => {
@@ -128,7 +130,7 @@ export default function StudentDashboard() {
   const isSessionOngoing = useMemo(() => {
     if (!nextSession) return false;
     const now = getServerTime();
-    const startTime = new Date(nextSession.start_time).getTime();
+    const startTime = parseCairoTime(nextSession.start_time);
     const endTime = getActualEndTime(nextSession);
     return now >= startTime && now < endTime;
   }, [nextSession, timeLeft, getServerTime]);
@@ -136,7 +138,7 @@ export default function StudentDashboard() {
   const isSessionReady = useMemo(() => {
     if (!nextSession) return false;
     const now = getServerTime();
-    const startTime = new Date(nextSession.start_time).getTime();
+    const startTime = parseCairoTime(nextSession.start_time);
     const endTime = getActualEndTime(nextSession);
     return (now >= startTime - (JOIN_THRESHOLD_SECONDS * 1000)) && now < endTime;
   }, [nextSession, timeLeft, getServerTime]);
