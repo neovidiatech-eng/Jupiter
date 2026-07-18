@@ -5,9 +5,11 @@ import { Schedule } from "../../types/scheduales";
 import { useLanguage } from "../../contexts/LanguageContext";
 import FeedbackModal from "../../features/teacher/components/FeedbackModal";
 
+import { parseCairoTime } from "../../utils/dateUtils";
+
 const getActualEndTime = (session: Schedule) => {
-  const start = new Date(session.start_time).getTime();
-  const end = session.end_time ? new Date(session.end_time).getTime() : 0;
+  const start = parseCairoTime(session.start_time);
+  const end = session.end_time ? parseCairoTime(session.end_time) : 0;
   if (!end || isNaN(end) || end <= start) {
     return start + (session.type?.toLowerCase() === 'half' ? 30 * 60 * 1000 : 60 * 60 * 1000);
   }
@@ -43,8 +45,8 @@ export default function MiniHeaderTimer() {
   useEffect(() => {
     const loadTime = async () => {
       try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const res = await fetch(`https://worldtimeapi.org/api/timezone/${tz}`);
+        // const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const res = await fetch(`https://worldtimeapi.org/api/timezone/Africa/Cairo`);
         const apiData = await res.json();
         const serverTime = new Date(apiData.datetime).getTime();
         const localTime = new Date().getTime();
@@ -73,7 +75,7 @@ export default function MiniHeaderTimer() {
     const now = new Date().getTime() + timeOffset;
     
     // Sort by start time
-    const sorted = [...sessions].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    const sorted = [...sessions].sort((a, b) => parseCairoTime(a.start_time) - parseCairoTime(b.start_time));
     
     // Find the first session that hasn't ended yet and is not completed
     return sorted.find(s => s.status?.toLowerCase() !== "completed" && getActualEndTime(s) > now) || null;
@@ -85,7 +87,7 @@ export default function MiniHeaderTimer() {
       setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       return;
     }
-    const startTime = new Date(nextSession.start_time).getTime();
+    const startTime = parseCairoTime(nextSession.start_time);
     const endTime = getActualEndTime(nextSession);
 
     const updateTimer = () => {
@@ -117,7 +119,7 @@ export default function MiniHeaderTimer() {
   const isSessionOngoing = useMemo(() => {
     if (!nextSession) return false;
     const now = new Date().getTime() + timeOffset;
-    const startTime = new Date(nextSession.start_time).getTime();
+    const startTime = parseCairoTime(nextSession.start_time);
     const endTime = getActualEndTime(nextSession);
     return now >= startTime && now < endTime;
   }, [nextSession, timeLeft, timeOffset]);
@@ -125,7 +127,7 @@ export default function MiniHeaderTimer() {
   const isReady = useMemo(() => {
     if (!nextSession) return false;
     const now = new Date().getTime() + timeOffset;
-    const startTime = new Date(nextSession.start_time).getTime();
+    const startTime = parseCairoTime(nextSession.start_time);
     const endTime = getActualEndTime(nextSession);
     const JOIN_THRESHOLD_MS = 5 * 60 * 1000;
     return now >= (startTime - JOIN_THRESHOLD_MS) && now < endTime;
@@ -134,7 +136,7 @@ export default function MiniHeaderTimer() {
   const canLeaveSession = useMemo(() => {
     if (!nextSession) return false;
     const now = new Date().getTime() + timeOffset;
-    const startTime = new Date(nextSession.start_time).getTime();
+    const startTime = parseCairoTime(nextSession.start_time);
     const endTime = getActualEndTime(nextSession);
     const halfSessionDurationMs = (endTime - startTime) / 2;
     return now >= (startTime + halfSessionDurationMs);
