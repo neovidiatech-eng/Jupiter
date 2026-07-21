@@ -5,7 +5,7 @@ interface ChatInputProps {
   message: string;
   conversationId: string | undefined;
   handleTyping: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSendMessage: (e: React.FormEvent) => void;
+  handleSendMessage: (e: React.FormEvent, file?: File | null) => void;
   isSocketReady?: boolean;
 }
 
@@ -16,13 +16,48 @@ export default function ChatInput({
   handleSendMessage,
   isSocketReady = true,
 }: ChatInputProps) {
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSendMessage(e, selectedFile);
+    setSelectedFile(null); // clear after send
+  };
+
   return (
-    <div className="p-4 sm:p-6 bg-white shrink-0 border-t border-slate-100">
+    <div className="p-4 sm:p-6 bg-white shrink-0 border-t border-slate-100 flex flex-col gap-2">
+      {/* File Preview */}
+      {selectedFile && (
+        <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 w-max">
+          <span className="text-xs text-slate-600 font-medium truncate max-w-[200px]">
+            {selectedFile.name}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelectedFile(null)}
+            className="text-red-500 hover:text-red-700 text-xs font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <form
-        onSubmit={handleSendMessage}
+        onSubmit={onSubmit}
         className="flex items-center gap-4"
       >
-        <button type="button" className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+        <input 
+          type="file" 
+          hidden 
+          ref={fileInputRef} 
+          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} 
+        />
+        <button 
+          type="button" 
+          onClick={() => fileInputRef.current?.click()}
+          className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+        >
           <Paperclip size={20} />
         </button>
 
@@ -39,9 +74,9 @@ export default function ChatInput({
 
         <button
           type="submit"
-          disabled={!message.trim() || !conversationId || !isSocketReady}
+          disabled={(!message.trim() && !selectedFile) || !conversationId || !isSocketReady}
           className={`p-3.5 rounded-xl flex items-center justify-center transition-all ${
-            message.trim() && conversationId && isSocketReady
+            (message.trim() || selectedFile) && conversationId && isSocketReady
               ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
               : "bg-slate-50 text-slate-300"
           }`}

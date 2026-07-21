@@ -180,9 +180,9 @@ export default function Sessions() {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  const { data: searchResults } = useSearchSchedules(debouncedSearch, 1, 1000);
+  const itemsPerPage = 10;
+  const { data: searchResults } = useSearchSchedules(debouncedSearch, currentPage, itemsPerPage);
 
-  const itemsPerPage = 5;
   const rawScheduleData: Schedule[] = useMemo(() => {
     if (!searchResults?.data?.schedule) return [];
 
@@ -257,16 +257,23 @@ export default function Sessions() {
     return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
   });
 
-  const totalItems = groupedSchedules.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const pagination = searchResults?.data?.pagination;
+  const totalItems = pagination?.totalItems || groupedSchedules.length;
+  const totalPages = pagination?.totalPages || 1;
 
-  const displaySchedules = groupedSchedules.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  const displaySchedules = groupedSchedules;
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handlePageChange = (page: number | string) => {
+    if (typeof page === "number") {
+      setCurrentPage(page);
+    }
+  };
+
+  const getPageNumbers = () => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (currentPage <= 3) return [1, 2, 3, 4, '...', totalPages];
+    if (currentPage >= totalPages - 2) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
   };
 
   const formatDateTime = (dateString: string) => {
@@ -579,7 +586,6 @@ export default function Sessions() {
                   key={tab}
                   onClick={() => {
                     setCurrentTab(tab);
-                    setCurrentPage(1);
                   }}
                   className={`flex-1 md:min-w-[120px] px-4 sm:px-8 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${currentTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                 >
@@ -599,6 +605,7 @@ export default function Sessions() {
             pagination={false}
             className="w-full min-w-[900px]"
             rowClassName="hover:bg-gray-50/50 transition-colors group cursor-pointer"
+            locale={{ emptyText: "No sessions" }}
           />
         </div>
 
@@ -619,16 +626,20 @@ export default function Sessions() {
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            {Array.from({ length: totalPages }).map((_, i) => (
+            {getPageNumbers().map((pageNum, i) => (
               <button
                 key={i}
-                onClick={() => handlePageChange(i + 1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${currentPage === i + 1
+                onClick={() => handlePageChange(pageNum)}
+                disabled={pageNum === '...'}
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                  currentPage === pageNum
                     ? "bg-[#6366f1] text-white shadow-sm"
+                    : pageNum === '...'
+                    ? "text-gray-400 cursor-default"
                     : "text-gray-500 hover:bg-gray-50"
-                  }`}
+                }`}
               >
-                {i + 1}
+                {pageNum}
               </button>
             ))}
 

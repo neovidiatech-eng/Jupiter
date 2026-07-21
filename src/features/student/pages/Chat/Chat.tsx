@@ -13,6 +13,7 @@ import ChatInput from "./components/ChatInput";
 import { useChatSocket } from "../../../../hooks/useChat";
 import { useTyping } from "../../../../hooks/useTyping";
 import { Socket } from "socket.io-client";
+import ErrorService from "../../../../utils/ErrorService";
 
 export default function StudentChat() {
   const navigate = useNavigate();
@@ -72,9 +73,21 @@ export default function StudentChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentMessages]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = (e: React.FormEvent, file?: File | null) => {
     e.preventDefault();
-    if (!message.trim() || !conversationId || !socket) return;
+    if ((!message.trim() && !file) || !conversationId || !socket) return;
+
+    if (file) {
+      // TODO: Implement actual file upload to Backend here
+       ErrorService.error("الرجاء ربط API رفع الملفات هنا (في Chat.tsx سطر 80). لم يتم إرسال الملف.");
+      // Example implementation:
+      // const formData = new FormData();
+      // formData.append("file", file);
+      // const res = await uploadApi(formData);
+      // const fileUrl = res.url;
+      // socket.emit("message:send", { conversationId, content: message, fileUrl });
+      return; 
+    }
 
     console.log("📤 [Chat] Sending message:", message);
     socket.emit("message:send", {
