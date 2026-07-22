@@ -183,7 +183,7 @@ export default function StudentDashboard() {
 
             <div className="space-y-4 pt-4">
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                {`Session 3`} : {nextSession ? nextSession.title : (language === "ar" ? "لا توجد حصص قادمة" : "No upcoming sessions")}
+                {`Session`} : {nextSession ? nextSession.title : (language === "ar" ? "لا توجد حصص قادمة" : "No upcoming sessions")}
               </h1>
               <div className="flex flex-wrap items-center gap-6 text-blue-100/80 font-medium">
                 {nextSession && (
