@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../store/store";
 
 import { useMessages } from "../../../../hooks/useMessages";
-import { setMessages } from "../../../../store/chatSlice";
+import { setMessages, addMessage } from "../../../../store/chatSlice";
 import ChatHeader from "./components/ChatHeader";
 import ChatSidebar from "./components/ChatSidebar";
 import ChatMessages from "./components/ChatMessages";
@@ -14,6 +14,7 @@ import { useChatSocket } from "../../../../hooks/useChat";
 import { useTyping } from "../../../../hooks/useTyping";
 import { Socket } from "socket.io-client";
 import ErrorService from "../../../../utils/ErrorService";
+import { sendMediaMessage } from "../../../../services/chatServices";
 
 export default function StudentChat() {
   const navigate = useNavigate();
@@ -73,29 +74,51 @@ export default function StudentChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentMessages]);
 
-  const handleSendMessage = (e: React.FormEvent, file?: File | null) => {
+  const handleSendMessage = async (
+    e: React.FormEvent,
+    file?: File | Blob | null,
+    isVoice?: boolean,
+    duration?: number
+  ) => {
     e.preventDefault();
-    if ((!message.trim() && !file) || !conversationId || !socket) return;
+    if ((!message.trim() && !file) || !conversationId) return;
 
-    if (file) {
-      // TODO: Implement actual file upload to Backend here
-       ErrorService.error("الرجاء ربط API رفع الملفات هنا (في Chat.tsx سطر 80). لم يتم إرسال الملف.");
-      // Example implementation:
-      // const formData = new FormData();
-      // formData.append("file", file);
-      // const res = await uploadApi(formData);
-      // const fileUrl = res.url;
-      // socket.emit("message:send", { conversationId, content: message, fileUrl });
-      return; 
+    try {
+      if (file) {
+        console.log("📤 [Chat] Sending file/voice note:", file);
+        const createdMsg = await sendMediaMessage({
+          conversationId,
+          file,
+          content: message,
+          isVoice,
+          duration,
+        });
+
+        if (createdMsg) {
+          dispatch(addMessage(createdMsg));
+        }
+      } else {
+        console.log("📤 [Chat] Sending text message:", message);
+        if (socket && isSocketReady) {
+          socket.emit("message:send", {
+            conversationId,
+            content: message,
+          });
+        } else {
+          const createdMsg = await sendMediaMessage({
+            conversationId,
+            content: message,
+          });
+          if (createdMsg) {
+            dispatch(addMessage(createdMsg));
+          }
+        }
+      }
+      setMessage("");
+    } catch (error: any) {
+      console.error("Failed to send message:", error);
+      ErrorService.error("Failed to send message. Please try again.");
     }
-
-    console.log("📤 [Chat] Sending message:", message);
-    socket.emit("message:send", {
-      conversationId,
-      content: message,
-    });
-
-    setMessage("");
   };
 
   const emitTyping = useTyping(socket as Socket, conversationId as string);
@@ -120,7 +143,6 @@ export default function StudentChat() {
 
       {/* Main Grid */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 px-6 pb-6 min-h-0">
-
         {/* Sidebar */}
         <ChatSidebar
           teacherName={teacherName}
@@ -130,7 +152,7 @@ export default function StudentChat() {
         />
 
         {/* Right Chat Area */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-[#FFFFFF] rounded-2xl border border-slate-100 shadow-sm flex flex-col h-full overflow-hidden">
           <ChatHeader
             teacherName={teacherName}
             isTeacherOnline={isTeacherOnline}
@@ -153,9 +175,9 @@ export default function StudentChat() {
         </div>
       </div>
 
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }
@@ -169,7 +191,9 @@ export default function StudentChat() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #cbd5e1;
         }
-      `}} />
+      `,
+        }}
+      />
     </div>
   );
 }

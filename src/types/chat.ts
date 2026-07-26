@@ -1,10 +1,22 @@
 // types/chat.ts
+export interface MessageAttachment {
+  path?: string;
+  originalname?: string;
+  size?: number;
+  mimetype?: string;
+  duration?: number;
+  [key: string]: any;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
   tempId?: string;
   senderId: string;
-  content: string;
+  content?: string | null;
+  mediaUrl?: string | null;
+  mediaType?: "image" | "video" | "voice" | "audio" | "pdf" | "document" | string | null;
+  attachments?: MessageAttachment | null;
   isRead: boolean;
   createdAt: string;
   status?: "sending" | "sent" | "failed";

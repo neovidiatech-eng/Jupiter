@@ -57,26 +57,27 @@ const chatSlice = createSlice({
       state,
       action: PayloadAction<Message>
     ) => {
+      const message = action.payload;
+      const conversationId = message.conversationId;
 
-      const message =
-        action.payload;
-
-      const conversationId =
-        message.conversationId;
-
-      if (
-        !state.messages[
-          conversationId
-        ]
-      ) {
-        state.messages[
-          conversationId
-        ] = [];
+      if (!state.messages[conversationId]) {
+        state.messages[conversationId] = [];
       }
 
-      state.messages[
-        conversationId
-      ].push(message);
+      const existingIndex = state.messages[conversationId].findIndex(
+        (m) => m.id === message.id || (message.tempId && m.tempId === message.tempId)
+      );
+
+      if (existingIndex !== -1) {
+        // Replace/update existing message
+        state.messages[conversationId][existingIndex] = {
+          ...state.messages[conversationId][existingIndex],
+          ...message,
+        };
+      } else {
+        // Add new message
+        state.messages[conversationId].push(message);
+      }
     },
 
     setTyping: (
