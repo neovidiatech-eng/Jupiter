@@ -171,14 +171,23 @@ export interface SessionsPagination {
 export interface GetSessionsResponse {
     message: string;
     status: number;
-    data: {
+    data: Array<{
         schedule: {
             upcomingSchedule: Schedule[];
-            toDaySchedule: Schedule[];
+            todaySchedule?: Schedule[];
+            toDaySchedule?: Schedule[];
             previousSchedule: Schedule[];
         };
-        pagination: SessionsPagination;
+    }> | {
+        schedule: {
+            upcomingSchedule: Schedule[];
+            todaySchedule?: Schedule[];
+            toDaySchedule?: Schedule[];
+            previousSchedule: Schedule[];
+        };
+        pagination?: SessionsPagination;
     };
+    pagination?: SessionsPagination;
 }
 
 export interface GetUserSchedulesResponse {

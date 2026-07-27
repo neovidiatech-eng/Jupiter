@@ -1,13 +1,21 @@
 import api from "../../../lib/axios";
 import { CreateRecurringSessionBody, CreateSessionBody, GetSessionsResponse, UpdateSessionBody, Schedule } from "../../../types/scheduales";
 
-export const getAllSchedules = async (page: number = 1, limit: number = 10): Promise<GetSessionsResponse> => {
-    const response = await api.get<GetSessionsResponse>(`/schedules?page=${page}&limit=${limit}`);
+export const getAllSchedules = async (page: number = 1, limit: number = 10, day_type: string = "today"): Promise<GetSessionsResponse> => {
+    let url = `/schedules?page=${page}&limit=${limit}`;
+    if (day_type) {
+        url += `&day_type=${day_type}`;
+    }
+    const response = await api.get<GetSessionsResponse>(url);
     return response.data;
 };
 
-export const searchSchedules = async (searchTerm: string, page: number = 1, limit: number = 10): Promise<GetSessionsResponse> => {
-    const response = await api.get<GetSessionsResponse>(`/schedules?search=${searchTerm}&page=${page}&limit=${limit}`);
+export const searchSchedules = async (searchTerm: string, page: number = 1, limit: number = 10, day_type: string = "today"): Promise<GetSessionsResponse> => {
+    let url = `/schedules?search=${searchTerm}&page=${page}&limit=${limit}`;
+    if (day_type) {
+        url += `&day_type=${day_type}`;
+    }
+    const response = await api.get<GetSessionsResponse>(url);
     return response.data;
 };
 

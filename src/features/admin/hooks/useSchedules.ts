@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { updateSchedule, createSchedule, createRecurringSchedule, deleteSchedule, deleteRecurringScheduale } from "../services/SchedulesServices";
 import { UpdateSchedulePayload, CreateSchedulePayload, CreateRecurringSchedulePayload } from "../../../types/scheduales";
 import { getAllSchedules, searchSchedules, getSchedulesForTeacher, getScheduleById, updateInstructorForSchedule } from "../services/SessionsServices";
@@ -13,17 +13,19 @@ export const useGetScheduleById = (id: string) => {
 import ErrorService from "../../../utils/ErrorService";
 import { useTranslation } from "react-i18next";
 
-export const useGetSchedules = (page: number = 1, limit: number = 10) => {
+export const useGetSchedules = (page: number = 1, limit: number = 10, day_type: string = "today") => {
     return useQuery({
-        queryKey: ["schedules", page, limit],
-        queryFn: () => getAllSchedules(page, limit),
+        queryKey: ["schedules", page, limit, day_type],
+        queryFn: () => getAllSchedules(page, limit, day_type),
+        placeholderData: keepPreviousData,
     });
 };
 
-export const useSearchSchedules = (searchTerm: string, page: number = 1, limit: number = 10) => {
+export const useSearchSchedules = (searchTerm: string, page: number = 1, limit: number = 10, day_type: string = "today") => {
     return useQuery({
-        queryKey: ["schedules", searchTerm, page, limit],
-        queryFn: () => searchTerm ? searchSchedules(searchTerm, page, limit) : getAllSchedules(page, limit),
+        queryKey: ["schedules", searchTerm, page, limit, day_type],
+        queryFn: () => searchTerm ? searchSchedules(searchTerm, page, limit, day_type) : getAllSchedules(page, limit, day_type),
+        placeholderData: keepPreviousData,
     });
 };
 

@@ -181,18 +181,23 @@ export default function Sessions() {
   }, [searchTerm]);
 
   const itemsPerPage = 10;
-  const { data: searchResults } = useSearchSchedules(debouncedSearch, currentPage, itemsPerPage);
+  const dayTypeParam = currentTab === "History" ? "previous" : currentTab.toLowerCase();
+  const { data: searchResults } = useSearchSchedules(debouncedSearch, currentPage, itemsPerPage, dayTypeParam);
 
   const rawScheduleData: Schedule[] = useMemo(() => {
-    if (!searchResults?.data?.schedule) return [];
+    if (!searchResults) return [];
+
+    const dataObj = Array.isArray(searchResults.data) ? searchResults.data[0] : searchResults.data;
+    const schedule = dataObj?.schedule;
+    if (!schedule) return [];
 
     switch (currentTab) {
       case "Upcoming":
-        return searchResults.data.schedule.upcomingSchedule || [];
+        return schedule.upcomingSchedule || [];
       case "Today":
-        return searchResults.data.schedule.toDaySchedule || [];
+        return schedule.todaySchedule || schedule.toDaySchedule || [];
       case "History":
-        return searchResults.data.schedule.previousSchedule || [];
+        return schedule.previousSchedule || [];
       default:
         return [];
     }
@@ -257,14 +262,28 @@ export default function Sessions() {
     return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
   });
 
-  const pagination = searchResults?.data?.pagination;
-  const totalItems = pagination?.totalItems || groupedSchedules.length;
-  const totalPages = pagination?.totalPages || 1;
+  const pagination = useMemo(() => {
+    if (!searchResults) return null;
+    if (searchResults.pagination) return searchResults.pagination;
+    if (Array.isArray(searchResults.data)) {
+      return (searchResults.data[0] as any)?.pagination || null;
+    }
+    return (searchResults.data as any)?.pagination || null;
+  }, [searchResults]);
+
+  const totalItems = pagination?.totalItems ?? (pagination as any)?.total_items ?? (pagination as any)?.total ?? (searchResults ? groupedSchedules.length : 0);
+  const totalPages = pagination?.totalPages ?? (pagination as any)?.total_pages ?? (totalItems > 0 ? Math.ceil(totalItems / itemsPerPage) : 1);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
 
   const displaySchedules = groupedSchedules;
 
   const handlePageChange = (page: number | string) => {
-    if (typeof page === "number") {
+    if (typeof page === "number" && page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
@@ -586,6 +605,7 @@ export default function Sessions() {
                   key={tab}
                   onClick={() => {
                     setCurrentTab(tab);
+                    setCurrentPage(1);
                   }}
                   className={`flex-1 md:min-w-[120px] px-4 sm:px-8 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all whitespace-nowrap ${currentTab === tab ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
                 >
