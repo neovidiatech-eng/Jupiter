@@ -49,8 +49,8 @@ const DAYS_EN = [
   "Saturday",
 ];
 
-const HOURS = Array.from({ length: 14 }, (_, i) => {
-  const hour = i + 8;
+const HOURS = Array.from({ length: 17 }, (_, i) => {
+  const hour = i + 7;
   const suffix = hour < 12 ? "AM" : "PM";
   const display = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
   return { value: hour, label: `${display}:00 ${suffix}` };
@@ -86,14 +86,22 @@ function formatDate(date: Date): string {
 }
 
 function parseTime(timeStr: string): number {
-  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!match) return 0;
-  let hours = parseInt(match[1]);
-  const minutes = parseInt(match[2]);
-  const period = match[3].toUpperCase();
-  if (period === "PM" && hours !== 12) hours += 12;
-  if (period === "AM" && hours === 12) hours = 0;
-  return hours + minutes / 60;
+  if (!timeStr) return 0;
+  const cleaned = timeStr.replace(/[\u200B-\u200D\uFEFF\u202F\u00A0]/g, " ").trim();
+  const match24 = cleaned.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (match24) {
+    return parseInt(match24[1]) + parseInt(match24[2]) / 60;
+  }
+  const match12 = cleaned.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*([AP]M)/i);
+  if (match12) {
+    let hours = parseInt(match12[1]);
+    const minutes = parseInt(match12[2]);
+    const period = match12[3].toUpperCase();
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+    return hours + minutes / 60;
+  }
+  return 0;
 }
 
 interface SessionData {
@@ -139,27 +147,34 @@ function TeacherDetailModal({
   const monthDates = getMonthDates(monthOffset);
   const DAYS = language === "ar" ? DAYS_AR : DAYS_EN;
 
-  // const teacherSessions = sessions.filter(
-  //   (s) => s.teacherName === teacher.name,
-  // );
-  const teacherSessions = sessions.filter((s) => s.teacherId === teacher.id);
+  const teacherSessions = useMemo(() => {
+    return sessions.filter(
+      (s) =>
+        s.teacherId === teacher.id ||
+        (s.teacherName && teacher.name && s.teacherName.trim().toLowerCase() === teacher.name.trim().toLowerCase())
+    );
+  }, [sessions, teacher]);
 
-  const weekSessions = teacherSessions.filter((s) =>
-    weekDates.some((d) => formatDate(d) === s.date),
-  );
+  const weekSessions = useMemo(() => {
+    return teacherSessions.filter((s) =>
+      weekDates.some((d) => formatDate(d) === s.date)
+    );
+  }, [teacherSessions, weekDates]);
 
-  const monthName = new Date(
-    new Date().getFullYear(),
-    new Date().getMonth() + monthOffset,
-    1,
-  ).toLocaleDateString(
-    language === "ar" ? "ar-SA" : "en-US",
-    { month: "long", year: "numeric" },
-  );
+  const uniqueStudents = useMemo(() => {
+    return [...new Set(teacherSessions.map((s) => s.studentName).filter(Boolean))];
+  }, [teacherSessions]);
 
-  const uniqueStudents = [
-    ...new Set(teacherSessions.map((s) => s.studentName)),
-  ];
+  const monthName = useMemo(() => {
+    return new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() + monthOffset,
+      1,
+    ).toLocaleDateString(
+      language === "ar" ? "ar-SA" : "en-US",
+      { month: "long", year: "numeric" },
+    );
+  }, [monthOffset, language]);
 
   const isTeacherBusy = (date: Date, hour: number): boolean => {
     const dateStr = formatDate(date);
@@ -167,7 +182,7 @@ function TeacherDetailModal({
       if (slot.date !== dateStr) return false;
       const start = parseTime(slot.time);
       const end = parseTime(slot.endTime);
-      return hour >= start && hour < end;
+      return hour < end && start < hour + 1;
     });
   };
 
@@ -177,7 +192,7 @@ function TeacherDetailModal({
       if (slot.date !== dateStr) return false;
       const start = parseTime(slot.time);
       const end = parseTime(slot.endTime);
-      return hour >= start && hour < end;
+      return hour < end && start < hour + 1;
     });
   };
 
@@ -572,15 +587,15 @@ export default function TeacherAvailability() {
   const DAYS = language === "ar" ? DAYS_AR : DAYS_EN;
   
   const dateRange = useMemo(() => {
-    const start = new Date();
-    start.setMonth(start.getMonth() - 1);
-    const end = new Date();
-    end.setMonth(end.getMonth() + 2);
+    const start = new Date(weekDates[0]);
+    start.setDate(start.getDate() - 7);
+    const end = new Date(weekDates[6]);
+    end.setDate(end.getDate() + 7);
     return {
       start: formatDate(start),
       end: formatDate(end)
     };
-  }, []);
+  }, [weekOffset]);
 
   const { data: teachersData, isLoading: loading, isError, error } = useTeacherAvailability(
     dateRange.start,
@@ -687,7 +702,7 @@ export default function TeacherAvailability() {
     return daySlots.some((slot) => {
       const start = parseTime(slot.time);
       const end = parseTime(slot.endTime);
-      return hour >= start && hour < end;
+      return hour < end && start < hour + 1;
     });
   };
 
@@ -698,7 +713,7 @@ export default function TeacherAvailability() {
     return daySlots.find((slot) => {
       const start = parseTime(slot.time);
       const end = parseTime(slot.endTime);
-      return hour >= start && hour < end;
+      return hour < end && start < hour + 1;
     });
   };
 

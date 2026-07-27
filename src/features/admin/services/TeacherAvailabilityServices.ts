@@ -50,7 +50,9 @@ export interface TeachersCalendarResponse {
   status: number;
   data: {
     teachers: TeacherApi[];
-  };
+  } | Array<{
+    teachers: TeacherApi[];
+  }>;
 }
 
 export const TeacherService = {
@@ -59,6 +61,7 @@ export const TeacherService = {
       `/calendar/teachers?startDate=${startDate}&endDate=${endDate}`,
     );
 
-    return response.data.data.teachers;
+    const dataObj = Array.isArray(response.data.data) ? response.data.data[0] : response.data.data;
+    return dataObj?.teachers || [];
   },
 };
