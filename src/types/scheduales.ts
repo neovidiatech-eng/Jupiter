@@ -148,8 +148,10 @@ export interface Schedule {
     teacher: Teacher;
     subject?: ScheduleSubject;
     scheduleLogs?: ScheduleLogs;
-      course: Course;
-
+    course: Course;
+    reviews?: any[];
+    students?: any[];
+    groupStudents?: any[];
 }
 
 export interface Pagination {
