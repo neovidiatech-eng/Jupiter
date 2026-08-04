@@ -180,19 +180,24 @@ export default function Sessions() {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  const { data: searchResults } = useSearchSchedules(debouncedSearch, 1, 1000);
+  const itemsPerPage = 10;
+  const dayTypeParam = currentTab === "History" ? "previous" : currentTab.toLowerCase();
+  const { data: searchResults } = useSearchSchedules(debouncedSearch, currentPage, itemsPerPage, dayTypeParam);
 
-  const itemsPerPage = 5;
   const rawScheduleData: Schedule[] = useMemo(() => {
-    if (!searchResults?.data?.schedule) return [];
+    if (!searchResults) return [];
+
+    const dataObj = Array.isArray(searchResults.data) ? searchResults.data[0] : searchResults.data;
+    const schedule = dataObj?.schedule;
+    if (!schedule) return [];
 
     switch (currentTab) {
       case "Upcoming":
-        return searchResults.data.schedule.upcomingSchedule || [];
+        return schedule.upcomingSchedule || [];
       case "Today":
-        return searchResults.data.schedule.toDaySchedule || [];
+        return schedule.todaySchedule || schedule.toDaySchedule || [];
       case "History":
-        return searchResults.data.schedule.previousSchedule || [];
+        return schedule.previousSchedule || [];
       default:
         return [];
     }
@@ -257,16 +262,37 @@ export default function Sessions() {
     return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
   });
 
-  const totalItems = groupedSchedules.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const pagination = useMemo(() => {
+    if (!searchResults) return null;
+    if (searchResults.pagination) return searchResults.pagination;
+    if (Array.isArray(searchResults.data)) {
+      return (searchResults.data[0] as any)?.pagination || null;
+    }
+    return (searchResults.data as any)?.pagination || null;
+  }, [searchResults]);
 
-  const displaySchedules = groupedSchedules.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  const totalItems = pagination?.totalItems ?? (pagination as any)?.total_items ?? (pagination as any)?.total ?? (searchResults ? groupedSchedules.length : 0);
+  const totalPages = pagination?.totalPages ?? (pagination as any)?.total_pages ?? (totalItems > 0 ? Math.ceil(totalItems / itemsPerPage) : 1);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
+  const displaySchedules = groupedSchedules;
+
+  const handlePageChange = (page: number | string) => {
+    if (typeof page === "number" && page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const getPageNumbers = () => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (currentPage <= 3) return [1, 2, 3, 4, '...', totalPages];
+    if (currentPage >= totalPages - 2) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
   };
 
   const formatDateTime = (dateString: string) => {
@@ -599,6 +625,7 @@ export default function Sessions() {
             pagination={false}
             className="w-full min-w-[900px]"
             rowClassName="hover:bg-gray-50/50 transition-colors group cursor-pointer"
+            locale={{ emptyText: "No sessions" }}
           />
         </div>
 
@@ -619,16 +646,20 @@ export default function Sessions() {
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            {Array.from({ length: totalPages }).map((_, i) => (
+            {getPageNumbers().map((pageNum, i) => (
               <button
                 key={i}
-                onClick={() => handlePageChange(i + 1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${currentPage === i + 1
+                onClick={() => handlePageChange(pageNum)}
+                disabled={pageNum === '...'}
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                  currentPage === pageNum
                     ? "bg-[#6366f1] text-white shadow-sm"
+                    : pageNum === '...'
+                    ? "text-gray-400 cursor-default"
                     : "text-gray-500 hover:bg-gray-50"
-                  }`}
+                }`}
               >
-                {i + 1}
+                {pageNum}
               </button>
             ))}
 

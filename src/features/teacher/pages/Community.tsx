@@ -1,17 +1,18 @@
 import { useMystudents } from "../hooks/useMystudents";
 import { TeacherStudent } from "../../../types/teacherStudents";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setMessages } from "../../../store/chatSlice";
-
-import { format } from "date-fns";
+import { setMessages, addMessage } from "../../../store/chatSlice";
 import { useCreateConversation, useMessages } from "../../../hooks/useMessages";
-// import { sendMessage } from "../../../services/chatServices";
+import { sendMediaMessage } from "../../../services/chatServices";
 import { useChatSocket } from "../../../hooks/useChat";
 import { useTyping } from "../../../hooks/useTyping";
 import { useTeacherProfile } from "../hooks/useTeacherProfile";
 import { RootState } from "../../../store/store";
-import { Users, MessageSquare, Smile, Send, MoreVertical } from "lucide-react";
+import { Users, MoreVertical } from "lucide-react";
+import ChatMessages from "../../student/pages/Chat/components/ChatMessages";
+import ChatInput from "../../student/pages/Chat/components/ChatInput";
+import ErrorService from "../../../utils/ErrorService";
 
 export default function CommunityPage() {
   const dispatch = useDispatch();
@@ -20,9 +21,10 @@ export default function CommunityPage() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
   // Read from Redux
   const { messages: allMessages, onlineUsers, typingUsers } = useSelector((rootState: RootState) => rootState.chat);
-  const { data: teacherData } = useTeacherProfile()
+  const { data: teacherData } = useTeacherProfile();
   const teacherId = teacherData?.data.teacher.id;
   const teacherUserId = teacherData?.data.teacher.user_id;
   const currentMessages = conversationId ? allMessages[conversationId] || [] : [];
@@ -33,7 +35,7 @@ export default function CommunityPage() {
 
   const { mutate: openChat } = useCreateConversation();
 
-  const { data: historyData, isLoading: isHistoryLoading } = useMessages(conversationId || undefined);
+  const { data: historyData } = useMessages(conversationId || undefined);
 
   useEffect(() => {
     if (historyData?.messages && conversationId) {
@@ -45,32 +47,59 @@ export default function CommunityPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentMessages]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = async (
+    e: React.FormEvent,
+    file?: File | Blob | null,
+    isVoice?: boolean,
+    duration?: number
+  ) => {
     e.preventDefault();
-    if (!messageText.trim() || !conversationId) return;
-
-    // const tempId = Date.now().toString();
-    const messageData = {
-      conversationId,
-      content: messageText,
-    };
-
-    setMessageText("");
+    if ((!messageText.trim() && !file) || !conversationId) return;
 
     try {
-      if (socket) {
-        socket.emit("message:send", messageData);
+      if (file) {
+        console.log("📤 [Community] Sending media/voice file message:", file);
+        const createdMsg = await sendMediaMessage({
+          conversationId,
+          file,
+          content: messageText,
+          isVoice,
+          duration,
+        });
+
+        if (createdMsg) {
+          dispatch(addMessage(createdMsg));
+        }
       } else {
-        console.error("Socket not connected, cannot send message");
+        console.log("📤 [Community] Sending text message:", messageText);
+        if (socket && socket.connected) {
+          socket.emit("message:send", {
+            conversationId,
+            content: messageText,
+          });
+        } else {
+          const createdMsg = await sendMediaMessage({
+            conversationId,
+            content: messageText,
+          });
+          if (createdMsg) {
+            dispatch(addMessage(createdMsg));
+          }
+        }
       }
-    } catch (error) {
-      console.error("Failed to send message:", error);
+      setMessageText("");
+    } catch (error: any) {
+      console.error("Failed to send message in Community:", error);
+      ErrorService.error("Failed to send message. Please try again.");
     }
   };
 
   const emitTyping = useTyping(socket, conversationId || undefined);
 
-  const handleTyping = () => {
+  const handleTyping = (e?: React.ChangeEvent<HTMLInputElement>) => {
+    if (e) {
+      setMessageText(e.target.value);
+    }
     if (socket && conversationId) {
       emitTyping();
     }
@@ -83,11 +112,8 @@ export default function CommunityPage() {
     if (conversationId) {
       console.log(`🔍 [Community] Conversation: ${conversationId}`);
       console.log(`👤 [Community] Student ID: ${studentUserId}`);
-      console.log(`⌨️ [Community] Typing Users for this convo:`, typingUsers[conversationId]);
     }
-  }, [conversationId, studentUserId, typingUsers]);
-
-
+  }, [conversationId, studentUserId]);
 
   return (
     <div className="animate-fade-in max-w-[1600px] mx-auto pb-12 p-7">
@@ -97,7 +123,7 @@ export default function CommunityPage() {
           Instructor Community
         </h1>
         <p className="text-slate-400 font-medium">
-          Connect, share, and learn with fellow instructors
+          Connect, share, and learn with fellow instructors & students
         </p>
       </header>
 
@@ -107,11 +133,11 @@ export default function CommunityPage() {
           {selectedStudent ? (
             <>
               {/* Chat Header */}
-              <div className="px-8 pb-6 border-b border-slate-50 flex items-center justify-between">
+              <div className="px-8 pb-6 border-b border-slate-50 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center font-bold text-blue-500 uppercase italic border-2 border-white shadow-sm">
-                      {selectedStudent.name.split(' ').map(n => n[0]).join('')}
+                      {selectedStudent.name.split(" ").map((n) => n[0]).join("")}
                     </div>
                     {isStudentOnline && (
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
@@ -121,20 +147,11 @@ export default function CommunityPage() {
                     <h3 className="text-lg font-bold text-slate-800">{selectedStudent.name}</h3>
                     <p className="text-xs font-medium text-slate-400">
                       {isStudentTyping ? (
-                        <div className="flex items-center gap-1">
-                          <span className="text-blue-500 font-bold animate-pulse">Typing...</span>
-                          <div className="flex gap-0.5">
-                            <span className="w-0.5 h-0.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.3s]" />
-                            <span className="w-0.5 h-0.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.15s]" />
-                            <span className="w-0.5 h-0.5 rounded-full bg-blue-500 animate-bounce" />
-                          </div>
-                        </div>
+                        <span className="text-blue-500 font-bold animate-pulse">Typing...</span>
+                      ) : isStudentOnline ? (
+                        <span className="text-emerald-500 font-bold">Online</span>
                       ) : (
-                        isStudentOnline ? (
-                          <span className="text-emerald-500 font-bold">Online</span>
-                        ) : (
-                          <span className="text-slate-300 font-bold uppercase tracking-wider">Offline</span>
-                        )
+                        <span className="text-slate-300 font-bold uppercase tracking-wider">Offline</span>
                       )}
                     </p>
                   </div>
@@ -145,77 +162,22 @@ export default function CommunityPage() {
               </div>
 
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar bg-slate-50/30">
-                {currentMessages.length === 0 && !isHistoryLoading ? (
-                  <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-4 opacity-60">
-                    <MessageSquare size={48} />
-                    <p className="font-medium">No messages yet. Start the conversation!</p>
-                  </div>
-                ) : (
-                  currentMessages.map((msg: any) => {
-                    const isMe = msg.senderId === teacherUserId || msg.senderId === "me" || msg.sender?.role === "teacher";
-                    return (
-                      <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] space-y-1`}>
-                          <div className={`p-4 rounded-2xl shadow-sm text-sm font-medium leading-relaxed ${isMe
-                              ? 'bg-blue-600 text-white rounded-tr-none'
-                              : 'bg-white text-slate-600 rounded-tl-none border border-slate-100'
-                            }`}>
-                            {msg.content}
-                          </div>
-                          <p className={`text-[10px] font-bold text-slate-300 uppercase ${isMe ? 'text-right' : 'text-left'}`}>
-                            {msg.createdAt ? format(new Date(msg.createdAt), 'hh:mm a') : 'Just now'}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-
-                {isStudentTyping && (
-                  <div className="flex justify-start">
-                    <div className="max-w-[80%] space-y-1">
-                      <div className="bg-white text-slate-600 rounded-2xl rounded-tl-none border border-slate-100 p-4 shadow-sm flex items-center gap-1.5">
-                        <span className="text-sm font-medium text-slate-400 italic">typing</span>
-                        <div className="flex gap-1">
-                          <span className="w-1 h-1 rounded-full bg-slate-300 animate-bounce [animation-delay:-0.3s]" />
-                          <span className="w-1 h-1 rounded-full bg-slate-300 animate-bounce [animation-delay:-0.15s]" />
-                          <span className="w-1 h-1 rounded-full bg-slate-300 animate-bounce" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+              <ChatMessages
+                conversationId={conversationId || undefined}
+                currentUserId={teacherUserId}
+                messages={currentMessages}
+                messagesEndRef={messagesEndRef}
+                isTyping={isStudentTyping}
+              />
 
               {/* Chat Input */}
-              <div className="p-6 border-t border-slate-50">
-                <form onSubmit={handleSendMessage} className="relative flex items-center gap-3">
-                  <div className="flex-1 relative">
-                    <input
-                      type="text"
-                      value={messageText}
-                      onChange={(e) => {
-                        setMessageText(e.target.value);
-                        handleTyping();
-                      }}
-                      placeholder="Type your message..."
-                      className="w-full px-6 py-4 bg-slate-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all text-sm font-medium"
-                    />
-                    <button type="button" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      <Smile size={20} />
-                    </button>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={!messageText.trim()}
-                    className="p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:shadow-none"
-                  >
-                    <Send size={20} />
-                  </button>
-                </form>
-              </div>
+              <ChatInput
+                message={messageText}
+                conversationId={conversationId || undefined}
+                handleTyping={handleTyping}
+                handleSendMessage={handleSendMessage}
+                isSocketReady={!!socket?.connected}
+              />
             </>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-6 animate-pulse">
@@ -242,31 +204,43 @@ export default function CommunityPage() {
                 onClick={() => {
                   setSelectedStudent(student);
                   if (teacherId) {
-                    openChat({ teacherId, studentId: student.id }, {
-                      onSuccess: (data) => {
-                        setConversationId(data.id);
+                    openChat(
+                      { teacherId, studentId: student.id },
+                      {
+                        onSuccess: (data) => {
+                          setConversationId(data.id);
+                        },
                       }
-                    });
+                    );
                   }
                 }}
-                className={`flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer group border ${selectedStudent?.id === student.id
+                className={`flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer group border ${
+                  selectedStudent?.id === student.id
                     ? "bg-blue-50/50 border-blue-100 shadow-sm"
                     : "hover:bg-slate-50 border-transparent"
-                  }`}
+                }`}
               >
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${selectedStudent?.id === student.id ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"
-                      }`}>
-                      {student.name.split(' ').map(n => n[0]).join('')}
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                        selectedStudent?.id === student.id
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-100 text-slate-400"
+                      }`}
+                    >
+                      {student.name.split(" ").map((n) => n[0]).join("")}
                     </div>
                     {student.user_id && onlineUsers[student.user_id] === "online" && (
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
                     )}
                   </div>
                   <div>
-                    <h4 className={`text-sm font-bold transition-colors ${selectedStudent?.id === student.id ? "text-blue-600" : "text-slate-800"
-                      }`}>
+                    <h4
+                      className={`text-sm font-bold transition-colors ${
+                        selectedStudent?.id === student.id ? "text-blue-600" : "text-slate-800"
+                      }`}
+                    >
                       {student.name}
                     </h4>
                     <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">

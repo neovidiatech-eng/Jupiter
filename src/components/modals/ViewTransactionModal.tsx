@@ -30,11 +30,12 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction }: V
     subscription: { ar: 'اشتراك', en: 'Subscription' },
   };
 
-  const transactionCurrency = transaction.currencyCode || 'SAR';
-  const amountToConvert = transaction.originalAmount || transaction.amount;
-  const originalSymbol = transactionCurrency; // Use code as symbol if we don't have a map
+  if (!isOpen || !transaction) return null;
 
-  if (!isOpen) return null;
+  const transactionCurrency = transaction.currencyCode || 'SAR';
+  const rawAmount = transaction.originalAmount ?? transaction.amount ?? transaction.convertedAmount ?? 0;
+  const numericAmount = typeof rawAmount === 'number' ? rawAmount : Number(rawAmount) || 0;
+  const originalSymbol = transactionCurrency;
 
   const isIncome = transaction.type === 'credit' || transaction.type === 'subscription';
 
@@ -58,7 +59,7 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction }: V
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 !mt-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div className={`sticky top-0 px-6 py-5 flex items-center justify-between rounded-t-2xl ${isIncome ? 'bg-gradient-to-r from-green-600 to-emerald-600' : 'bg-gradient-to-r from-orange-500 to-amber-600'
           } text-white`}>
@@ -80,7 +81,7 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction }: V
           <div className={`rounded-xl p-5 text-center ${isIncome ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
             <p className="text-sm text-gray-600 mb-2">{text.amount[language]}</p>
             <p className={`text-5xl font-bold ${isIncome ? 'text-green-600' : 'text-orange-600'}`}>
-              {(transaction.originalAmount || transaction.amount).toFixed(2)} <span className="text-2xl">{originalSymbol}</span>
+              {numericAmount.toFixed(2)} <span className="text-2xl">{originalSymbol}</span>
             </p>
 
             <span className={`inline-flex mt-3 px-3 py-1 rounded-full text-sm font-medium ${
@@ -98,7 +99,7 @@ export default function ViewTransactionModal({ isOpen, onClose, transaction }: V
                 <Calendar className="w-4 h-4 text-gray-500" />
                 <p className="text-sm text-gray-600">{text.date[language]}</p>
               </div>
-              <p className="font-semibold text-gray-900">{new Date(transaction.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}</p>
+              <p className="font-semibold text-gray-900">{transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US') : '-'}</p>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
