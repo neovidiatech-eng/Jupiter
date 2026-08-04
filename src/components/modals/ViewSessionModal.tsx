@@ -1,4 +1,4 @@
-import { X, Calendar, Clock, User, GraduationCap, Video, FileText, Bell, ExternalLink, Repeat } from 'lucide-react';
+import { X, Calendar, Clock, User, GraduationCap, Video, FileText, Bell, ExternalLink, Repeat, MessageSquare, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Schedule } from '../../types/scheduales';
 
@@ -211,6 +211,83 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('notes')}</p>
                 </div>
                 <p className="text-sm font-medium text-gray-700 leading-relaxed break-words whitespace-pre-wrap overflow-hidden">{session.notes}</p>
+              </div>
+            )}
+
+            {/* Reviews */}
+            {session.reviews && session.reviews.length > 0 && (
+              <div className="mt-8 space-y-4">
+                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-4">
+                  <MessageSquare className="w-5 h-5 text-indigo-500" />
+                  {language === 'ar' ? 'تقييمات الحصة' : 'Session Reviews'}
+                </h3>
+                <div className="grid grid-cols-1 gap-4">
+                  {session.reviews.map((review: any) => {
+                    const isTeacher = review.role === 'teacher';
+                    
+                    let fallbackName = "";
+                    if (isTeacher) {
+                      fallbackName = session.teacher?.user?.name || (session.teacher as any)?.name || "";
+                    } else {
+                      if (session.student && (session.student?.user?.id === review.reviewerId || session.student?.id === review.reviewerId)) {
+                        fallbackName = session.student?.user?.name || (session.student as any)?.name || "";
+                      } else if (session.students) {
+                        const st = session.students.find((s:any) => s.user?.id === review.reviewerId || s.id === review.reviewerId);
+                        if (st) fallbackName = st.user?.name || (st as any).name || "";
+                      }
+                      if (!fallbackName && session.groupStudents) {
+                        const gs = session.groupStudents.find((g:any) => g.student?.user?.id === review.reviewerId || g.student?.id === review.reviewerId);
+                        if (gs) fallbackName = gs.student?.user?.name || (gs.student as any)?.name || "";
+                      }
+                    }
+                    
+                    const reviewerName = review.reviewer?.name || review.reviewer?.user?.name || fallbackName || (language === 'ar' ? 'مستخدم مجهول' : 'Unknown User');
+                    
+                    const roleText = isTeacher 
+                      ? (language === 'ar' ? 'تقييم المعلم' : "Teacher's Review")
+                      : (language === 'ar' ? 'تقييم الطالب' : "Student's Review");
+
+                    return (
+                      <div key={review.id} className={`bg-white rounded-2xl p-5 border shadow-sm relative overflow-hidden transition-all hover:shadow-md ${isTeacher ? 'border-emerald-100' : 'border-blue-100'}`}>
+                        <div className={`absolute top-0 left-0 w-1.5 h-full ${isTeacher ? 'bg-emerald-400' : 'bg-blue-400'}`}></div>
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4 pl-2 rtl:pl-0 rtl:pr-2">
+                           <div className="flex items-center gap-3">
+                              <div className={`p-2.5 rounded-xl ${isTeacher ? 'bg-emerald-50 text-emerald-500' : 'bg-blue-50 text-blue-500'}`}>
+                                 {isTeacher ? <GraduationCap className="w-5 h-5" /> : <User className="w-5 h-5" />}
+                              </div>
+                              <div>
+                                 <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${isTeacher ? 'text-emerald-500' : 'text-blue-500'}`}>
+                                   {roleText}
+                                 </p>
+                                 <p className="text-sm font-bold text-gray-900">
+                                   {reviewerName}
+                                 </p>
+                              </div>
+                           </div>
+                           <div className="flex items-center gap-1 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${
+                                    i < (review.rating || 0)
+                                      ? 'fill-amber-400 text-amber-400'
+                                      : 'fill-gray-200 text-gray-200'
+                                  }`}
+                                />
+                              ))}
+                           </div>
+                        </div>
+                        <div className="pl-2 rtl:pl-0 rtl:pr-2">
+                          <div className={`p-4 rounded-xl ${isTeacher ? 'bg-emerald-50/30' : 'bg-blue-50/30'}`}>
+                            <p className="text-sm font-medium text-gray-700 leading-relaxed whitespace-pre-line">
+                              {review.comment ? `"${review.comment}"` : (language === 'ar' ? 'لا يوجد تعليق' : 'No comment provided')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
