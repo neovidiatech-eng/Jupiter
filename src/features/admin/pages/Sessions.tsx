@@ -10,6 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Bell,
+  UserCog,
+  CheckCircle,
 } from "lucide-react";
 import {
   useSearchSchedules,
@@ -530,7 +532,7 @@ export default function Sessions() {
             key: "edit Instructor",
             label: (
               <span className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                <Edit className="w-3.5 h-3.5" /> Edit Instructor
+                <UserCog className="w-3.5 h-3.5" /> Edit Instructor
               </span>
             ),
             onClick: () => {
@@ -542,7 +544,7 @@ export default function Sessions() {
             key: "change Status",
             label: (
               <span className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                <Edit className="w-3.5 h-3.5" /> Change Status
+                <CheckCircle className="w-3.5 h-3.5" /> Change Status
               </span>
             ),
             onClick: () => {
