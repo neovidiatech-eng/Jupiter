@@ -26,6 +26,7 @@ import AddSessionModal from "../../../components/modals/AddSessionModal";
 import ViewSessionModal from "../../../components/modals/ViewSessionModal";
 import EditSessionModal from "../../../components/modals/EditSessionModal";
 import EditInstructorModal from "../../../components/modals/EditInstructorModal";
+import ChangeStatusModal from "../../../components/modals/ChangeStatus";
 import ConfirmModal from "../../../components/modals/ConfirmModal";
 import {
   DayOfWeek,
@@ -51,6 +52,8 @@ export default function Sessions() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditInstructorModal, setShowEditInstructorModal] = useState(false);
+  const [showChangeStatusModal, setShowChangeStatusModal] = useState(false);
+
   const [selectedSession, setSelectedSession] = useState<Schedule | null>(null);
   const [groupedSessions, setGroupedSessions] = useState<Schedule[]>([]);
   const [currentTab, setCurrentTab] = useState("Today");
@@ -63,7 +66,7 @@ export default function Sessions() {
   const deleteSchedule = useDeleteSchedule();
   const deleteGroupedSchedule = useDeleteGroupedSchedule();
   const { data: fullSessionData } = useGetScheduleById(viewingId || "");
-  const { data: instructors } = useTeacher({search: "", page: 1, limit: 1000});
+  const { data: instructors } = useTeacher({ search: "", page: 1, limit: 1000 });
   const { getServerDate } = useServerTime();
 
   // Fetch today's availability
@@ -435,23 +438,23 @@ export default function Sessions() {
         );
       },
     },
-    {
-      title: "Status",
-      render: (_: unknown, record: GroupedSchedule) => (
-        <div className="flex flex-col gap-1">
-          <span
-            className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] tracking-widest uppercase ${getBadgeStyle(record.status || "upcoming")}`}
-          >
-            {record.status || "UPCOMING"}
-          </span>
-          {record.is_recurring && (
-            <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-tighter">
-              Recurring Series ({record.groupCount} sessions)
-            </span>
-          )}
-        </div>
-      ),
-    },
+    // {
+    //   title: "Status",
+    //   render: (_: unknown, record: GroupedSchedule) => (
+    //     <div className="flex flex-col gap-1">
+    //       <span
+    //         className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] tracking-widest uppercase ${getBadgeStyle(record.status || "upcoming")}`}
+    //       >
+    //         {record.status || "UPCOMING"}
+    //       </span>
+    //       {record.is_recurring && (
+    //         <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-tighter">
+    //           Recurring Series ({record.groupCount} sessions)
+    //         </span>
+    //       )}
+    //     </div>
+    //   ),
+    // },
     {
       title: "Meeting Details",
       render: (_: unknown, record: GroupedSchedule) => {
@@ -524,17 +527,7 @@ export default function Sessions() {
             },
           },
           {
-            key: "delete",
-            label: (
-              <span className="flex items-center gap-2 text-xs font-bold text-red-600">
-                <Trash2 className="w-3.5 h-3.5" /> Delete
-              </span>
-            ),
-            danger: true,
-            onClick: () => handleDeleteSession(record),
-          },
-          {
-            key:"edit Instructor",
+            key: "edit Instructor",
             label: (
               <span className="flex items-center gap-2 text-xs font-bold text-gray-700">
                 <Edit className="w-3.5 h-3.5" /> Edit Instructor
@@ -545,6 +538,29 @@ export default function Sessions() {
               setShowEditInstructorModal(true);
             },
           },
+          {
+            key: "change Status",
+            label: (
+              <span className="flex items-center gap-2 text-xs font-bold text-gray-700">
+                <Edit className="w-3.5 h-3.5" /> Change Status
+              </span>
+            ),
+            onClick: () => {
+              setSelectedSession(record);
+              setShowChangeStatusModal(true);
+            },
+          },
+          {
+            key: "delete",
+            label: (
+              <span className="flex items-center gap-2 text-xs font-bold text-red-600">
+                <Trash2 className="w-3.5 h-3.5" /> Delete
+              </span>
+            ),
+            danger: true,
+            onClick: () => handleDeleteSession(record),
+          },
+
         ];
 
         return (
@@ -651,13 +667,12 @@ export default function Sessions() {
                 key={i}
                 onClick={() => handlePageChange(pageNum)}
                 disabled={pageNum === '...'}
-                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                  currentPage === pageNum
-                    ? "bg-[#6366f1] text-white shadow-sm"
-                    : pageNum === '...'
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${currentPage === pageNum
+                  ? "bg-[#6366f1] text-white shadow-sm"
+                  : pageNum === '...'
                     ? "text-gray-400 cursor-default"
                     : "text-gray-500 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 {pageNum}
               </button>
@@ -857,6 +872,17 @@ export default function Sessions() {
           isOpen={showEditInstructorModal}
           onClose={() => {
             setShowEditInstructorModal(false);
+            setSelectedSession(null);
+          }}
+          session={selectedSession}
+        />
+      )}
+
+      {selectedSession && (
+        <ChangeStatusModal
+          isOpen={showChangeStatusModal}
+          onClose={() => {
+            setShowChangeStatusModal(false);
             setSelectedSession(null);
           }}
           session={selectedSession}

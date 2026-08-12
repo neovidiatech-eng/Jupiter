@@ -108,6 +108,11 @@ export interface MultipleSessionsInput {
     meetingLink?: string;
   }>;
 }
+export type SessionStatusValue = "planned" | "scheduled" | "ongoing" | "completed" | "missed" | "cancelled";
+
+export interface ChangeSessionStatusPayload {
+  status: SessionStatusValue;
+}
 
 export interface GetSessionById {
   id: string;
