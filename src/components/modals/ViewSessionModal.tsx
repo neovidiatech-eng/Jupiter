@@ -71,6 +71,10 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
   const { date: sessionDate, time: sessionTime } = formatDateTime(session.start_time);
   const { time: endTime } = formatDateTime(session.end_time);
   const duration = calculateDuration(session.start_time, session.end_time);
+  
+  const isRecurringGroup = Boolean((session.is_recurring || session.parent_recurring_id) && groupedSessions && groupedSessions.length > 1);
+  const allSessionsCompleted = isRecurringGroup ? groupedSessions!.every(s => s.status?.toLowerCase() === 'completed') : false;
+  const hideStatusBadge = isRecurringGroup && session.status?.toLowerCase() === 'completed' && !allSessionsCompleted;
 
   return (
     <div className="fixed inset-0 !mt-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 font-sans transition-all">
@@ -88,9 +92,11 @@ export default function ViewSessionModal({ isOpen, onClose, session, groupedSess
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-widest ${getStatusStyle(session.status)}`}>
-              {t(session.status?.toLowerCase() || '')}
-            </span>
+            {!hideStatusBadge && (
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-widest ${getStatusStyle(session.status)}`}>
+                {t(session.status?.toLowerCase() || '')}
+              </span>
+            )}
             <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors">
               <X className="w-5 h-5" />
             </button>

@@ -1,5 +1,6 @@
 import api from "../../../lib/axios";
 import { CreateRecurringSessionBody, CreateSessionBody, GetSessionsResponse, UpdateSessionBody, Schedule } from "../../../types/scheduales";
+import { ChangeSessionStatusPayload, GetSessionById } from "../../../types/sessions"
 
 export const getAllSchedules = async (page: number = 1, limit: number = 10, day_type: string = "today"): Promise<GetSessionsResponse> => {
     let url = `/schedules?page=${page}&limit=${limit}`;
@@ -79,3 +80,11 @@ export const updateInstructorForSchedule = async (scheduleId: string, teacherId:
     const response = await api.patch(`/schedules/change-instructor/${scheduleId}`, { teacherId });
     return response.data;
 };
+
+
+
+export const updateSessionStatus = async (sessionId: string, payload: ChangeSessionStatusPayload): Promise<GetSessionById> => {
+    const response = await api.patch(`/schedules/${sessionId}/status`, payload);
+    return response.data;
+   
+}
