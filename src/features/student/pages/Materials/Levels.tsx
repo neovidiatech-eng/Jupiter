@@ -1,14 +1,56 @@
 import { ArrowLeft, Award } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import CurriculumCard from "../../components/CurriculumCard";
+import { useCourses } from "../../../../hooks/useCourses";
+import { useDashboardData } from "../../hooks/useDashboardData";
+import { useQuery } from "@tanstack/react-query";
+import { getStudentProgress } from "../../../../services/CoursesServices";
+
+function CourseCardWithProgress({ course, index, navigate }: any) {
+  const { data: progressData } = useQuery({
+    queryKey: ["student-progress", course.id],
+    queryFn: () => getStudentProgress(course.id),
+    enabled: !!course.id,
+  });
+
+  const lectures = progressData?.lectures || [];
+  const totalSessions = Math.max(lectures.length, 1);
+  const completedSessions = lectures.filter((l: any) => {
+    const isLocked = l.locked || l.status?.toLowerCase() === "locked";
+    return !isLocked;
+  }).length;
+
+  return (
+    <CurriculumCard
+      id={index + 1}
+      title={course.title || "Untitled Course"}
+      description={course.description || "Course details"}
+      totalSessions={lectures.length > 0 ? lectures.length : 1}
+      completedSessions={completedSessions}
+      currentSession={completedSessions + 1}
+      startSessionNumber={1}
+      status={completedSessions > 0 && completedSessions === lectures.length ? "Completed" : "In Progress"}
+      onClick={() =>
+        navigate(`/student-dashboard/Materials/Levels/${course.id}`, {
+          state: { courseTitle: course.title },
+        })
+      }
+    />
+  );
+}
 
 export default function Levels() {
   const navigate = useNavigate();
   const location = useLocation();
-  const rank = location.state?.rank;
+  const stateRank = location.state?.rank;
+
+  const { data: dashboardResponse } = useDashboardData();
+  const rank = stateRank || dashboardResponse?.data?.metadata?.rank;
 
   const rankName = rank?.name || "Levels";
-  const courses = rank?.courses || [];
+  
+  const { data: coursesData, isLoading } = useCourses(1, 100, rank?.id);
+  const courses = coursesData?.items || rank?.courses || [];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 p-6 md:p-10 max-w-7xl mx-auto">
@@ -45,25 +87,27 @@ export default function Levels() {
 
       {/* Courses Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
-        {courses.map((course: any, index: number) => (
-          <CurriculumCard
-            key={course.id || index}
-            id={index + 1}
-            title={course.title || "Untitled Course"}
-            description={course.description || "Course details"}
-            totalSessions={1}
-            completedSessions={0}
-            currentSession={1}
-            startSessionNumber={1}
-            status={"In Progress"}
-            onClick={() => navigate(`/student-dashboard/Materials/Levels/${course.id}`, { state: { courseTitle: course.title } })}
-          />
-        ))}
-
-        {courses.length === 0 && (
+        {isLoading ? (
           <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
-            No courses found in this level.
+            Loading courses...
           </div>
+        ) : (
+          <>
+            {courses.map((course: any, index: number) => (
+              <CourseCardWithProgress
+                key={course.id || index}
+                course={course}
+                index={index}
+                navigate={navigate}
+              />
+            ))}
+
+            {courses.length === 0 && (
+              <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+                No courses found in this level.
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -17,7 +17,13 @@ export default function Sessions() {
 
   const { data: allSchedules, isLoading } = useUserSessions(debouncedSearch);
 
-  const scheduleData = allSchedules?.data || [];
+  const scheduleData = Array.isArray(allSchedules?.data) 
+    ? allSchedules.data 
+    : [
+        ...((allSchedules?.data as any)?.toDaySchedule || []),
+        ...((allSchedules?.data as any)?.upcomingSchedule || []),
+        ...((allSchedules?.data as any)?.previousSchedule || [])
+      ];
 
   // Filtering logic to show only sessions (similar to original)
   const displaySchedules: Schedule[] = [];

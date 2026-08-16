@@ -34,7 +34,13 @@ export default function Sessions() {
   }, [searchTerm]);
 
   const itemsPerPage = 5;
-  const scheduleData = sessionResponse?.data || [];
+  const scheduleData = Array.isArray(sessionResponse?.data)
+    ? sessionResponse.data
+    : [
+        ...((sessionResponse?.data as any)?.toDaySchedule || []),
+        ...((sessionResponse?.data as any)?.upcomingSchedule || []),
+        ...((sessionResponse?.data as any)?.previousSchedule || [])
+      ];
 
   const displaySchedules: Schedule[] = [];
   const seenParents = new Set<string>();
