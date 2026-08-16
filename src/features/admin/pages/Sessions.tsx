@@ -843,12 +843,15 @@ export default function Sessions() {
         </div>
       </div>
 
+      {showAddModal && (
       <AddSessionModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={handleAddSession}
       />
+      )}
 
+      {showViewModal && (
       <ViewSessionModal
         isOpen={showViewModal}
         onClose={() => {
@@ -858,7 +861,9 @@ export default function Sessions() {
         session={fullSessionData?.data?.schedule || selectedSession}
         groupedSessions={groupedSessions}
       />
+      )}
 
+      {showEditModal && (
       <EditSessionModal
         isOpen={showEditModal}
         onClose={() => {
@@ -868,6 +873,7 @@ export default function Sessions() {
         session={selectedSession}
         onSave={handleUpdateSession}
       />
+      )}
 
       {selectedSession && (
         <EditInstructorModal

@@ -22,11 +22,6 @@ export const useSupport = () => {
         queryFn: SupportServices.getSupportCategories
     });
 
-    const teacherSupportQuery = useQuery({
-        queryKey: ['teacher-supports'],
-        queryFn: SupportServices.getSupportForTeacher
-    });
-
     // Support Item Mutations
     const createSupportMutation = useMutation({
         mutationFn: (data: CreateSupportItemInput) => SupportServices.createSupport(data),
@@ -92,12 +87,10 @@ export const useSupport = () => {
         // Data
         supports: supportsQuery.data?.data || [],
         categories: supportCategoriesQuery.data?.data || [],
-        teacherSupports: teacherSupportQuery.data?.data || [],
         
         // Loading States
         isLoadingSupports: supportsQuery.isLoading,
         isLoadingCategories: supportCategoriesQuery.isLoading,
-        isLoadingTeacherSupports: teacherSupportQuery.isLoading,
 
         // Mutations
         createSupport: createSupportMutation.mutateAsync,
@@ -111,6 +104,18 @@ export const useSupport = () => {
         // Expose queries if needed
         supportsQuery,
         supportCategoriesQuery,
+    };
+};
+
+export const useTeacherSupport = () => {
+    const teacherSupportQuery = useQuery({
+        queryKey: ['teacher-supports'],
+        queryFn: SupportServices.getSupportForTeacher
+    });
+
+    return {
+        teacherSupports: teacherSupportQuery.data?.data || [],
+        isLoadingTeacherSupports: teacherSupportQuery.isLoading,
         teacherSupportQuery
     };
 };

@@ -271,16 +271,18 @@ export default function Roles() {
             </div>
 
             {/* Modal */}
-            <AddRoleModal
-                isOpen={isModalOpen}
-                onClose={() => {
-                    setIsModalOpen(false);
-                    setSelectedRole(null);
+            {isModalOpen && (
+                <AddRoleModal
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedRole(null);
                 }}
                 onSubmit={handleSubmitRole}
                 initialData={selectedRole}
                 isLoading={isAdding || isUpdating || isAddingPermissions}
             />
+            )}
             {ConfirmDialog}
         </div>
     );

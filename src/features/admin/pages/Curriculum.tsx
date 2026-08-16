@@ -591,14 +591,16 @@ export default function Curriculum() {
       ) : (
         <Empty description="No courses found" className="mt-20" />
       )}
-      <AddCourseModal
-        visible={isAddModalVisible || !!editingCourse}
-        onClose={() => {
-          setIsAddModalVisible(false);
-          setEditingCourse(null);
-        }}
-        course={editingCourse}
-      />
+      {isAddModalVisible && (
+        <AddCourseModal
+          visible={isAddModalVisible || !!editingCourse}
+          onClose={() => {
+            setIsAddModalVisible(false);
+            setEditingCourse(null);
+          }}
+          course={editingCourse}
+        />
+      )}
     </div>
   );
 }
