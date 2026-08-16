@@ -1,5 +1,5 @@
 import { useState, lazy, useMemo, useEffect } from 'react';
-import { Search, Eye, EyeOff, Pencil, Trash2, Plus, Users, UserCheck, UserX, ClipboardList, ChevronDown, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, Pencil, Trash2, Plus, Users, UserCheck, UserX, ClipboardList, ChevronDown, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import WhatsAppPhone from '../../../components/ui/WhatsAppPhone';
 import { useTranslation } from 'react-i18next';
 import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } from '../hooks/useStudents';
@@ -425,6 +425,7 @@ export default function Students() {
       `}} />
 
       {/* Modals */}
+      {isAddModalOpen && (
       <AddStudentModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -477,13 +478,17 @@ export default function Students() {
           }
         }}
       />
+      )}
 
+      {isViewModalOpen && (
       <ViewStudentModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         studentData={selectedStudent}
       />
+      )}
 
+      {isEditModalOpen && (
       <EditStudentModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -539,6 +544,7 @@ export default function Students() {
           }
         }}
       />
+      )}
       {ConfirmDialog}
       <style dangerouslySetInnerHTML={{
         __html: `

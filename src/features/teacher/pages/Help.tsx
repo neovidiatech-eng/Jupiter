@@ -1,10 +1,10 @@
 import  { useMemo, useState } from 'react';
 import { Search, Book, Video, FileQuestion, MessageCircle } from 'lucide-react';
-import { useSupport } from '../../../hooks/useSupport';
+import { useTeacherSupport } from '../../../hooks/useSupport';
 
 export default function SupportPage() {
   const [search ,setSearch] = useState("")
-  const { teacherSupports, isLoadingTeacherSupports } = useSupport();
+  const { teacherSupports, isLoadingTeacherSupports } = useTeacherSupport();
 
 
   // Define static visual assets for categories

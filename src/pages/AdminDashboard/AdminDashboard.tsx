@@ -131,7 +131,7 @@ export default function AdminDashboard() {
         </div>
       </main>
 
-      <SubscribePlanModal isOpen={showSubscribeModal} onClose={() => setShowSubscribeModal(false)} />
+      {showSubscribeModal && <SubscribePlanModal isOpen={showSubscribeModal} onClose={() => setShowSubscribeModal(false)} />}
     </div>
   );
 }
