@@ -463,7 +463,7 @@ export default function StudentDashboard() {
                 <div className="flex items-center gap-2 text-slate-400">
                   <BookOpen size={16} className="text-blue-400" />
                   <p className="text-xs font-bold uppercase tracking-widest">
-                    {metadata?.rank?.courses.length + ' ' + 'Curriculums Available'}
+                    {(metadata?.rank?.courses?.length || 0) + ' ' + 'Curriculums Available'}
                   </p>
                 </div>
               </div>

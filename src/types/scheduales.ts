@@ -152,6 +152,8 @@ export interface Schedule {
     reviews?: any[];
     students?: any[];
     groupStudents?: any[];
+    reviewer?: any;
+    reviewee?: any;
 }
 
 export interface Pagination {

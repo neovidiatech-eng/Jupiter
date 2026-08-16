@@ -272,15 +272,18 @@ export default function CurriculumDetails() {
             ) : (
               lectures.map(
                 (lecture: any, index: number) => {
+                  const isLocked =
+                    lecture.locked ||
+                    lecture.status === "Locked";
+
                   const isCompleted =
-                    lecture.status === "Completed";
+                    !isLocked &&
+                    lecture.status?.toLowerCase() === "completed";
 
                   const isPending =
-                    lecture.status === "Pending" ||
-                    !lecture.status;
-
-                  const isLocked =
-                    lecture.status === "Locked";
+                    !isLocked &&
+                    (lecture.status?.toLowerCase() === "pending" ||
+                      !lecture.status);
 
                   const lectureOrder =
                     lecture.order || index + 1;
@@ -397,7 +400,7 @@ export default function CurriculumDetails() {
                                 fill="currentColor"
                               />
 
-                              Watch Video
+                              {isCompleted ? "Re-watch Lecture" : "Watch Video"}
                             </button>
                           )}
 
@@ -442,10 +445,17 @@ export default function CurriculumDetails() {
 
                         {/* Locked */}
                         {isLocked && (
-                          <button className="flex items-center gap-2 bg-slate-100 text-slate-400 px-4 py-2 rounded-xl text-sm font-bold cursor-not-allowed">
-                            <Lock size={16} />
-                            Locked
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-2 bg-slate-100 text-slate-400 px-4 py-2 rounded-xl text-sm font-bold cursor-not-allowed">
+                              <Lock size={16} />
+                              Locked
+                            </span>
+                            {lecture.availableAt && (
+                              <span className="text-xs font-medium text-slate-500 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+                                Available: {new Date(lecture.availableAt).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

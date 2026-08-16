@@ -62,5 +62,12 @@ export const useCompleteLecture = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["student-progress"] });
     },
+    onError: (error: any) => {
+      if (error?.response?.status === 403 && error?.response?.data?.message === "LECTURE_LOCKED") {
+        ErrorService.error("This lecture is locked until your scheduled session starts.");
+      } else {
+        ErrorService.error("Failed to mark lecture as completed");
+      }
+    }
   });
 };
