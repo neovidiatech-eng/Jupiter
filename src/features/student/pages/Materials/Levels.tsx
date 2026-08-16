@@ -9,15 +9,22 @@ import { getStudentProgress } from "../../../../services/CoursesServices";
 function CourseCardWithProgress({ course, index, navigate }: any) {
   const { data: progressData } = useQuery({
     queryKey: ["student-progress", course.id],
-    queryFn: () => getStudentProgress(course.id),
+    queryFn: async () => {
+      // Stagger requests to avoid backend rate limiting
+      if (index > 0) {
+        await new Promise(resolve => setTimeout(resolve, index * 200));
+      }
+      return getStudentProgress(course.id);
+    },
     enabled: !!course.id,
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes to reduce refetches
   });
 
   const lectures = progressData?.lectures || [];
   const totalSessions = Math.max(lectures.length, 1);
   const completedSessions = lectures.filter((l: any) => {
     const isLocked = l.locked || l.status?.toLowerCase() === "locked";
-    return !isLocked;
+    return !isLocked && l.status?.toLowerCase() === "completed";
   }).length;
 
   return (
